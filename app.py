@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request, render_template
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 from auth import auth_bp
+from goals import goals_bp
 from models import db
 
 load_dotenv()
@@ -16,6 +17,7 @@ db.init_app(app)
 jwt = JWTManager(app)
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(goals_bp)
 
 @app.route('/')
 def home():

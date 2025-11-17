@@ -7,6 +7,7 @@ from marshmallow import ValidationError
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 user_schema = UserSchema()
 
+#Signup method
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
     
@@ -33,7 +34,7 @@ def signup():
         return jsonify({"error": "failed to create user"}), 500
         
 
-    
+#Login method
 @auth_bp.route('/login', methods=['POST'])
 def login():
     

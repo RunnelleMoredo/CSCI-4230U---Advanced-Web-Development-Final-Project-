@@ -13,3 +13,9 @@ class User(db.Model):
         
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+class Goal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(80), nullable=False)
+    description = db.Column(db.String(120), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
