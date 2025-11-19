@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Workout Session</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
+</head>
+<body>
+<div class="dashboard-container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="day-display">Workout Session</div>
+        <div>
+            <button class="btn btn-outline" onclick="window.location.href='/main'">Back to Explorer</button>
+            <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+        </div>
+    </div>
+
+    <!-- TIMER -->
+    <div class="card">
+        <h3>Session Timer</h3>
+        <div id="timerDisplay" style="font-size: 24px; font-weight:bold;">00:00</div>
+        <br>
+        <button class="btn btn-accent" id="startBtn">Start</button>
+        <button class="btn btn-outline" id="pauseBtn">Pause</button>
+        <button class="btn btn-outline" id="resetBtn">Reset</button>
+    </div>
+
+    <!-- EXERCISES & SETS -->
+    <div class="section-title">Exercises</div>
+    <div id="sessionExercises"></div>
+
+    <button class="btn btn-accent logout-btn" id="finishBtn">Finish Workout</button>
+
+</div>
+
+<script>
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+        alert("You must be logged in.");
+        window.location.href = "/";
+    }
+
+    /* THEME */
+    function applySavedTheme() {
+        const saved = localStorage.getItem("theme");
+        if (saved === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle("dark-mode");
+        const mode = document.body.classList.contains("dark-mode") ? "dark" : "light";
+        localStorage.setItem("theme", mode);
+    }
+
+    applySavedTheme();
+
+    /* TIMER LOGIC */
+    let timerInterval = null;
+    let secondsElapsed = 0;
+
+    const timerDisplay = document.getElementById("timerDisplay");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    function updateTimerDisplay() {
+        const minutes = String(Math.floor(secondsElapsed / 60)).padStart(2, "0");
+        const seconds = String(secondsElapsed % 60).padStart(2, "0");
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+    }
+
+    startBtn.addEventListener("click", () => {
+        if (timerInterval) return;
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            updateTimerDisplay();
+        }, 1000);
+    });
+
+    pauseBtn.addEventListener("click", () => {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    });
+
+    resetBtn.addEventListener("click", () => {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        secondsElapsed = 0;
+        updateTimerDisplay();
+    });
+
+    /* SESSION EXERCISES & SETS (front-end only for now) */
+    const sessionExercisesDiv = document.getElementById("sessionExercises");
+    const finishBtn = document.getElementById("finishBtn");
+
+    let sessionExercises = [];
+
+    function loadSelectedExercises() {
+        const stored = localStorage.getItem("selectedExercises");
+        if (!stored) {
+            alert("No exercises selected. Go back and choose exercises first.");
+            window.location.href = "/main";
+            return;
+        }
+        sessionExercises = JSON.parse(stored);
+        renderSessionExercises();
+    }
+
+    function renderSessionExercises() {
+        sessionExercisesDiv.innerHTML = "";
+        if (sessionExercises.length === 0) {
+            sessionExercisesDiv.innerHTML = "<p>No exercises in this session.</p>";
+            return;
+        }
+
+        sessionExercises.forEach((ex, idx) => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+                <h3>${ex.name}</h3>
+                <div id="sets_${idx}"></div>
+                <button class="btn btn-outline">Add Set</button>
+            `;
+
+            const addSetBtn = card.querySelector("button");
+            addSetBtn.addEventListener("click", () => addSet(idx));
+
+            sessionExercisesDiv.appendChild(card);
+        });
+    }
+
+    function addSet(exIdx) {
+        const setsContainer = document.getElementById(`sets_${exIdx}`);
+        const setDiv = document.createElement("div");
+        setDiv.className = "set-row";
+        setDiv.innerHTML = `
+            Reps: <input type="number" min="1" style="width:60px;">
+            Weight: <input type="number" min="0" style="width:60px;"> kg
+        `;
+        setsContainer.appendChild(setDiv);
+    }
+
+    finishBtn.addEventListener("click", () => {
+        // For now, just end the session on the front-end
+        alert("Workout session finished! (You can extend this to save to the backend.)");
+        // Clear selected exercises so next session starts fresh
+        localStorage.removeItem("selectedExercises");
+        window.location.href = "/main";
+    });
+
+    // Init
+    updateTimerDisplay();
+    loadSelectedExercises();
+</script>
+</body>
+</html>
