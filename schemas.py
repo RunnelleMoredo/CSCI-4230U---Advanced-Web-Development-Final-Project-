@@ -10,3 +10,9 @@ class GoalSchema(Schema):
     id = fields.Int(dump_only=True)
     title = fields.Str(required=True)
     description = fields.Str(required=True)
+    
+class WorkoutSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True)
+    target_muscles = fields.Str(required=True)
+    equipment = fields.Str(required=True)

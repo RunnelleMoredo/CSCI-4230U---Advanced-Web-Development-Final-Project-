@@ -22,8 +22,7 @@ class Goal(db.Model):
 
 class Workout(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    exercise = db.Column(db.String(80), nullable=False)
-    sets = db.Column(db.Integer, nullable=False)
-    reps = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String(80), nullable=False)
+    target_muscles = db.Column(db.String(80))
+    equipment = db.Column(db.String(80))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    day = db.Column(db.String(20), nullable=False)   # e.g., "Monday"

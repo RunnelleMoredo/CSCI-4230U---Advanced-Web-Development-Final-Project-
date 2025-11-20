@@ -96,3 +96,16 @@ body {
     background: var(--card);
     margin-bottom: 10px;
 }
+
+/* Workout Card */
+.workout_section {
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.modal-container {
+    display: none;
+
+}

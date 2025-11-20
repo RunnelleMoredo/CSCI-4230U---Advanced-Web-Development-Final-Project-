@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Exercise Explorer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/exercise.css') }}">
@@ -7,33 +8,34 @@
 
 <body>
 
-<h1>Exercise Explorer</h1>
+    <h1>Exercise Explorer</h1>
 
-<div class="search-card">
-    <input id="searchInput" placeholder="Search exercises... (e.g., bench)">
-    
-    <label>Body Part:</label>
-    <select id="bodyPartFilter">
-        <option value="">All</option>
-        <option value="back">Back</option>
-        <option value="cardio">Cardio</option>
-        <option value="chest">Chest</option>
-        <option value="lower arms">Lower Arms</option>
-        <option value="lower legs">Lower Legs</option>
-        <option value="neck">Neck</option>
-        <option value="shoulders">Shoulders</option>
-        <option value="upper arms">Upper Arms</option>
-        <option value="upper legs">Upper Legs</option>
-        <option value="waist">Waist</option>
-    </select>
+    <div class="search-card">
+        <input id="searchInput" placeholder="Search exercises... (e.g., bench)">
 
-    <button id="searchBtn">Search</button>
-</div>
+        <label>Body Part:</label>
+        <select id="bodyPartFilter">
+            <option value="">All</option>
+            <option value="back">Back</option>
+            <option value="cardio">Cardio</option>
+            <option value="chest">Chest</option>
+            <option value="lower arms">Lower Arms</option>
+            <option value="lower legs">Lower Legs</option>
+            <option value="neck">Neck</option>
+            <option value="shoulders">Shoulders</option>
+            <option value="upper arms">Upper Arms</option>
+            <option value="upper legs">Upper Legs</option>
+            <option value="waist">Waist</option>
+        </select>
 
-<h2>Results</h2>
-<div id="exerciseResults" class="exercise-grid"></div>
+        <button id="searchBtn">Search</button>
+    </div>
 
-<script src="{{ url_for('static', filename='scripts/exercise.js') }}"></script>
+    <h2>Results</h2>
+    <div id="exerciseResults" class="exercise-grid"></div>
+
+    <script src="{{ url_for('static', filename='scripts/exercise.js') }}"></script>
 
 </body>
+
 </html>

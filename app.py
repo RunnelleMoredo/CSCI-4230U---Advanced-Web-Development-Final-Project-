@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 from auth import auth_bp
 from goals import goals_bp
-from workouts import workouts_bp
+from workout import workout_bp
 from models import db
 
 # Load environment variables
@@ -23,7 +23,7 @@ jwt = JWTManager(app)
 # Register Blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(goals_bp)
-app.register_blueprint(workouts_bp)
+app.register_blueprint(workout_bp)
 
 # ================================
 # PAGE ROUTES
@@ -49,40 +49,6 @@ def session_page():
 @app.route('/exercise')
 def exercise_page():
     return render_template('exercise.html')
-
-
-# ================================
-# EXERCISE SEARCH API (No API Key)
-# ================================
-@app.route("/api/exercises/search")
-def exercise_search():
-    query = request.args.get("q", "").strip().lower()
-    body_part = request.args.get("bodyPart", "").strip().lower()
-
-    BASE = "https://exercisedb-api.vercel.app/api/v1/exercises"
-
-    # Build correct API endpoint
-    if query:
-        url = f"{BASE}/name/{query}"
-    elif body_part and body_part != "all":
-        url = f"{BASE}/bodyPart/{body_part}"
-    else:
-        url = BASE
-
-    print("FETCH →", url)
-
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-    except Exception as e:
-        print("API ERROR:", e)
-        return jsonify({"error": "Failed to load exercises"}), 500
-
-    return jsonify(data[:20])
-
-
-
 
 
 # ================================
