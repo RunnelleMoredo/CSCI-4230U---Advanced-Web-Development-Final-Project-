@@ -13,10 +13,13 @@
     <header class="top-header">
         <h1>Welcome</h1>
 
-        <!-- ⭐ NEW CLEAN THEME TOGGLE BUTTON -->
-        <button id="btn_toggle_theme" class="btn btn-outline theme-toggle-btn">
-            Dark Mode
-        </button>
+        <div class="theme-switch">
+            <input type="checkbox" id="theme_toggle_checkbox">
+            <label for="theme_toggle_checkbox" class="theme-slider">
+                <span class="sun">🌞</span>
+                <span class="moon">🌙</span>
+            </label>
+        </div>
     </header>
 
     <!-- GOAL CREATION CARD -->
@@ -56,7 +59,7 @@
     </section>
 </div>
 
-<!-- MODAL OVERLAY -->
+<!-- MODAL -->
 <div id="modal_container" class="modal-overlay">
     <div class="modal-card">
 
