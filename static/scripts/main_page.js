@@ -1,33 +1,29 @@
 // ---------- Theme Toggle ----------
-const themeBtn = document.getElementById("btn_toggle_theme");
+const themeCheckbox = document.getElementById("theme_toggle_checkbox");
 
 function applySavedTheme() {
     const saved = localStorage.getItem("theme");
 
     if (saved === "dark") {
         document.body.classList.add("dark-mode");
-        if (themeBtn) themeBtn.textContent = "Light Mode";
+        if (themeCheckbox) themeCheckbox.checked = true;
     } else {
         document.body.classList.remove("dark-mode");
-        if (themeBtn) themeBtn.textContent = "Dark Mode";
+        if (themeCheckbox) themeCheckbox.checked = false;
     }
 }
 
-if (themeBtn) {
-    themeBtn.addEventListener("click", () => {
-        const nowDark = document.body.classList.toggle("dark-mode");
-        localStorage.setItem("theme", nowDark ? "dark" : "light");
-
-        themeBtn.textContent = nowDark ? "Light Mode" : "Dark Mode";
+if (themeCheckbox) {
+    themeCheckbox.addEventListener("change", () => {
+        const dark = themeCheckbox.checked;
+        document.body.classList.toggle("dark-mode", dark);
+        localStorage.setItem("theme", dark ? "dark" : "light");
     });
 }
 
 applySavedTheme();
 
-
-
-// ---------- Auth & Navigation ----------
-
+// ===== AUTH & NAVIGATION =====
 const logoutBtn = document.getElementById('btn_logout');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
@@ -43,8 +39,7 @@ if (goalsBtn) {
     });
 }
 
-// ---------- Create Goal ----------
-
+// ===== CREATE GOAL =====
 const submitGoalBtn = document.getElementById('btn_submit');
 if (submitGoalBtn) {
     submitGoalBtn.addEventListener('click', async () => {
@@ -82,7 +77,6 @@ if (submitGoalBtn) {
         }
     });
 }
-
 // ---------- Workout Search & Selection ----------
 
 const token = localStorage.getItem('access_token');
