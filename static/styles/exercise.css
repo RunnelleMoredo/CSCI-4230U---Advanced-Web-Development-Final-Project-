@@ -50,3 +50,19 @@ input, select {
     height: 180px;
     object-fit: contain;
 }
+
+.shake {
+    animation: shake 0.35s ease;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0px); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0px); }
+}
+
+.flash-border {
+    box-shadow: 0 0 0 3px var(--accent-color);
+}

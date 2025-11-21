@@ -1,166 +1,138 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Workout Session</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
 </head>
+<body class="dark-mode">
+<div class="dashboard-container">
 
-<body>
-    <div class="dashboard-container">
+    <header class="top-header">
+        <h1>Workout Session</h1>
+        <button id="btn_back_main" class="btn btn-outline">Back to Main</button>
+    </header>
 
-        <!-- HEADER -->
-        <div class="header">
-            <div class="day-display">Workout Session</div>
-            <div>
-                <button class="btn btn-outline" onclick="window.location.href='/main'">Back to Explorer</button>
-                <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
-            </div>
+    <section class="card" id="session_container">
+        <!-- JS will fill this -->
+    </section>
+
+    <section class="card">
+        <h2>Session Timer</h2>
+        <div class="timer-display" id="timer_display">00:00</div>
+        <div class="timer-controls">
+            <button id="btn_timer_start" class="btn btn-accent">Start</button>
+            <button id="btn_timer_pause" class="btn btn-outline">Pause</button>
+            <button id="btn_timer_reset" class="btn btn-danger">Reset</button>
         </div>
+    </section>
 
-        <!-- TIMER -->
-        <div class="card">
-            <h3>Session Timer</h3>
-            <div id="timerDisplay" style="font-size: 24px; font-weight:bold;">00:00</div>
-            <br>
-            <button class="btn btn-accent" id="startBtn">Start</button>
-            <button class="btn btn-outline" id="pauseBtn">Pause</button>
-            <button class="btn btn-outline" id="resetBtn">Reset</button>
-        </div>
+</div>
 
-        <!-- EXERCISES & SETS -->
-        <div class="section-title">Exercises</div>
-        <div id="sessionExercises"></div>
+<script>
+    const sessionContainer = document.getElementById('session_container');
+    const exercises = JSON.parse(localStorage.getItem('selectedExercises') || '[]');
 
-        <button class="btn btn-accent logout-btn" id="finishBtn">Finish Workout</button>
+    // Back button
+    document.getElementById('btn_back_main').addEventListener('click', () => {
+        window.location.href = "/main";
+    });
 
-    </div>
+    if (!exercises.length) {
+        sessionContainer.innerHTML = `
+            <h2>No Exercises Selected</h2>
+            <p>Go back to the main page and add some workouts to your session.</p>
+        `;
+    } else {
+        sessionContainer.innerHTML = "<h2>Today's Workout</h2>";
 
-    <script>
-        const token = localStorage.getItem("access_token");
-        if (!token) {
-            alert("You must be logged in.");
-            window.location.href = "/";
-        }
+        exercises.forEach((ex, idx) => {
+            const card = document.createElement('div');
+            card.className = "workout-card selected-card";
 
-        /* THEME */
-        function applySavedTheme() {
-            const saved = localStorage.getItem("theme");
-            if (saved === "dark") {
-                document.body.classList.add("dark-mode");
-            }
-        }
-
-        function toggleTheme() {
-            document.body.classList.toggle("dark-mode");
-            const mode = document.body.classList.contains("dark-mode") ? "dark" : "light";
-            localStorage.setItem("theme", mode);
-        }
-
-        applySavedTheme();
-
-        /* TIMER LOGIC */
-        let timerInterval = null;
-        let secondsElapsed = 0;
-
-        const timerDisplay = document.getElementById("timerDisplay");
-        const startBtn = document.getElementById("startBtn");
-        const pauseBtn = document.getElementById("pauseBtn");
-        const resetBtn = document.getElementById("resetBtn");
-
-        function updateTimerDisplay() {
-            const minutes = String(Math.floor(secondsElapsed / 60)).padStart(2, "0");
-            const seconds = String(secondsElapsed % 60).padStart(2, "0");
-            timerDisplay.textContent = `${minutes}:${seconds}`;
-        }
-
-        startBtn.addEventListener("click", () => {
-            if (timerInterval) return;
-            timerInterval = setInterval(() => {
-                secondsElapsed++;
-                updateTimerDisplay();
-            }, 1000);
-        });
-
-        pauseBtn.addEventListener("click", () => {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-        });
-
-        resetBtn.addEventListener("click", () => {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-            secondsElapsed = 0;
-            updateTimerDisplay();
-        });
-
-        /* SESSION EXERCISES & SETS (front-end only for now) */
-        const sessionExercisesDiv = document.getElementById("sessionExercises");
-        const finishBtn = document.getElementById("finishBtn");
-
-        let sessionExercises = [];
-
-        function loadSelectedExercises() {
-            const stored = localStorage.getItem("selectedExercises");
-            if (!stored) {
-                alert("No exercises selected. Go back and choose exercises first.");
-                window.location.href = "/main";
-                return;
-            }
-            sessionExercises = JSON.parse(stored);
-            renderSessionExercises();
-        }
-
-        function renderSessionExercises() {
-            sessionExercisesDiv.innerHTML = "";
-            if (sessionExercises.length === 0) {
-                sessionExercisesDiv.innerHTML = "<p>No exercises in this session.</p>";
-                return;
-            }
-
-            sessionExercises.forEach((ex, idx) => {
-                const card = document.createElement("div");
-                card.className = "card";
-                card.innerHTML = `
+            card.innerHTML = `
                 <h3>${ex.name}</h3>
-                <div id="sets_${idx}"></div>
-                <button class="btn btn-outline">Add Set</button>
+                <img src="${ex.gifUrl || ''}" class="workout-gif" alt="${ex.name}">
+                <p><strong>Suggested:</strong> ${ex.sets} sets × ${ex.reps} reps</p>
+                <div id="sets_${idx}" class="logged-sets"></div>
+                <button class="btn btn-outline btn-add-set">Add Set</button>
             `;
 
-                const addSetBtn = card.querySelector("button");
-                addSetBtn.addEventListener("click", () => addSet(idx));
+            const setsContainer = card.querySelector(`#sets_${idx}`);
+            const addSetBtn = card.querySelector('.btn-add-set');
 
-                sessionExercisesDiv.appendChild(card);
+            let setCount = 0;
+
+            addSetBtn.addEventListener('click', () => {
+                setCount += 1;
+                const row = document.createElement('div');
+                row.className = "logged-set-row";
+                row.innerHTML = `
+                    Set ${setCount}:
+                    Reps <input type="number" min="1" value="${ex.reps}" style="width:60px;">
+                    Weight (kg) <input type="number" min="0" value="0" style="width:70px;">
+                `;
+                setsContainer.appendChild(row);
             });
-        }
 
-        function addSet(exIdx) {
-            const setsContainer = document.getElementById(`sets_${exIdx}`);
-            const setDiv = document.createElement("div");
-            setDiv.className = "set-row";
-            setDiv.innerHTML = `
-            Reps: <input type="number" min="1" style="width:60px;">
-            Weight: <input type="number" min="0" style="width:60px;"> kg
-        `;
-            setsContainer.appendChild(setDiv);
-        }
-
-        finishBtn.addEventListener("click", () => {
-            // For now, just end the session on the front-end
-            alert("Workout session finished! (You can extend this to save to the backend.)");
-            // Clear selected exercises so next session starts fresh
-            localStorage.removeItem("selectedExercises");
-            window.location.href = "/main";
+            sessionContainer.appendChild(card);
         });
 
-        // Init
-        updateTimerDisplay();
-        loadSelectedExercises();
-    </script>
-</body>
+        const finishBtn = document.createElement('button');
+        finishBtn.textContent = "Finish Workout";
+        finishBtn.className = "btn btn-accent";
+        finishBtn.style.marginTop = "15px";
 
+        finishBtn.addEventListener('click', () => {
+            if (confirm("Finish and clear current workout?")) {
+                localStorage.removeItem('selectedExercises');
+                window.location.href = "/main";
+            }
+        });
+
+        sessionContainer.appendChild(finishBtn);
+    }
+
+    // ===== TIMER LOGIC =====
+    const timerDisplay = document.getElementById('timer_display');
+    const btnStart = document.getElementById('btn_timer_start');
+    const btnPause = document.getElementById('btn_timer_pause');
+    const btnReset = document.getElementById('btn_timer_reset');
+
+    let seconds = 0;
+    let timerId = null;
+
+    function renderTime() {
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        timerDisplay.textContent = `${m}:${s}`;
+    }
+
+    btnStart.addEventListener('click', () => {
+        if (timerId !== null) return;
+        timerId = setInterval(() => {
+            seconds += 1;
+            renderTime();
+        }, 1000);
+    });
+
+    btnPause.addEventListener('click', () => {
+        if (timerId !== null) {
+            clearInterval(timerId);
+            timerId = null;
+        }
+    });
+
+    btnReset.addEventListener('click', () => {
+        seconds = 0;
+        renderTime();
+        if (timerId !== null) {
+            clearInterval(timerId);
+            timerId = null;
+        }
+    });
+
+    renderTime();
+</script>
+</body>
 </html>

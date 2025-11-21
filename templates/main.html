@@ -1,82 +1,95 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Main Page</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
 </head>
 
 <body>
-    <div class="container">
+<div class="dashboard-container">
 
-        <div class="header">
-            <h1>Welcome</h1>
-            <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
-        </div>
+    <!-- HEADER -->
+    <header class="top-header">
+        <h1>Welcome</h1>
 
-        <div class="card">
-            <h2>Create a Goal</h2>
-            <label>Title:</label><br>
-            <input type="text" id="text_title"><br><br>
+        <!-- ⭐ NEW CLEAN THEME TOGGLE BUTTON -->
+        <button id="btn_toggle_theme" class="btn btn-outline theme-toggle-btn">
+            Dark Mode
+        </button>
+    </header>
 
-            <label>Description:</label><br>
-            <textarea id="text_description" rows="4"></textarea><br><br>
+    <!-- GOAL CREATION CARD -->
+    <section class="card">
+        <h2>Create a Goal</h2>
 
-            <button id="btn_submit" class="btn btn-accent">Submit Goal</button>
-        </div>
+        <label for="text_title">Title:</label>
+        <input type="text" id="text_title" class="input-full">
 
-        <div class="workout_section">
+        <label for="text_description">Description:</label>
+        <textarea id="text_description" rows="4" class="input-full"></textarea>
 
+        <button id="btn_submit" class="btn btn-accent">Submit Goal</button>
+    </section>
+
+    <!-- WORKOUT EXPLORER -->
+    <section class="card">
         <h2>Workout</h2>
 
-        <label>Find Workout:</label>
-        <input type="text" id="find_workout"><br><br>
-        <button id="btn_find_workout">Search</button><br><br>
-
-        <h3>Search Results:</h3>
-        <ul id="search_results"></ul>
-
-        <h3>Selected Workouts:</h3>
-        <ul id="selected_workouts"></ul>
-        <div class="modal-container" id="modal_container">
-            <div class="modal">
-                <h1>Exercise Description</h1>
-                <p><strong>Name: <span id="modal_name"></span></p>
-                <p><strong>Target Muscles: <span id="modal_target_muscles"></span></p>
-                <p><strong>Secondary Muscles: <span id="modal_secondary_muscles"></span></p>
-                <p><strong>Equipment: <span id="modal_equipment"></span></p>
-                <p><strong>Instructions: <span id="modal_instructions"></span></p>
-                <img id="modal_gif" />
-                <button id="btn_close_modal">Close</button>
-            </div>
-        </div>
-    </div>
-
-        <div class="card">
-            <button id="btn_goals" class="btn btn-outline">View Your Goals</button>
-            <button id="btn_logout" class="btn btn-accent">Logout</button>
+        <div class="workout-search-row">
+            <label for="find_workout">Find Workout:</label>
+            <input type="text" id="find_workout" placeholder="e.g., bench press">
+            <button id="btn_find_workout" class="btn btn-accent">Search</button>
         </div>
 
+        <h3>Search Results</h3>
+        <div id="search_results" class="workout-grid"></div>
+
+        <h3>Selected Workouts</h3>
+        <div id="selected_workouts" class="workout-grid"></div>
+    </section>
+
+    <!-- NAVIGATION CARD -->
+    <section class="card nav-card">
+        <button id="btn_goals" class="btn btn-outline">View Your Goals</button>
+        <button id="btn_logout" class="btn btn-danger">Logout</button>
+    </section>
+</div>
+
+<!-- MODAL OVERLAY -->
+<div id="modal_container" class="modal-overlay">
+    <div class="modal-card">
+
+        <div class="modal-header">
+            <h2 id="modal_name"></h2>
+            <button id="btn_close_modal" class="modal-close">✕</button>
+        </div>
+
+        <img id="modal_gif" class="modal-gif">
+
+        <div class="modal-section">
+            <h3>Target Muscles</h3>
+            <p id="modal_target_muscles"></p>
+        </div>
+
+        <div class="modal-section">
+            <h3>Secondary Muscles</h3>
+            <p id="modal_secondary_muscles"></p>
+        </div>
+
+        <div class="modal-section">
+            <h3>Equipment</h3>
+            <p id="modal_equipment"></p>
+        </div>
+
+        <div class="modal-section">
+            <h3>Instructions</h3>
+            <p id="modal_instructions"></p>
+        </div>
+
     </div>
+</div>
 
-    <script src="{{ url_for('static', filename='scripts/main_page.js') }}"></script>
-    <script>
-        function applySavedTheme() {
-            const saved = localStorage.getItem("theme");
-            if (saved === "dark") {
-                document.body.classList.add("dark-mode");
-            }
-        }
-        function toggleTheme() {
-            document.body.classList.toggle("dark-mode");
-            localStorage.setItem("theme",
-                document.body.classList.contains("dark-mode") ? "dark" : "light"
-            );
-        }
-
-        applySavedTheme();
-    </script>
-
+<script src="{{ url_for('static', filename='scripts/main_page.js') }}"></script>
 </body>
-
 </html>
