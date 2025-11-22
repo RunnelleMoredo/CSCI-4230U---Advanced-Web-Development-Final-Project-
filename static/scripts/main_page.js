@@ -354,6 +354,77 @@ if (searchBtn && searchInput && searchResults) {
         }
     });
 }
+/* ==============================================
+   WORKOUT HISTORY — LOAD + RENDER
+================================================ */
+
+function loadWorkoutHistory() {
+    const historyCard = document.getElementById("history_card");
+    const list = document.getElementById("history_list");
+
+    if (!historyCard || !list) return;
+
+    const history = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
+
+    if (!history.length) {
+        historyCard.style.display = "none";
+        return;
+    }
+
+    historyCard.style.display = "block";
+    list.innerHTML = "";
+
+    history.forEach((entry, idx) => {
+        const date = new Date(entry.date);
+        const minutes = Math.floor(entry.durationSeconds / 60);
+        const seconds = entry.durationSeconds % 60;
+
+        const div = document.createElement("div");
+        div.className = "history-entry";
+
+        div.innerHTML = `
+            <div class="history-header" data-index="${idx}">
+                <span>${date.toLocaleString()}</span>
+                <span>${minutes}m ${seconds}s ▾</span>
+            </div>
+
+            <div class="history-details" id="history_details_${idx}">
+                ${entry.exercises.map(ex => `
+                    <div class="history-row">
+                        <strong>${ex.name}</strong><br>
+                        Sets: ${ex.totalSets}, Reps: ${ex.totalReps}
+                        ${ex.totalVolume ? `, Volume: ${ex.totalVolume.toFixed(1)} kg` : ""}
+                    </div>
+                `).join("")}
+            </div>
+        `;
+
+        list.appendChild(div);
+    });
+
+    // Expand/collapse logic
+    document.querySelectorAll(".history-header").forEach(header => {
+        header.addEventListener("click", () => {
+            const id = header.dataset.index;
+            const details = document.getElementById(`history_details_${id}`);
+            details.style.display = details.style.display === "block" ? "none" : "block";
+        });
+    });
+}
+
+// Clear history
+const clearHistoryBtn = document.getElementById("btn_clear_history");
+if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener("click", () => {
+        if (confirm("Clear all workout history?")) {
+            localStorage.removeItem("workoutHistory");
+            loadWorkoutHistory();
+        }
+    });
+}
+
+// INIT on page load
+loadWorkoutHistory();
 
 
 // init
