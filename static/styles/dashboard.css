@@ -745,3 +745,487 @@ body:not(.dark-mode) .auth-input::placeholder {
     align-items: center;
     cursor: pointer;
 }
+
+/* ========================
+   Session page polish
+   ======================== */
+
+/* Animate session cards in */
+.workout-card.selected-card {
+    animation: sessionCardIn 0.25s ease-out;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.workout-card.selected-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes sessionCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Logged sets look like small pills */
+.logged-sets {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.logged-set-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 0.9rem;
+}
+
+.dark-mode .logged-set-row {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.logged-set-row .set-label {
+    font-weight: 600;
+}
+
+.logged-set-row .set-inputs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.logged-set-row input[type="number"] {
+    width: 60px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+}
+
+/* ========================
+   Summary overlay
+   ======================== */
+
+.summary-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+}
+
+.summary-overlay.visible {
+    display: flex;
+}
+
+.summary-card {
+    background: var(--card);
+    color: var(--text);
+    padding: 20px 24px;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.5);
+}
+
+.summary-card h2 {
+    margin-top: 0;
+    margin-bottom: 6px;
+}
+
+.summary-card #summary_time {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.summary-row {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+/* =============================
+   WORKOUT HISTORY SECTION
+============================= */
+
+#history_card {
+    margin-top: 20px;
+    display: none; /* Hidden unless history exists */
+}
+
+.history-entry {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    margin-bottom: 10px;
+    transition: all 0.25s ease;
+}
+
+.history-entry:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.history-details {
+    margin-top: 8px;
+    padding-left: 8px;
+    display: none;
+    animation: fadeDetails 0.25s ease-out;
+}
+
+@keyframes fadeDetails {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.history-row {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    border-left: 3px solid var(--accent);
+    padding-left: 6px;
+}
+
+/* =============================
+   MAIN PAGE PREMIUM LAYOUT
+============================= */
+
+.main-hero {
+    background: linear-gradient(135deg, #22c55e, #0f766e);
+    color: #fff;
+    padding: 18px 20px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.hero-text h1 {
+    margin: 0 0 4px 0;
+}
+
+.hero-text p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+}
+
+.hero-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Theme switch pill */
+.theme-switch {
+    position: relative;
+    width: 140px;
+    height: 32px;
+}
+
+.theme-switch input {
+    display: none;
+}
+
+.theme-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.2);
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-slider::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: calc(50% - 6px);
+    height: calc(100% - 6px);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+    transition: transform 0.25s ease;
+}
+
+.theme-switch input:checked + .theme-slider::before {
+    transform: translateX(100%);
+}
+
+.theme-slider .sun,
+.theme-slider .moon {
+    position: relative;
+    z-index: 1;
+}
+
+/* Main grid: goals + explorer */
+.main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Elevated cards for main sections */
+.card-elevated {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+/* Section headings */
+.section-heading {
+    margin: 0 0 4px 0;
+}
+
+.section-subtitle {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    opacity: 0.85;
+}
+
+/* Inputs */
+.input-full {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
+/* Workout search layout */
+.workout-search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.workout-search-row input {
+    flex: 1;
+}
+
+/* Workout grid for results + selected */
+.workout-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 12px;
+}
+
+/* Generic card look for any child of workout-grid */
+.workout-grid > * {
+    list-style: none;
+    background: var(--card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.workout-grid > *:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+    border-color: var(--accent);
+}
+
+.workout-grid img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Selected workout item extra look */
+.selected-workout-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 4px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Full width button */
+.full-width {
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* Nav buttons row */
+.nav-card .nav-buttons-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* History section */
+#history_card {
+    margin-top: 20px;
+    display: none;
+}
+
+
+/* =============================
+   SESSION PAGE PREMIUM LAYOUT
+============================= */
+
+.session-page .dashboard-container {
+    max-width: 900px;
+    margin: auto;
+}
+
+.session-header {
+    margin-bottom: 16px;
+}
+
+.session-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Timer bar */
+.session-timer-card {
+    position: sticky;
+    top: 10px;
+    z-index: 10;
+    margin-bottom: 18px;
+}
+
+.session-timer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+/* Session workouts layout */
+.session-workouts-card {
+    margin-top: 10px;
+}
+
+/* Exercise cards in session */
+.session-exercise-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.session-exercise-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.session-exercise-meta {
+    margin: 2px 0 0 0;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.session-gif {
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+/* Logged sets styling (already defined earlier, this tweaks for session) */
+.session-page .logged-set-row {
+    background: rgba(148, 163, 184, 0.08);
+}
+
+.session-card-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Finish workout CTA */
+.finish-workout-btn {
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* Back button spacing */
+.back-main-btn {
+    margin-top: 16px;
+}
+
+/* Better form spacing inside cards */
+.card label {
+    display: block;
+    margin: 12px 0 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.input-full {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+/* Highlight fields nicely on focus */
+.input-full:focus,
+.input-full:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent) inset;
+}
