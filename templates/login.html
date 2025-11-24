@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Login / Sign Up</title>
@@ -8,36 +9,37 @@
 
 <body>
 
-<!-- VIDEO BACKGROUND -->
-<div class="video-container">
-    <video autoplay loop muted playsinline class="bg-video">
-        <source src="{{ url_for('static', filename='media/gym_bg.mp4') }}" type="video/mp4">
-    </video>
-</div>
-
-<!-- DARK OVERLAY -->
-<div class="video-overlay"></div>
-
-<!-- LOGIN CARD -->
-<div class="auth-wrapper">
-    <div class="auth-card glass-card">
-
-        <h1 class="auth-title">Welcome Back</h1>
-        <p class="auth-subtitle">Stay consistent. Track your workouts.</p>
-
-        <input type="text" id="username" class="auth-input" placeholder="Username">
-        <input type="password" id="password" class="auth-input" placeholder="Password">
-
-        <button id="btn_login" class="btn btn-accent auth-btn">Login</button>
-        <button id="btn_signup" class="btn btn-outline auth-btn">Sign Up</button>
-
-        <p id="auth_message" class="auth-message"></p>
-
-        <button id="btn_toggle_theme" class="btn btn-outline theme-toggle-btn">Dark Mode</button>
+    <!-- VIDEO BACKGROUND -->
+    <div class="video-container">
+        <video autoplay loop muted playsinline class="bg-video">
+            <source src="{{ url_for('static', filename='media/gym_bg.mp4') }}" type="video/mp4">
+        </video>
     </div>
-</div>
 
-<script src="{{ url_for('static', filename='scripts/authorization.js') }}"></script>
+    <!-- DARK OVERLAY -->
+    <div class="video-overlay"></div>
+
+    <!-- LOGIN CARD -->
+    <div class="auth-wrapper">
+        <div class="auth-card glass-card">
+
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Stay consistent. Track your workouts.</p>
+
+            <input type="text" id="username" class="auth-input" placeholder="Username">
+            <input type="password" id="password" class="auth-input" placeholder="Password">
+
+            <button id="btn_login" class="btn btn-accent auth-btn">Login</button>
+            <button id="btn_signup" class="btn btn-outline auth-btn">Sign Up</button>
+
+            <p id="auth_message" class="auth-message"></p>
+
+            <button id="btn_toggle_theme" class="btn btn-outline theme-toggle-btn">Dark Mode</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='scripts/authorization.js') }}"></script>
 
 </body>
+
 </html>

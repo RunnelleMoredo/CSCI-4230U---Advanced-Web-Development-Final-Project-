@@ -45,7 +45,7 @@ def goals_page():
 def session_page():
     return render_template('session.html')
 
-# NEW: Exercise Explorer page
+# Exercise Explorer page
 @app.route('/exercise')
 def exercise_page():
     return render_template('exercise.html')

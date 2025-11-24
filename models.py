@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
@@ -20,9 +21,9 @@ class Goal(db.Model):
     description = db.Column(db.String(120), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-class Workout(db.Model):
+class Session(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    target_muscles = db.Column(db.String(80))
-    equipment = db.Column(db.String(80))
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    duration_seconds = db.Column(db.Integer)
+    details = db.Column(db.JSON)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

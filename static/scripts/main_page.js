@@ -354,9 +354,8 @@ if (searchBtn && searchInput && searchResults) {
         }
     });
 }
-/* ==============================================
-   WORKOUT HISTORY — LOAD + RENDER
-================================================ */
+// =========== WORKOUT HISTORY — LOAD + RENDER ===========
+
 
 function loadWorkoutHistory() {
     const historyCard = document.getElementById("history_card");

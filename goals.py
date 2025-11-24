@@ -16,7 +16,10 @@ def load_user():
 @goals_bp.route("/", methods=["POST"])
 @jwt_required()
 def create_goal():
-    load_user()
+    try:
+        load_user()
+    except:
+        return jsonify({"error": "Could not load current user"}), 400
 
     data = request.get_json()
     title = data.get("title")
