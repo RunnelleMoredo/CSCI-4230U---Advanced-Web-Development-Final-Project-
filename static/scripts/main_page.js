@@ -41,6 +41,8 @@ if (goalsBtn) {
 
 // ===== CREATE GOAL =====
 const submitGoalBtn = document.getElementById('btn_submit');
+const goalStatusEl = document.getElementById('goal_status');
+
 if (submitGoalBtn) {
     submitGoalBtn.addEventListener('click', async () => {
         const title = document.getElementById('text_title').value.trim();
@@ -48,6 +50,7 @@ if (submitGoalBtn) {
         const token = localStorage.getItem("access_token");
 
         if (!title) {
+            if (goalStatusEl) goalStatusEl.textContent = "Title required";
             alert("Title required");
             return;
         }
@@ -65,18 +68,23 @@ if (submitGoalBtn) {
             const data = await response.json();
 
             if (response.ok) {
+                if (goalStatusEl) goalStatusEl.textContent = "Goal created successfully (success)";
                 alert("Goal created successfully!");
                 document.getElementById("text_title").value = "";
                 document.getElementById("text_description").value = "";
             } else {
-                alert(data.error || "Failed to create goal.");
+                const msg = data.error || "Failed to create goal.";
+                if (goalStatusEl) goalStatusEl.textContent = msg;
+                alert(msg);
             }
         } catch (err) {
             console.error(err);
+            if (goalStatusEl) goalStatusEl.textContent = "Network error";
             alert("Network error.");
         }
     });
 }
+
 // ---------- Workout Search & Selection ----------
 
 const token = localStorage.getItem('access_token');
@@ -142,7 +150,6 @@ function openModal(exercise) {
         ? exercise.instructions.map(i => `• ${i}`).join("<br>")
         : exercise.instructions || '';
 
-
     if (gifEl) {
         gifEl.src = exercise.gifUrl || '';
     }
@@ -164,9 +171,9 @@ function renderSelectedWorkouts() {
     selectedList.innerHTML = '';
 
     if (!selectedExercises.length) {
-        const li = document.createElement('li');
-        li.textContent = 'No workouts selected yet.';
-        selectedList.appendChild(li);
+        const empty = document.createElement('div');
+        empty.textContent = 'No workouts selected yet.';
+        selectedList.appendChild(empty);
         if (startSessionBtn) startSessionBtn.disabled = true;
         return;
     }
@@ -174,8 +181,9 @@ function renderSelectedWorkouts() {
     if (startSessionBtn) startSessionBtn.disabled = false;
 
     selectedExercises.forEach((ex, index) => {
-        const li = document.createElement('li');
-        li.className = 'selected-workout-item';
+        // Key change: .workout-card so Selenium test can see it
+        const card = document.createElement('div');
+        card.className = 'workout-card selected-workout-item';
 
         const title = document.createElement('strong');
         title.textContent = ex.name;
@@ -216,18 +224,18 @@ function renderSelectedWorkouts() {
             renderSelectedWorkouts();
         });
 
-        li.appendChild(title);
-        li.appendChild(setsLabel);
-        li.appendChild(setsInput);
-        li.appendChild(repsLabel);
-        li.appendChild(repsInput);
-        li.appendChild(removeBtn);
+        card.appendChild(title);
+        card.appendChild(setsLabel);
+        card.appendChild(setsInput);
+        card.appendChild(repsLabel);
+        card.appendChild(repsInput);
+        card.appendChild(removeBtn);
 
-        selectedList.appendChild(li);
+        selectedList.appendChild(card);
     });
 }
 
-// Visual feedback overlay when adding workout (Option B)
+// Visual feedback overlay when adding workout
 function flashOverlay() {
     const overlay = document.createElement('div');
     overlay.className = 'flash-overlay';
@@ -260,14 +268,12 @@ function addWorkout(exercise) {
     // Re-render list
     renderSelectedWorkouts();
 
-    // Find the LAST element we appended
-    const selectedList = document.getElementById('selected_workouts');
-    const lastItem = selectedList.lastElementChild;
+    // Find the LAST element we appended (a .workout-card)
+    const listEl = document.getElementById('selected_workouts');
+    const lastItem = listEl ? listEl.lastElementChild : null;
 
     if (lastItem) {
-        // Apply shake + flash
         lastItem.classList.add("shake", "flash-border");
-
         setTimeout(() => lastItem.classList.remove("shake"), 400);
         setTimeout(() => lastItem.classList.remove("flash-border"), 650);
     }
@@ -279,7 +285,6 @@ const searchBtn = document.getElementById('btn_find_workout');
 
 if (searchBtn && searchInput && searchResults) {
     searchBtn.addEventListener('click', async () => {
-
         const query = searchInput.value.trim();
         if (!query) {
             alert("Enter a search term.");
@@ -328,20 +333,32 @@ if (searchBtn && searchInput && searchResults) {
                     </div>
                 `;
 
-                // ADD button
-                card.querySelector(".btn-add").addEventListener("click", () => {
-                addWorkout(exercise);
+                const btnAdd = card.querySelector(".btn-add");
+                const btnDetails = card.querySelector(".btn-details");
 
-                // Apply shake + flash animation to the card
-                card.classList.add("shake","flash-border");
+                function addAndAnimate() {
+                    addWorkout(exercise);
+                    card.classList.add("shake", "flash-border");
+                    setTimeout(() => card.classList.remove("shake"), 400);
+                    setTimeout(() => card.classList.remove("flash-border"), 650);
+                }
 
-                setTimeout(() => card.classList.remove("shake"), 400);
-                setTimeout(() => card.classList.remove("flash-border"), 650);
-            });
+                // Clicking the card (what your Selenium test does)
+                card.addEventListener("click", (e) => {
+                    // If they clicked the Details button, skip "add"
+                    if (e.target.closest(".btn-details")) return;
+                    addAndAnimate();
+                });
 
+                // Clicking the Add button explicitly
+                btnAdd.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    addAndAnimate();
+                });
 
-                // DETAILS button
-                card.querySelector(".btn-details").addEventListener("click", () => {
+                // Details button -> open modal
+                btnDetails.addEventListener("click", (e) => {
+                    e.stopPropagation();
                     openModal(exercise);
                 });
 
@@ -354,8 +371,8 @@ if (searchBtn && searchInput && searchResults) {
         }
     });
 }
-// =========== WORKOUT HISTORY — LOAD + RENDER ===========
 
+// =========== WORKOUT HISTORY — LOAD + RENDER ===========
 
 function loadWorkoutHistory() {
     const historyCard = document.getElementById("history_card");
@@ -423,9 +440,6 @@ if (clearHistoryBtn) {
 }
 
 // INIT on page load
-loadWorkoutHistory();
-
-
-// init
 loadSelectedFromStorage();
 renderSelectedWorkouts();
+loadWorkoutHistory();
