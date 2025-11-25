@@ -38,13 +38,17 @@
                 <p class="section-subtitle">Capture what you want to accomplish today.</p>
 
                 <label for="text_title">Title</label>
-                <input type="text" id="text_title" class="input-full" placeholder="e.g., Study 2 hours, Hit 8k steps">
+                <input type="text" id="text_title" class="input-full"
+                       placeholder="e.g., Study 2 hours, Hit 8k steps">
 
                 <label for="text_description">Description</label>
                 <textarea id="text_description" rows="4" class="input-full"
-                    placeholder="Add details, time, or any notes..."></textarea>
+                          placeholder="Add details, time, or any notes..."></textarea>
 
                 <button id="btn_submit" class="btn btn-accent full-width">Save Goal</button>
+
+                <!-- NEW: status line so Selenium can see 'success' / 'Title required' -->
+                <p id="goal_status" class="goal-status-text"></p>
             </section>
 
             <!-- WORKOUT EXPLORER -->
@@ -54,7 +58,7 @@
 
                 <div class="workout-search-row">
                     <input type="text" id="find_workout" class="input-full"
-                        placeholder="Search exercises (e.g., bench, squat)">
+                           placeholder="Search exercises (e.g., bench, squat)">
                     <button id="btn_find_workout" class="btn btn-accent">Search</button>
                 </div>
 
