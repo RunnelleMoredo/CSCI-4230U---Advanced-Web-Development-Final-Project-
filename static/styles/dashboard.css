@@ -1229,3 +1229,13 @@ body:not(.dark-mode) .auth-input::placeholder {
     border-color: var(--accent);
     box-shadow: 0 0 0 1px var(--accent) inset;
 }
+
+.goal-message {
+    margin-top: 10px;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.goal-message.error {
+    color: #dc2626;
+}
