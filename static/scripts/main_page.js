@@ -1,9 +1,10 @@
-// ---------- Theme Toggle ----------
+// =======================================
+// THEME TOGGLE
+// =======================================
 const themeCheckbox = document.getElementById("theme_toggle_checkbox");
 
 function applySavedTheme() {
     const saved = localStorage.getItem("theme");
-
     if (saved === "dark") {
         document.body.classList.add("dark-mode");
         if (themeCheckbox) themeCheckbox.checked = true;
@@ -23,7 +24,10 @@ if (themeCheckbox) {
 
 applySavedTheme();
 
-// ===== AUTH & NAVIGATION =====
+
+// =======================================
+// LOGOUT
+// =======================================
 const logoutBtn = document.getElementById('btn_logout');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
@@ -32,6 +36,10 @@ if (logoutBtn) {
     });
 }
 
+
+// =======================================
+// GO TO GOALS PAGE
+// =======================================
 const goalsBtn = document.getElementById('btn_goals');
 if (goalsBtn) {
     goalsBtn.addEventListener('click', () => {
@@ -39,7 +47,51 @@ if (goalsBtn) {
     });
 }
 
-// ===== CREATE GOAL =====
+
+// =======================================
+// GOAL SYSTEM (localStorage-based enforcement)
+// =======================================
+function markGoalCreated() {
+    localStorage.setItem("hasGoal", "true");
+}
+
+function userHasGoal() {
+    return localStorage.getItem("hasGoal") === "true";
+}
+
+function blockWorkoutAccessIfNoGoal() {
+    const searchBox = document.getElementById("find_workout");
+    const searchBtn = document.getElementById("btn_find_workout");
+
+    if (!userHasGoal()) {
+        if (searchBox) searchBox.disabled = true;
+        if (searchBtn) searchBtn.disabled = true;
+        if (startSessionBtn) startSessionBtn.disabled = true;
+
+        const selectedArea = document.getElementById("selected_workouts");
+        if (selectedArea) {
+            selectedArea.innerHTML = `
+                <div class="no-goal-warning">
+                    <p>You must create a goal before planning a workout.</p>
+                </div>
+            `;
+        }
+    } else {
+        const searchBtn = document.getElementById("btn_find_workout");
+        const searchBox = document.getElementById("find_workout");
+
+        if (searchBox) searchBox.disabled = false;
+        if (searchBtn) searchBtn.disabled = false;
+        if (startSessionBtn) startSessionBtn.disabled = false;
+
+        renderSelectedWorkouts();
+    }
+}
+
+
+// =======================================
+// CREATE GOAL
+// =======================================
 const submitGoalBtn = document.getElementById('btn_submit');
 const goalStatusEl = document.getElementById('goal_status');
 
@@ -50,7 +102,7 @@ if (submitGoalBtn) {
         const token = localStorage.getItem("access_token");
 
         if (!title) {
-            if (goalStatusEl) goalStatusEl.textContent = "Title required";
+            goalStatusEl.textContent = "Title required";
             alert("Title required");
             return;
         }
@@ -68,25 +120,32 @@ if (submitGoalBtn) {
             const data = await response.json();
 
             if (response.ok) {
-                if (goalStatusEl) goalStatusEl.textContent = "Goal created successfully (success)";
+                goalStatusEl.textContent = "Goal created successfully (success)";
                 alert("Goal created successfully!");
+
+                // Mark goal as created
+                markGoalCreated();
+                blockWorkoutAccessIfNoGoal();
+
                 document.getElementById("text_title").value = "";
                 document.getElementById("text_description").value = "";
             } else {
                 const msg = data.error || "Failed to create goal.";
-                if (goalStatusEl) goalStatusEl.textContent = msg;
+                goalStatusEl.textContent = msg;
                 alert(msg);
             }
         } catch (err) {
             console.error(err);
-            if (goalStatusEl) goalStatusEl.textContent = "Network error";
+            goalStatusEl.textContent = "Network error";
             alert("Network error.");
         }
     });
 }
 
-// ---------- Workout Search & Selection ----------
 
+// =======================================
+// WORKOUT SYSTEM
+// =======================================
 const token = localStorage.getItem('access_token');
 const searchInput = document.getElementById('find_workout');
 const searchResults = document.getElementById('search_results');
@@ -97,11 +156,8 @@ let selectedExercises = [];
 function loadSelectedFromStorage() {
     try {
         const stored = localStorage.getItem('selectedExercises');
-        if (stored) {
-            selectedExercises = JSON.parse(stored);
-        }
-    } catch (e) {
-        console.error('Failed to parse selectedExercises from storage', e);
+        if (stored) selectedExercises = JSON.parse(stored);
+    } catch {
         selectedExercises = [];
     }
 }
@@ -110,7 +166,10 @@ function saveSelectedToStorage() {
     localStorage.setItem('selectedExercises', JSON.stringify(selectedExercises));
 }
 
-// Create “Start Workout Session” button dynamically
+
+// =======================================
+// START SESSION BUTTON
+// =======================================
 let startSessionBtn = null;
 if (selectedList && selectedList.parentNode) {
     startSessionBtn = document.createElement('button');
@@ -130,29 +189,24 @@ if (selectedList && selectedList.parentNode) {
     });
 }
 
-function openModal(exercise) {
-    const nameEl = document.getElementById('modal_name');
-    const targetEl = document.getElementById('modal_target_muscles');
-    const secondaryEl = document.getElementById('modal_secondary_muscles');
-    const equipEl = document.getElementById('modal_equipment');
-    const instrEl = document.getElementById('modal_instructions');
-    const gifEl = document.getElementById('modal_gif');
-    const container = document.getElementById('modal_container');
 
+// =======================================
+// MODAL
+// =======================================
+function openModal(exercise) {
+    const container = document.getElementById('modal_container');
     if (!container) return;
 
-    nameEl.textContent = exercise.name || '';
-    targetEl.textContent = (exercise.targetMuscles || []).join(', ');
-    secondaryEl.textContent = (exercise.secondaryMuscles || []).join(', ');
-    equipEl.textContent = (exercise.equipments || []).join(', ');
+    document.getElementById('modal_name').textContent = exercise.name || "";
+    document.getElementById('modal_target_muscles').textContent = (exercise.targetMuscles || []).join(", ");
+    document.getElementById('modal_secondary_muscles').textContent = (exercise.secondaryMuscles || []).join(", ");
+    document.getElementById('modal_equipment').textContent = (exercise.equipments || []).join(", ");
+    document.getElementById('modal_instructions').innerHTML =
+        Array.isArray(exercise.instructions)
+            ? exercise.instructions.map(i => `• ${i}`).join("<br>")
+            : exercise.instructions || "";
 
-    instrEl.innerHTML = Array.isArray(exercise.instructions)
-        ? exercise.instructions.map(i => `• ${i}`).join("<br>")
-        : exercise.instructions || '';
-
-    if (gifEl) {
-        gifEl.src = exercise.gifUrl || '';
-    }
+    document.getElementById('modal_gif').src = exercise.gifUrl || "";
 
     container.style.display = 'flex';
 }
@@ -160,20 +214,21 @@ function openModal(exercise) {
 const closeModalBtn = document.getElementById('btn_close_modal');
 if (closeModalBtn) {
     closeModalBtn.addEventListener('click', () => {
-        const container = document.getElementById('modal_container');
-        if (container) container.style.display = 'none';
+        document.getElementById('modal_container').style.display = 'none';
     });
 }
 
+
+// =======================================
+// RENDER SELECTED WORKOUTS
+// =======================================
 function renderSelectedWorkouts() {
     if (!selectedList) return;
 
-    selectedList.innerHTML = '';
+    selectedList.innerHTML = "";
 
     if (!selectedExercises.length) {
-        const empty = document.createElement('div');
-        empty.textContent = 'No workouts selected yet.';
-        selectedList.appendChild(empty);
+        selectedList.innerHTML = `<div>No workouts selected yet.</div>`;
         if (startSessionBtn) startSessionBtn.disabled = true;
         return;
     }
@@ -181,110 +236,89 @@ function renderSelectedWorkouts() {
     if (startSessionBtn) startSessionBtn.disabled = false;
 
     selectedExercises.forEach((ex, index) => {
-        // Key change: .workout-card so Selenium test can see it
         const card = document.createElement('div');
         card.className = 'workout-card selected-workout-item';
 
-        const title = document.createElement('strong');
-        title.textContent = ex.name;
-        title.style.cursor = 'pointer';
-        title.addEventListener('click', () => openModal(ex));
+        card.innerHTML = `
+            <strong style="cursor:pointer">${ex.name}</strong>
+            <label> Sets: </label>
+            <input type="number" min="1" value="${ex.sets || 3}" style="width:50px">
+            <label> Reps: </label>
+            <input type="number" min="1" value="${ex.reps || 8}" style="width:50px">
+            <button class="btn btn-outline">Remove</button>
+        `;
 
-        const setsLabel = document.createElement('label');
-        setsLabel.textContent = ' Sets: ';
-        const setsInput = document.createElement('input');
-        setsInput.type = 'number';
-        setsInput.min = '1';
-        setsInput.value = ex.sets || 3;
-        setsInput.style.width = '50px';
-        setsInput.addEventListener('change', (e) => {
+        card.querySelector("strong").addEventListener("click", () => openModal(ex));
+
+        const setsInput = card.querySelectorAll("input")[0];
+        const repsInput = card.querySelectorAll("input")[1];
+        const removeBtn = card.querySelector("button");
+
+        setsInput.addEventListener("change", (e) => {
             selectedExercises[index].sets = parseInt(e.target.value) || 1;
             saveSelectedToStorage();
         });
 
-        const repsLabel = document.createElement('label');
-        repsLabel.textContent = ' Reps: ';
-        const repsInput = document.createElement('input');
-        repsInput.type = 'number';
-        repsInput.min = '1';
-        repsInput.value = ex.reps || 8;
-        repsInput.style.width = '50px';
-        repsInput.addEventListener('change', (e) => {
+        repsInput.addEventListener("change", (e) => {
             selectedExercises[index].reps = parseInt(e.target.value) || 1;
             saveSelectedToStorage();
         });
 
-        const removeBtn = document.createElement('button');
-        removeBtn.textContent = 'Remove';
-        removeBtn.className = 'btn btn-outline';
-        removeBtn.style.marginLeft = '8px';
-        removeBtn.addEventListener('click', () => {
+        removeBtn.addEventListener("click", () => {
             selectedExercises.splice(index, 1);
             saveSelectedToStorage();
             renderSelectedWorkouts();
         });
 
-        card.appendChild(title);
-        card.appendChild(setsLabel);
-        card.appendChild(setsInput);
-        card.appendChild(repsLabel);
-        card.appendChild(repsInput);
-        card.appendChild(removeBtn);
-
         selectedList.appendChild(card);
     });
 }
 
-// Visual feedback overlay when adding workout
-function flashOverlay() {
-    const overlay = document.createElement('div');
-    overlay.className = 'flash-overlay';
-    document.body.appendChild(overlay);
-    setTimeout(() => overlay.remove(), 500);
-}
 
+// =======================================
+// ADD WORKOUT
+// =======================================
 function addWorkout(exercise) {
-    // Prevent duplicates
-    if (selectedExercises.some(ex => ex.name === exercise.name)) {
-        alert('Workout already selected.');
+    if (!userHasGoal()) {
+        alert("Create a goal first!");
         return;
     }
 
-    // Push into selected exercise list
+    if (selectedExercises.some(ex => ex.name === exercise.name)) {
+        alert("Workout already selected.");
+        return;
+    }
+
     selectedExercises.push({
         name: exercise.name,
-        equipments: exercise.equipments || [],
-        instructions: exercise.instructions || [],
         targetMuscles: exercise.targetMuscles || [],
         secondaryMuscles: exercise.secondaryMuscles || [],
+        equipments: exercise.equipments || [],
+        instructions: exercise.instructions || [],
         gifUrl: exercise.gifUrl,
         sets: 3,
         reps: 8
     });
 
-    // Save to localStorage
     saveSelectedToStorage();
-
-    // Re-render list
     renderSelectedWorkouts();
-
-    // Find the LAST element we appended (a .workout-card)
-    const listEl = document.getElementById('selected_workouts');
-    const lastItem = listEl ? listEl.lastElementChild : null;
-
-    if (lastItem) {
-        lastItem.classList.add("shake", "flash-border");
-        setTimeout(() => lastItem.classList.remove("shake"), 400);
-        setTimeout(() => lastItem.classList.remove("flash-border"), 650);
-    }
 }
 
-// ---------- SEARCH HANDLER (FULL-WIDTH GIF CARDS) ----------
 
-const searchBtn = document.getElementById('btn_find_workout');
+// =======================================
+// WORKOUT SEARCH
+// =======================================
+const searchBtn = document.getElementById("btn_find_workout");
 
 if (searchBtn && searchInput && searchResults) {
-    searchBtn.addEventListener('click', async () => {
+
+    searchBtn.addEventListener("click", async () => {
+
+        if (!userHasGoal()) {
+            alert("Please create a goal first.");
+            return;
+        }
+
         const query = searchInput.value.trim();
         if (!query) {
             alert("Enter a search term.");
@@ -311,7 +345,6 @@ if (searchBtn && searchInput && searchResults) {
                 return;
             }
 
-            // Clear previous results
             searchResults.innerHTML = "";
 
             data.forEach(exercise => {
@@ -319,7 +352,7 @@ if (searchBtn && searchInput && searchResults) {
                 card.className = "workout-card";
 
                 card.innerHTML = `
-                    <img src="${exercise.gifUrl}" class="workout-gif-banner" alt="${exercise.name}">
+                    <img src="${exercise.gifUrl}" class="workout-gif-banner">
 
                     <div class="workout-info">
                         <h3>${exercise.name}</h3>
@@ -333,31 +366,17 @@ if (searchBtn && searchInput && searchResults) {
                     </div>
                 `;
 
-                const btnAdd = card.querySelector(".btn-add");
-                const btnDetails = card.querySelector(".btn-details");
-
-                function addAndAnimate() {
-                    addWorkout(exercise);
-                    card.classList.add("shake", "flash-border");
-                    setTimeout(() => card.classList.remove("shake"), 400);
-                    setTimeout(() => card.classList.remove("flash-border"), 650);
-                }
-
-                // Clicking the card (what your Selenium test does)
                 card.addEventListener("click", (e) => {
-                    // If they clicked the Details button, skip "add"
                     if (e.target.closest(".btn-details")) return;
-                    addAndAnimate();
+                    addWorkout(exercise);
                 });
 
-                // Clicking the Add button explicitly
-                btnAdd.addEventListener("click", (e) => {
+                card.querySelector(".btn-add").addEventListener("click", (e) => {
                     e.stopPropagation();
-                    addAndAnimate();
+                    addWorkout(exercise);
                 });
 
-                // Details button -> open modal
-                btnDetails.addEventListener("click", (e) => {
+                card.querySelector(".btn-details").addEventListener("click", (e) => {
                     e.stopPropagation();
                     openModal(exercise);
                 });
@@ -372,8 +391,10 @@ if (searchBtn && searchInput && searchResults) {
     });
 }
 
-// =========== WORKOUT HISTORY — LOAD + RENDER ===========
 
+// =======================================
+// WORKOUT HISTORY
+// =======================================
 function loadWorkoutHistory() {
     const historyCard = document.getElementById("history_card");
     const list = document.getElementById("history_list");
@@ -392,8 +413,7 @@ function loadWorkoutHistory() {
 
     history.forEach((entry, idx) => {
         const date = new Date(entry.date);
-        const minutes = Math.floor(entry.durationSeconds / 60);
-        const seconds = entry.durationSeconds % 60;
+        const duration = `${Math.floor(entry.durationSeconds / 60)}m ${entry.durationSeconds % 60}s`;
 
         const div = document.createElement("div");
         div.className = "history-entry";
@@ -401,7 +421,7 @@ function loadWorkoutHistory() {
         div.innerHTML = `
             <div class="history-header" data-index="${idx}">
                 <span>${date.toLocaleString()}</span>
-                <span>${minutes}m ${seconds}s ▾</span>
+                <span>${duration} ▾</span>
             </div>
 
             <div class="history-details" id="history_details_${idx}">
@@ -418,7 +438,6 @@ function loadWorkoutHistory() {
         list.appendChild(div);
     });
 
-    // Expand/collapse logic
     document.querySelectorAll(".history-header").forEach(header => {
         header.addEventListener("click", () => {
             const id = header.dataset.index;
@@ -428,7 +447,6 @@ function loadWorkoutHistory() {
     });
 }
 
-// Clear history
 const clearHistoryBtn = document.getElementById("btn_clear_history");
 if (clearHistoryBtn) {
     clearHistoryBtn.addEventListener("click", () => {
@@ -439,7 +457,11 @@ if (clearHistoryBtn) {
     });
 }
 
-// INIT on page load
+
+// =======================================
+// INIT
+// =======================================
 loadSelectedFromStorage();
 renderSelectedWorkouts();
 loadWorkoutHistory();
+blockWorkoutAccessIfNoGoal();
