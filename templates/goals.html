@@ -33,6 +33,23 @@
 
     </div>
 
+    <div id="modal_container" class="modal-overlay">
+        <div class="modal-card">
+            <h2>Edit Goal</h2>
+
+            <label>Title:</label><br>
+            <input id="editTitle" type="text"><br><br>
+
+            <label>Description:</label><br>
+            <textarea id="editDescription" rows="3"></textarea><br><br>
+
+            <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+            <button class="btn btn-accent" onclick="saveGoal()">Save</button>
+
+        </div>
+    </div>
+
+
     <script>
         const token = localStorage.getItem("access_token");
 
@@ -75,6 +92,7 @@
                 <h3>${goal.title}</h3>
                 <p>${goal.description}</p>
                 <button class="btn btn-outline" onclick="deleteGoal(${goal.id})">Delete</button>
+                <button class="btn btn-outline" onclick="editGoal(${goal.id}, '${goal.title}', '${goal.description}')">Edit</button>
             </div>`;
             });
         }
@@ -119,7 +137,6 @@
             }
         });
 
-
         /* Delete Goal */
         async function deleteGoal(id) {
             const res = await fetch("/goals/" + id, {
@@ -132,6 +149,47 @@
                 loadGoals();
             } else {
                 alert("Delete failed.");
+            }
+        }
+
+        let currentEditId = null;
+
+        /* Open the Edit Goal Modal */
+        function editGoal(id, title, description) {
+            currentEditId = id;
+            document.getElementById("editTitle").value = title;
+            document.getElementById("editDescription").value = description;
+
+            document.getElementById("modal_container").style.display = "flex";
+        }
+
+        /* Close the Edit Goal Modal */
+        function closeEditModal(id, title, description) {
+            document.getElementById("modal_container").style.display = "none";
+        }
+
+        /* Edit Goal */
+        async function saveGoal() {
+            const title = document.getElementById("editTitle").value.trim();
+            const description = document.getElementById("editDescription").value.trim();
+
+            const res = await fetch("/goals/" + currentEditId, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ title, description })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert("Goal updated!");
+                closeEditModal();
+                loadGoals();
+            } else {
+                alert(data.error || "Error editing goal.");
             }
         }
 
