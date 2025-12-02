@@ -1,144 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Main Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
+  <meta charset="UTF-8">
+  <title>Choose Your Level</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
+  <script defer src="{{ url_for('static', filename='scripts/main_page.js') }}"></script>
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: radial-gradient(circle at top, #111b26, #05080d 70%);
+      font-family: 'Poppins', sans-serif;
+      color: #f1f1f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      position: relative;
+      z-index: 5;
+      animation: fadeInUp 1s ease forwards;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 40px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(0,255,170,0.2);
+    }
+
+    .mode-select {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      flex-wrap: wrap;
+    }
+
+    .mode-card {
+      width: 260px;
+      height: 320px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #16202b, #0a1016);
+      box-shadow: 0 0 25px rgba(0,255,170,0.15);
+      transition: transform 0.5s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mode-card::before {
+      content: "";
+      position: absolute;
+      width: 300%;
+      height: 300%;
+      top: -100%;
+      left: -100%;
+      background: conic-gradient(from 0deg, #00ffaa, transparent, #00ffaa);
+      animation: spin 6s linear infinite;
+      opacity: 0.1;
+    }
+
+    .mode-card:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 40px rgba(0,255,170,0.25);
+    }
+
+    .mode-title {
+      font-size: 1.7rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      z-index: 2;
+    }
+
+    .mode-desc {
+      font-size: 0.9rem;
+      color: #cfd9e0;
+      padding: 0 18px;
+      z-index: 2;
+    }
+
+    .bg-animation {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(0,255,170,0.07);
+      animation: float 8s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); opacity: 0.4; }
+      50% { transform: translateY(-20px); opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 
 <body>
-    <div class="dashboard-container">
+  <div class="bg-animation">
+    <div class="circle" style="width:140px;height:140px;top:15%;left:10%;animation-delay:0s;"></div>
+    <div class="circle" style="width:220px;height:220px;top:65%;left:70%;animation-delay:1.5s;"></div>
+    <div class="circle" style="width:100px;height:100px;top:75%;left:25%;animation-delay:2s;"></div>
+  </div>
 
-        <!-- HERO HEADER -->
-        <header class="main-hero">
-            <div class="hero-text">
-                <h1>Daily Habit & Workout Hub</h1>
-                <p>Stay consistent, track your goals, and build stronger habits one session at a time.</p>
-            </div>
-
-            <div class="hero-right">
-                <!-- Theme switch -->
-                <div class="theme-switch">
-                    <input type="checkbox" id="theme_toggle_checkbox">
-                    <label for="theme_toggle_checkbox" class="theme-slider">
-                        <span class="sun">Light</span>
-                        <span class="moon">Dark</span>
-                    </label>
-                </div>
-            </div>
-        </header>
-
-        <!-- MAIN GRID: GOALS + WORKOUT EXPLORER -->
-        <div class="main-grid">
-
-            <!-- GOAL CREATION CARD -->
-            <section class="card card-elevated">
-                <h2 class="section-heading">Daily Goals</h2>
-                <p class="section-subtitle">Capture what you want to accomplish today.</p>
-
-                <label for="text_title">Title</label>
-                <input type="text" id="text_title" class="input-full" placeholder="e.g., Study 2 hours, Hit 8k steps">
-
-                <label for="text_description">Description</label>
-                <textarea id="text_description" rows="4" class="input-full"
-                    placeholder="Add details, time, or any notes..."></textarea>
-
-                <button id="btn_submit" class="btn btn-accent full-width">Save Goal</button>
-
-                <!-- NEW: status line so Selenium can see 'success' / 'Title required' -->
-                <p id="goal_status" class="goal-status-text"></p>
-            </section>
-
-            <!-- WORKOUT EXPLORER -->
-            <section class="card card-elevated">
-                <h2 class="section-heading">Exercise Finder</h2>
-                <p class="section-subtitle">Search exercises and build your next workout.</p>
-
-                <div class="workout-search-row">
-                    <input type="text" id="find_workout" class="input-full"
-                        placeholder="Search exercises (e.g., bench, squat)">
-                    <button id="btn_find_workout" class="btn btn-accent">Search</button>
-                </div>
-
-                <h3 class="subheading-with-line">Search Results</h3>
-                <div id="search_results" class="workout-grid">
-                    <!-- search cards injected here -->
-                </div>
-            </section>
+  <div class="container">
+    <h1>Welcome! Choose Your Fitness Level</h1>
+    <div class="mode-select">
+      <div class="mode-card" id="beginnerCard">
+        <div class="mode-title">Beginner</div>
+        <div class="mode-desc">
+          Build your foundation with guided, simple, and safe routines.
         </div>
+      </div>
 
-        <!-- SELECTED WORKOUTS (OWN SECTION) -->
-        <section class="card card-elevated">
-            <div class="section-header-row">
-                <div>
-                    <h2 class="section-heading">Today's Workout Plan</h2>
-                    <p class="section-subtitle">Exercises you’ve selected for your upcoming session.</p>
-                </div>
-            </div>
-
-            <div id="selected_workouts" class="workout-grid">
-                <!-- selected cards injected by JS -->
-            </div>
-            <!-- Start Workout Session button is still injected by JS (btn_start_session) -->
-        </section>
-
-        <!-- WORKOUT HISTORY SECTION -->
-        <section class="card card-elevated" id="history_card">
-            <h2 class="section-heading">Previous Sessions</h2>
-            <p class="section-subtitle">Review your recent workouts and volume.</p>
-
-            <div id="history_list"></div>
-
-            <button id="btn_clear_history" class="btn btn-outline" style="margin-top: 12px;">
-                Clear History
-            </button>
-        </section>
-
-        <!-- NAVIGATION CARD -->
-        <section class="card nav-card">
-            <div class="nav-buttons-row">
-                <button id="btn_goals" class="btn btn-outline">View Your Goals</button>
-                <button id="btn_logout" class="btn btn-danger">Logout</button>
-            </div>
-        </section>
-    </div>
-
-    <!-- MODAL FOR EXERCISE DETAILS -->
-    <div id="modal_container" class="modal-overlay">
-        <div class="modal-card">
-
-            <div class="modal-header">
-                <h2 id="modal_name"></h2>
-                <button id="btn_close_modal" class="modal-close">✕</button>
-            </div>
-
-            <img id="modal_gif" class="modal-gif">
-
-            <div class="modal-section">
-                <h3>Target Muscles</h3>
-                <p id="modal_target_muscles"></p>
-            </div>
-
-            <div class="modal-section">
-                <h3>Secondary Muscles</h3>
-                <p id="modal_secondary_muscles"></p>
-            </div>
-
-            <div class="modal-section">
-                <h3>Equipment</h3>
-                <p id="modal_equipment"></p>
-            </div>
-
-            <div class="modal-section">
-                <h3>Instructions</h3>
-                <p id="modal_instructions"></p>
-            </div>
-
+      <div class="mode-card" id="intermediateCard">
+        <div class="mode-title">Intermediate</div>
+        <div class="mode-desc">
+          Advance your strength, endurance, and technique for real results.
         </div>
+      </div>
     </div>
-
-    <script src="{{ url_for('static', filename='scripts/main_page.js') }}"></script>
+  </div>
 </body>
-
 </html>
