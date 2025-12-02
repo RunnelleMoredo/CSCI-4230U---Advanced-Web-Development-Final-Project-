@@ -456,6 +456,55 @@ if (clearHistoryBtn) {
         }
     });
 }
+// =======================================
+// MAIN PAGE: Beginner / Intermediate Selector
+// =======================================
+document.addEventListener("DOMContentLoaded", () => {
+  const beginner = document.getElementById("beginnerCard");
+  const intermediate = document.getElementById("intermediateCard");
+
+  // Only run on the selector screen
+  if (!beginner || !intermediate) return;
+
+  function animateExit() {
+    document.querySelectorAll(".mode-card").forEach((card) => {
+      card.style.transform = "scale(0.8)";
+      card.style.opacity = "0";
+      card.style.transition = "all 0.5s ease";
+    });
+    const container = document.querySelector(".container");
+    if (container) container.style.opacity = "0";
+  }
+
+  // Beginner → AI Workout
+  beginner.addEventListener("click", () => {
+    animateExit();
+    setTimeout(() => {
+      window.location.href = "/ai_workout?mode=beginner";
+    }, 600);
+  });
+
+  // Intermediate → Original dashboard
+  intermediate.addEventListener("click", () => {
+    animateExit();
+    setTimeout(() => {
+      window.location.href = "/main_dashboard";
+    }, 600);
+  });
+
+  // Smooth entry fade
+  window.addEventListener("load", () => {
+    const container = document.querySelector(".container");
+    if (container) {
+      container.style.opacity = "0";
+      setTimeout(() => {
+        container.style.transition = "opacity 1.4s ease";
+        container.style.opacity = "1";
+      }, 100);
+    }
+  });
+});
+
 
 
 // =======================================
