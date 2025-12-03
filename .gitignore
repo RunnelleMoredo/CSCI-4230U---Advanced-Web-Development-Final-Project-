@@ -1,6 +1,7 @@
 # Python cache
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 
 # Virtual environments
 .venv/
@@ -8,6 +9,22 @@ venv/
 
 # Environment files
 *.env
+.env.*
+
+# SQLite database files (if you use any locally)
+*.sqlite3
+instance/
 
 # OS files
 .DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Python bytecode
+*.pyc
+
+# IDE / Editor folders
+.idea/
+.vscode/
