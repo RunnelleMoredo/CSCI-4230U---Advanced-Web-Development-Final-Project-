@@ -203,6 +203,26 @@ def get_or_update_plan(plan_id):
     db.session.commit()
     return jsonify({"message": "Workout plan updated", "id": plan.id})
 
+@app.route("/test-gpt", methods=["GET"])
+def test_gpt():
+    """Quick test route to confirm OpenAI API connectivity"""
+    from openai import OpenAI
+    import os
+
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": "Say: The GPT API is connected successfully!"}],
+            max_tokens=30
+        )
+        reply = completion.choices[0].message.content
+        return jsonify({"status": "success", "message": reply})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)})
+
+
 # ---------------------------------------------------------
 # DATABASE INITIALIZATION
 # ---------------------------------------------------------
