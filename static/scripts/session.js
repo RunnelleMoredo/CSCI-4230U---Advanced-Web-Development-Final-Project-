@@ -24,7 +24,7 @@ if (themeToggle) {
 
 // =============== NAVIGATION ===============
 document.getElementById("btn_back_main").addEventListener("click", () => {
-    window.location.href = "/main";
+    window.location.href = "/main_dashboard";
 });
 
 
@@ -182,7 +182,7 @@ if (!exercises.length) {
                 exercises: summaryExercises
             });
             localStorage.removeItem("selectedExercises");
-            window.location.href = "/main";
+            window.location.href = "/main_dashboard";
         };
     });
 }
