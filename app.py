@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, redirect, url_for
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required
 from openai import OpenAI
@@ -9,7 +9,6 @@ from models import db, User, WorkoutPlan
 from auth import auth_bp
 from goals import goals_bp
 from workout import workout_bp
-
 
 # ---------------------------------------------------------
 # BASIC SETUP
@@ -41,32 +40,59 @@ app.register_blueprint(workout_bp)
 def home():
     return render_template("login.html")
 
-@app.route("/main")
-def main_page():
-    """Level selector page (Beginner / Intermediate)."""
-    return render_template("main.html")
+
+@app.route("/fitness_level")
+def fitness_level():
+    """Page where users pick Beginner or Intermediate."""
+    return render_template("fitness_level.html")
+
 
 @app.route("/main_dashboard")
 def main_dashboard():
-    """Your original main dashboard with goals/workouts/sessions."""
+    """User's real dashboard (daily goals, workouts, sessions)."""
     return render_template("main_dashboard.html")
+
 
 @app.route("/ai_workout")
 def ai_workout_page():
     """AI workout planner page."""
     return render_template("ai_workout.html")
 
+
 @app.route("/goals_page")
 def goals_page():
     return render_template("goals.html")
 
+
 @app.route("/session")
 def session_page():
+    """Workout session page."""
     return render_template("session.html")
+
 
 @app.route("/exercise")
 def exercise_page():
     return render_template("exercise.html")
+
+
+# ---------------------------------------------------------
+# LEGACY REDIRECTS + SESSION COMPLETION
+# ---------------------------------------------------------
+@app.route("/main")
+def redirect_old_main():
+    """Redirect old /main URLs to dashboard."""
+    return redirect(url_for("main_dashboard"))
+
+
+@app.route("/session/complete")
+def complete_session_redirect():
+    """
+    Redirect user to main_dashboard after completing a workout.
+    Triggered from frontend JS after finishing a session.
+    """
+    logging.info("Workout session completed — redirecting to dashboard.")
+    return redirect(url_for("main_dashboard"))
+
 
 # ---------------------------------------------------------
 # AI WORKOUT PLAN ENDPOINTS
@@ -202,7 +228,6 @@ def get_or_update_plan(plan_id):
 
     db.session.commit()
     return jsonify({"message": "Workout plan updated", "id": plan.id})
-
 
 
 # ---------------------------------------------------------
