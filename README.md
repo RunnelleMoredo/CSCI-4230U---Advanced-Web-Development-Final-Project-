@@ -3,7 +3,7 @@
 
 This webapp allows you to sync your core fitness goals with careful planning!
 
-**Created By:** Runnelle Moredo and Almas Alam 
+**Created By:** Runnelle Moredo (100822547) and Almas Alam (100815977)
 
 **How to use**
 1. Enter a username and password, click signup. Use those credentials to login
