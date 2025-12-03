@@ -14,38 +14,6 @@ def load_user():
     user_id = get_jwt_identity()
     g.current_user = User.query.get(int(user_id))
 
-# @workout_bp.route("/", methods=["GET"])
-# def get_target_muscles():
-    
-#     response = requests.get(EXERCISE_API_URL)
-
-#     if response.status_code != 200:
-#         return jsonify({"error": "Failed to fetch data"}), 500
-
-#     data = response.json()
-#     return jsonify(data), 200
-
-# @workout_bp.route("/<bodyPartName>/exercises", methods=["GET"])
-# def get_workouts(bodyPartName):
-    
-#     url = f"{TARGET_MUSCLE_URL}/{bodyPartName}/exercises"
-#     response = requests.get(url)
-    
-#     if response.status_code != 200:
-#         return jsonify({"error": "Failed to fetch data"}), 500
-
-#     data = response.json()
-    
-#     cleaned_data = [{
-#         'name': exercise.get('name'),
-#         'equipments': exercise.get('equipments'),
-#         'instructions': exercise.get('instructions'),
-#         'secondaryMuscles': exercise.get('secondaryMuscles'),
-#         'gifUrl': exercise.get('gifUrl')
-#     } for exercise in data.get('data', [])]
-    
-#     return jsonify(cleaned_data), 200
-
 @workout_bp.route("/search", methods=["GET"])
 @jwt_required()
 def search_workout():
