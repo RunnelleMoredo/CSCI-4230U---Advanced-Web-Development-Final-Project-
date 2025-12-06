@@ -1,161 +1,273 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 
 <head>
   <meta charset="UTF-8">
-  <title>Main Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Daily Habit & Workout Hub</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2b6cee",
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+          },
+          fontFamily: {
+            "display": ["Inter"]
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* Modal styling */
+    #modal_container {
+      display: none;
+    }
+
+    #modal_container.visible {
+      display: flex;
+    }
+  </style>
 </head>
 
-<body>
-  <div class="dashboard-container">
+<body class="font-display bg-background-light dark:bg-background-dark min-h-screen">
+  <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
 
-    <!-- HERO HEADER -->
-    <header class="main-hero">
-      <div class="hero-text">
-        <h1>Daily Habit & Workout Hub</h1>
-        <p>Stay consistent, track your goals, and build stronger habits one session at a time.</p>
-      </div>
-
-      <div class="hero-right">
-        <!-- Theme switch -->
-        <div class="theme-switch">
-          <input type="checkbox" id="theme_toggle_checkbox">
-          <label for="theme_toggle_checkbox" class="theme-slider">
-            <span class="sun">Light</span>
-            <span class="moon">Dark</span>
-          </label>
+    <!-- TopNavBar -->
+    <header
+      class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-white/10 px-6 sm:px-10 lg:px-20 py-3 bg-background-light dark:bg-background-dark/80 backdrop-blur-sm sticky top-0 z-10">
+      <div class="flex items-center gap-4 text-slate-800 dark:text-white">
+        <div class="size-6 text-primary">
+          <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M39.5563 34.1455V13.8546C39.5563 15.708 36.8773 17.3437 32.7927 18.3189C30.2914 18.916 27.263 19.2655 24 19.2655C20.737 19.2655 17.7086 18.916 15.2073 18.3189C11.1227 17.3437 8.44365 15.708 8.44365 13.8546V34.1455C8.44365 35.9988 11.1227 37.6346 15.2073 38.6098C17.7086 39.2069 20.737 39.5564 24 39.5564C27.263 39.5564 30.2914 39.2069 32.7927 38.6098C36.8773 37.6346 39.5563 35.9988 39.5563 34.1455Z"
+              fill="currentColor"></path>
+            <path clip-rule="evenodd"
+              d="M10.4485 13.8519C10.4749 13.9271 10.6203 14.246 11.379 14.7361C12.298 15.3298 13.7492 15.9145 15.6717 16.3735C18.0007 16.9296 20.8712 17.2655 24 17.2655C27.1288 17.2655 29.9993 16.9296 32.3283 16.3735C34.2508 15.9145 35.702 15.3298 36.621 14.7361C37.3796 14.246 37.5251 13.9271 37.5515 13.8519C37.5287 13.7876 37.4333 13.5973 37.0635 13.2931C36.5266 12.8516 35.6288 12.3647 34.343 11.9175C31.79 11.0295 28.1333 10.4437 24 10.4437C19.8667 10.4437 16.2099 11.0295 13.657 11.9175C12.3712 12.3647 11.4734 12.8516 10.9365 13.2931C10.5667 13.5973 10.4713 13.7876 10.4485 13.8519ZM37.5563 18.7877C36.3176 19.3925 34.8502 19.8839 33.2571 20.2642C30.5836 20.9025 27.3973 21.2655 24 21.2655C20.6027 21.2655 17.4164 20.9025 14.7429 20.2642C13.1498 19.8839 11.6824 19.3925 10.4436 18.7877V34.1275C10.4515 34.1545 10.5427 34.4867 11.379 35.027C12.298 35.6207 13.7492 36.2054 15.6717 36.6644C18.0007 37.2205 20.8712 37.5564 24 37.5564C27.1288 37.5564 29.9993 37.2205 32.3283 36.6644C34.2508 36.2054 35.702 35.6207 36.621 35.027C37.4573 34.4867 37.5485 34.1546 37.5563 34.1275V18.7877ZM41.5563 13.8546V34.1455C41.5563 36.1078 40.158 37.5042 38.7915 38.3869C37.3498 39.3182 35.4192 40.0389 33.2571 40.5551C30.5836 41.1934 27.3973 41.5564 24 41.5564C20.6027 41.5564 17.4164 41.1934 14.7429 40.5551C12.5808 40.0389 10.6502 39.3182 9.20848 38.3869C7.84205 37.5042 6.44365 36.1078 6.44365 34.1455L6.44365 13.8546C6.44365 12.2684 7.37223 11.0454 8.39581 10.2036C9.43325 9.3505 10.8137 8.67141 12.343 8.13948C15.4203 7.06909 19.5418 6.44366 24 6.44366C28.4582 6.44366 32.5797 7.06909 35.657 8.13948C37.1863 8.67141 38.5667 9.3505 39.6042 10.2036C40.6278 11.0454 41.5563 12.2684 41.5563 13.8546Z"
+              fill="currentColor" fill-rule="evenodd"></path>
+          </svg>
         </div>
+        <h2 class="text-slate-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">The Daily Habit &
+          Workout Hub</h2>
+      </div>
+      <div class="flex flex-1 justify-end items-center gap-4">
+        <nav class="hidden md:flex items-center gap-9">
+          <a class="text-primary text-sm font-medium leading-normal" href="#">Dashboard</a>
+          <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+            href="/session">Workouts</a>
+          <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+            href="/goals_page">Goals</a>
+          <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+            href="/ai_workout">AI Coach</a>
+        </nav>
+        <!-- Theme Toggle -->
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="theme_toggle_checkbox" class="sr-only peer">
+          <div
+            class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+          </div>
+          <span class="ml-2 text-sm text-slate-600 dark:text-slate-300">
+            <span class="material-symbols-outlined text-base align-middle">dark_mode</span>
+          </span>
+        </label>
+        <button id="btn_logout"
+          class="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-sm font-medium">
+          <span class="material-symbols-outlined text-base">logout</span>
+          <span class="hidden sm:inline">Logout</span>
+        </button>
       </div>
     </header>
 
-    <!-- GRID: GOALS + EXERCISE FINDER -->
-    <div class="main-grid">
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Hero Section -->
+      <div class="mb-8">
+        <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] mb-2">Welcome
+          Back!</h1>
+        <p class="text-slate-500 dark:text-slate-400 text-lg">Stay consistent, track your goals, and build stronger
+          habits one session at a time.</p>
+      </div>
 
-      <!-- GOAL CREATION -->
-      <section class="card card-elevated">
-        <h2 class="section-heading">Daily Goals</h2>
-        <p class="section-subtitle">Capture what you want to accomplish today.</p>
+      <!-- Grid: Goals + Exercise Finder -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
-        <label for="text_title">Title</label>
-        <input type="text" id="text_title" class="input-full" placeholder="e.g., Study 2 hours, Hit 8k steps">
+        <!-- Daily Goals Card -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">flag</span>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Daily Goals</h2>
+          </div>
+          <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">Capture what you want to accomplish today.</p>
 
-        <label for="text_description">Description</label>
-        <textarea id="text_description" rows="4" class="input-full"
-          placeholder="Add details, time, or any notes..."></textarea>
-
-        <button id="btn_submit" class="btn btn-accent full-width">Save Goal</button>
-        <p id="goal_status" class="goal-status-text"></p>
-      </section>
-
-      <!-- EXERCISE FINDER -->
-      <section class="card card-elevated">
-        <h2 class="section-heading">Exercise Finder</h2>
-        <p class="section-subtitle">Search exercises and build your next workout.</p>
-
-        <div class="workout-search-row">
-          <input type="text" id="find_workout" class="input-full"
-            placeholder="Search exercises (e.g., bench, squat)">
-          <button id="btn_find_workout" class="btn btn-accent">Search</button>
+          <div class="space-y-4">
+            <div>
+              <label for="text_title"
+                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>
+              <input type="text" id="text_title"
+                class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3"
+                placeholder="e.g., Study 2 hours, Hit 8k steps">
+            </div>
+            <div>
+              <label for="text_description"
+                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+              <textarea id="text_description" rows="3"
+                class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3"
+                placeholder="Add details, time, or any notes..."></textarea>
+            </div>
+            <button id="btn_submit"
+              class="w-full flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+              <span class="material-symbols-outlined">save</span>
+              Save Goal
+            </button>
+            <p id="goal_status" class="text-sm text-center"></p>
+          </div>
         </div>
 
-        <h3 class="subheading-with-line">Search Results</h3>
-        <div id="search_results" class="workout-grid">
-          <!-- search cards injected here -->
-        </div>
-      </section>
-    </div>
+        <!-- Exercise Finder Card -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">search</span>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Exercise Finder</h2>
+          </div>
+          <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">Search exercises and build your next workout.</p>
 
-    <!-- SELECTED WORKOUTS (Manual Section) -->
-    <section class="card card-elevated">
-      <div class="section-header-row">
-        <div>
-          <h2 class="section-heading">Today's Workout Plan</h2>
-          <p class="section-subtitle">Exercises you’ve selected for your upcoming session.</p>
+          <div class="flex gap-2 workout-search-row mb-4">
+            <input type="text" id="find_workout"
+              class="flex-1 bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3"
+              placeholder="Search exercises (e.g., bench, squat)">
+            <button id="btn_find_workout"
+              class="flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+              <span class="material-symbols-outlined">search</span>
+            </button>
+          </div>
+
+          <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3 uppercase tracking-wide">Search
+            Results</h3>
+          <div id="search_results" class="space-y-3 max-h-64 overflow-y-auto">
+            <p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">Search for exercises above</p>
+          </div>
         </div>
       </div>
 
-      <div id="selected_workouts" class="workout-grid">
-        <!-- selected cards injected by JS -->
-      </div>
-    </section>
-
-    <!-- AI WORKOUTS SECTION -->
-    <section id="ai_workouts_section" class="card card-elevated" style="margin-top: 25px;">
-      <div class="section-header-row">
-        <div>
-          <h2 class="section-heading">AI Generated Plans</h2>
-          <p class="section-subtitle">Automatically designed by your AI coach.</p>
+      <!-- Today's Workout Plan -->
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">fitness_center</span>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Today's Workout Plan</h2>
+          </div>
+        </div>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">Exercises you've selected for your upcoming session.
+        </p>
+        <div id="selected_workouts" class="space-y-3">
+          <p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No workouts selected yet.</p>
         </div>
       </div>
-      <div id="ai_workouts_container" class="workout-grid">Loading AI plans...</div>
-    </section>
 
-    <!-- WORKOUT HISTORY SECTION -->
-    <section id="workout_history_section" class="card card-elevated" style="margin-top: 25px;">
-      <div class="section-header-row">
-        <div>
-          <h2 class="section-heading">Workout History</h2>
-          <p class="section-subtitle">Your recent completed sessions.</p>
+      <!-- AI Generated Plans -->
+      <div id="ai_workouts_section"
+        class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">smart_toy</span>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">AI Generated Plans</h2>
+          </div>
+          <a href="/ai_workout" class="text-primary text-sm font-medium hover:underline">Create New →</a>
+        </div>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">Automatically designed by your AI coach.</p>
+        <div id="ai_workouts_container" class="space-y-3">
+          <p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">Loading AI plans...</p>
         </div>
       </div>
-      <div id="workout_history_container">No previous sessions yet.</div>
-      <button id="btn_clear_history" class="btn btn-outline" style="margin-top: 12px;">Clear History</button>
-    </section>
 
-    <!-- NAVIGATION & TOOLS SECTION -->
-<section class="card nav-card" style="margin-top: 25px;">
-  <div class="section-header-row">
-    <div>
-      <h2 class="section-heading">Tools & Navigation</h2>
-      <p class="section-subtitle">Quick access to your settings and features.</p>
-    </div>
-  </div>
+      <!-- Workout History -->
+      <div id="workout_history_section"
+        class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">history</span>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Workout History</h2>
+          </div>
+          <button id="btn_clear_history" class="text-red-500 text-sm font-medium hover:underline">Clear History</button>
+        </div>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">Your recent completed sessions.</p>
+        <div id="workout_history_container" class="space-y-3">
+          <p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No previous sessions yet.</p>
+        </div>
+      </div>
 
-  <div class="nav-buttons-row" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-start;">
-    <button class="btn btn-outline" onclick="window.location.href='/fitness_level'">
-      Change Fitness Level
-    </button>
-    <button id="btn_goals" class="btn btn-outline">
-      View Your Goals
-    </button>
-    <button id="btn_logout" class="btn btn-danger">
-      Logout
-    </button>
-  </div>
-</section>
-
-
+      <!-- Quick Actions -->
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="material-symbols-outlined text-primary">apps</span>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Quick Actions</h2>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a href="/fitness_level"
+            class="flex items-center gap-2 px-4 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors">
+            <span class="material-symbols-outlined text-base">tune</span>
+            Change Fitness Level
+          </a>
+          <button id="btn_goals"
+            class="flex items-center gap-2 px-4 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors">
+            <span class="material-symbols-outlined text-base">flag</span>
+            View Your Goals
+          </button>
+          <a href="/ai_workout"
+            class="flex items-center gap-2 px-4 py-3 bg-primary hover:bg-primary/90 rounded-lg text-white text-sm font-medium transition-colors">
+            <span class="material-symbols-outlined text-base">smart_toy</span>
+            AI Workout Coach
+          </a>
+        </div>
+      </div>
+    </main>
   </div>
 
   <!-- EXERCISE DETAILS MODAL -->
-  <div id="modal_container" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2 id="modal_name"></h2>
-        <button id="btn_close_modal" class="modal-close">✕</button>
+  <div id="modal_container" class="fixed inset-0 bg-black/80 items-center justify-center z-50">
+    <div class="bg-slate-100 dark:bg-slate-900 p-6 rounded-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="modal_name" class="text-2xl font-bold text-slate-900 dark:text-white"></h2>
+        <button id="btn_close_modal" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+          <span class="material-symbols-outlined text-2xl">close</span>
+        </button>
       </div>
 
-      <img id="modal_gif" class="modal-gif" />
+      <img id="modal_gif" class="w-full rounded-lg mb-4" alt="Exercise demonstration">
 
-      <div class="modal-section">
-        <h3>Target Muscles</h3>
-        <p id="modal_target_muscles"></p>
-      </div>
-
-      <div class="modal-section">
-        <h3>Secondary Muscles</h3>
-        <p id="modal_secondary_muscles"></p>
-      </div>
-
-      <div class="modal-section">
-        <h3>Equipment</h3>
-        <p id="modal_equipment"></p>
-      </div>
-
-      <div class="modal-section">
-        <h3>Instructions</h3>
-        <p id="modal_instructions"></p>
+      <div class="space-y-4">
+        <div>
+          <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1">Target
+            Muscles</h3>
+          <p id="modal_target_muscles" class="text-slate-800 dark:text-slate-200"></p>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1">Secondary
+            Muscles</h3>
+          <p id="modal_secondary_muscles" class="text-slate-800 dark:text-slate-200"></p>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1">Equipment
+          </h3>
+          <p id="modal_equipment" class="text-slate-800 dark:text-slate-200"></p>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1">Instructions
+          </h3>
+          <p id="modal_instructions" class="text-slate-800 dark:text-slate-200 leading-relaxed"></p>
+        </div>
       </div>
     </div>
   </div>

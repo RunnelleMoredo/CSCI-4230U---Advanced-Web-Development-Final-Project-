@@ -1,18 +1,26 @@
 // =======================================
-// THEME TOGGLE
+// THEME TOGGLE (TailwindCSS dark mode)
 // =======================================
 const themeCheckbox = document.getElementById("theme_toggle_checkbox");
 
 function applySavedTheme() {
   const saved = localStorage.getItem("theme");
-  document.body.classList.toggle("dark-mode", saved === "dark");
-  if (themeCheckbox) themeCheckbox.checked = saved === "dark";
+  const htmlEl = document.documentElement;
+
+  if (saved === "light") {
+    htmlEl.classList.remove("dark");
+    if (themeCheckbox) themeCheckbox.checked = false;
+  } else {
+    // Default to dark
+    htmlEl.classList.add("dark");
+    if (themeCheckbox) themeCheckbox.checked = true;
+  }
 }
 
 if (themeCheckbox) {
   themeCheckbox.addEventListener("change", () => {
     const dark = themeCheckbox.checked;
-    document.body.classList.toggle("dark-mode", dark);
+    document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   });
 }
@@ -73,7 +81,9 @@ if (submitGoalBtn) {
 
       const data = await res.json();
       if (res.ok) {
-        alert("Goal created successfully!");
+        document.getElementById("goal_status").innerHTML = `<span class="text-green-500">✓ Goal created!</span>`;
+        document.getElementById("text_title").value = "";
+        document.getElementById("text_description").value = "";
         markGoalCreated();
         blockWorkoutAccessIfNoGoal();
       } else {
@@ -130,7 +140,7 @@ function addWorkout(exercise) {
 
 
 // =======================================
-// RENDER MANUAL WORKOUTS
+// RENDER MANUAL WORKOUTS (TailwindCSS)
 // =======================================
 function renderSelectedWorkouts() {
   const selectedList = document.getElementById("selected_workouts");
@@ -138,29 +148,36 @@ function renderSelectedWorkouts() {
   selectedList.innerHTML = "";
 
   if (!selectedExercises.length) {
-    selectedList.innerHTML = `<div class="empty-state">No workouts selected yet.</div>`;
+    selectedList.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No workouts selected yet.</p>`;
     const existingBtn = document.getElementById("btn_start_session");
     if (existingBtn) existingBtn.remove();
     return;
   }
 
   selectedExercises.forEach((ex, idx) => {
-    const card = document.createElement("div");
-    card.className = "workout-card selected-workout-item" + (ex.fromHistory ? " from-history" : "");
-
     const historyBadge = ex.fromHistory
-      ? '<span class="from-history-badge">History</span>'
+      ? `<span class="ml-2 px-2 py-0.5 text-xs font-semibold bg-primary/20 text-primary rounded-full">HISTORY</span>`
       : '';
 
+    const card = document.createElement("div");
+    card.className = "flex items-center justify-between p-4 bg-slate-200 dark:bg-slate-800 rounded-lg" + (ex.fromHistory ? " border-l-4 border-primary" : "");
     card.innerHTML = `
-      <strong class="exercise-title" style="cursor:pointer">${ex.name}${historyBadge}</strong>
-      <div class="set-rep-row">
-        <label>Sets:</label>
-        <input type="number" min="1" value="${ex.sets || 3}" class="input-sets">
-        <label>Reps:</label>
-        <input type="number" min="1" value="${ex.reps || 8}" class="input-reps">
-        <button class="btn btn-outline btn-remove">Remove</button>
+      <div class="flex-1">
+        <p class="font-semibold text-slate-900 dark:text-white cursor-pointer hover:text-primary transition-colors exercise-title">${ex.name}${historyBadge}</p>
+        <div class="flex items-center gap-4 mt-2">
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-slate-500 dark:text-slate-400">Sets:</label>
+            <input type="number" min="1" value="${ex.sets || 3}" class="input-sets w-16 bg-slate-100 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-sm text-slate-800 dark:text-slate-200">
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-slate-500 dark:text-slate-400">Reps:</label>
+            <input type="number" min="1" value="${ex.reps || 8}" class="input-reps w-16 bg-slate-100 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-sm text-slate-800 dark:text-slate-200">
+          </div>
+        </div>
       </div>
+      <button class="btn-remove text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+        <span class="material-symbols-outlined">delete</span>
+      </button>
     `;
 
     card.querySelector(".exercise-title").onclick = () => openModal(ex);
@@ -189,9 +206,8 @@ function renderSelectedWorkouts() {
   if (!startSessionBtn) {
     startSessionBtn = document.createElement("button");
     startSessionBtn.id = "btn_start_session";
-    startSessionBtn.textContent = "Start Manual Session";
-    startSessionBtn.className = "btn btn-accent full-width";
-    startSessionBtn.style.marginTop = "15px";
+    startSessionBtn.className = "w-full flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors mt-4";
+    startSessionBtn.innerHTML = `<span class="material-symbols-outlined">play_arrow</span> Start Manual Session`;
     selectedList.parentElement.appendChild(startSessionBtn);
   }
 
@@ -223,22 +239,22 @@ function openModal(ex) {
   const container = document.getElementById("modal_container");
   if (!container) return;
   document.getElementById("modal_name").textContent = ex.name || "";
-  document.getElementById("modal_target_muscles").textContent = (ex.targetMuscles || []).join(", ");
-  document.getElementById("modal_secondary_muscles").textContent = (ex.secondaryMuscles || []).join(", ");
-  document.getElementById("modal_equipment").textContent = (ex.equipments || []).join(", ");
+  document.getElementById("modal_target_muscles").textContent = (ex.targetMuscles || []).join(", ") || "N/A";
+  document.getElementById("modal_secondary_muscles").textContent = (ex.secondaryMuscles || []).join(", ") || "N/A";
+  document.getElementById("modal_equipment").textContent = (ex.equipments || []).join(", ") || "N/A";
   document.getElementById("modal_instructions").innerHTML = Array.isArray(ex.instructions)
-    ? ex.instructions.map((i) => `• ${i}`).join("<br>")
-    : ex.instructions || "";
+    ? ex.instructions.map((i, idx) => `<span class="text-primary font-bold">${idx + 1}.</span> ${i}`).join("<br><br>")
+    : ex.instructions || "No instructions available";
   document.getElementById("modal_gif").src = ex.gifUrl || "";
-  container.style.display = "flex";
+  container.classList.add("visible");
 }
 const closeModalBtn = document.getElementById("btn_close_modal");
 if (closeModalBtn)
-  closeModalBtn.onclick = () => (document.getElementById("modal_container").style.display = "none");
+  closeModalBtn.onclick = () => document.getElementById("modal_container").classList.remove("visible");
 
 
 // =======================================
-// SEARCH WORKOUTS (MANUAL)
+// SEARCH WORKOUTS (MANUAL) - TailwindCSS
 // =======================================
 async function setupWorkoutSearch() {
   const searchBtn = document.getElementById("btn_find_workout");
@@ -246,11 +262,18 @@ async function setupWorkoutSearch() {
   const searchResults = document.getElementById("search_results");
   if (!searchBtn || !searchInput || !searchResults) return;
 
+  // Enter key support
+  searchInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") searchBtn.click();
+  });
+
   searchBtn.onclick = async () => {
     if (!userHasGoal()) return alert("Create a goal first.");
     const query = searchInput.value.trim();
     if (!query) return alert("Enter a search term.");
-    searchResults.innerHTML = "<p>Loading...</p>";
+    searchResults.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">
+      <span class="material-symbols-outlined animate-spin">progress_activity</span> Searching...
+    </p>`;
     const token = localStorage.getItem("access_token");
 
     try {
@@ -260,25 +283,25 @@ async function setupWorkoutSearch() {
       const data = await res.json();
 
       if (!res.ok || !Array.isArray(data) || !data.length) {
-        searchResults.innerHTML = "<p>No exercises found.</p>";
+        searchResults.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No exercises found.</p>`;
         return;
       }
 
       searchResults.innerHTML = "";
       data.forEach((ex) => {
         const card = document.createElement("div");
-        card.className = "workout-card";
+        card.className = "flex items-start gap-4 p-3 bg-slate-200 dark:bg-slate-800 rounded-lg";
         card.innerHTML = `
-          <img src="${ex.gifUrl}" class="workout-gif-banner">
-          <div class="workout-info">
-            <h3>${ex.name}</h3>
-            <p><strong>Target:</strong> ${(ex.targetMuscles || []).join(", ")}</p>
-            <p><strong>Equipment:</strong> ${(ex.equipments || []).join(", ")}</p>
+          <img src="${ex.gifUrl}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" alt="${ex.name}">
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-slate-900 dark:text-white truncate">${ex.name}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${(ex.targetMuscles || []).join(", ")}</p>
           </div>
-          <div class="workout-actions">
-            <button class="btn btn-accent btn-add">Add</button>
-            <button class="btn btn-outline btn-details">Details</button>
-          </div>`;
+          <div class="flex gap-2 flex-shrink-0">
+            <button class="btn-add px-3 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors">Add</button>
+            <button class="btn-details px-3 py-1.5 bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors">Info</button>
+          </div>
+        `;
         card.querySelector(".btn-add").onclick = (e) => {
           e.stopPropagation();
           addWorkout(ex);
@@ -290,20 +313,19 @@ async function setupWorkoutSearch() {
         searchResults.appendChild(card);
       });
     } catch (err) {
-      searchResults.innerHTML = "<p>Error fetching exercises.</p>";
+      searchResults.innerHTML = `<p class="text-red-500 text-sm text-center py-4">Error fetching exercises.</p>`;
     }
   };
 }
 
 
 // =======================================
-// LOAD USER WORKOUTS (Manual + AI)
+// LOAD USER WORKOUTS (Manual + AI) - TailwindCSS
 // =======================================
 async function loadUserWorkouts() {
   const token = localStorage.getItem("access_token");
-  const manualContainer = document.getElementById("selected_workouts");
   const aiContainer = document.getElementById("ai_workouts_container");
-  if (!token || !manualContainer) return;
+  if (!token) return;
 
   try {
     const res = await fetch("/workout/all", {
@@ -312,59 +334,43 @@ async function loadUserWorkouts() {
     const data = await res.json();
 
     if (!res.ok || !Array.isArray(data)) {
-      manualContainer.innerHTML = "<p>Failed to load workouts.</p>";
-      if (aiContainer) aiContainer.innerHTML = "<p>Failed to load AI plans.</p>";
+      if (aiContainer) aiContainer.innerHTML = `<p class="text-red-500 text-sm">Failed to load AI plans.</p>`;
       return;
     }
 
-    const manualWorkouts = data.filter((w) => !w.category?.includes("AI Generated"));
     const aiWorkouts = data.filter((w) => w.category?.includes("AI Generated"));
-
-    // Render manual workouts
-    manualContainer.innerHTML = "";
-    manualWorkouts.forEach((workout) => {
-      const exercises = workout.details?.exercises || [];
-      const card = document.createElement("div");
-      card.className = "workout-card";
-      card.innerHTML = `
-        <h3>${workout.title}</h3>
-        <p><strong>Exercises:</strong> ${exercises.length}</p>
-        <div class="actions">
-          <button class="btn btn-accent start-session" data-id="${workout.id}">
-            Start Session
-          </button>
-        </div>`;
-      manualContainer.appendChild(card);
-    });
 
     // Render AI workouts
     if (aiContainer) {
       aiContainer.innerHTML = "";
       if (aiWorkouts.length === 0) {
-        aiContainer.innerHTML = "<p>No AI-generated plans yet.</p>";
+        aiContainer.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No AI-generated plans yet. <a href="/ai_workout" class="text-primary hover:underline">Create one →</a></p>`;
       } else {
         aiWorkouts.forEach((workout) => {
           const exercises = workout.details?.exercises || [];
           const card = document.createElement("div");
-          card.className = "workout-card";
+          card.className = "flex items-center justify-between p-4 bg-slate-200 dark:bg-slate-800 rounded-lg";
           card.innerHTML = `
-            <h3>${workout.title}</h3>
-            <p><strong>Exercises:</strong> ${exercises.length}</p>
-            <div class="actions">
-              <button class="btn btn-accent start-ai" data-id="${workout.id}">
+            <div>
+              <p class="font-semibold text-slate-900 dark:text-white">${workout.title}</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400">${exercises.length} exercises</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="start-ai px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors" data-id="${workout.id}">
                 Run Plan
               </button>
-              <button class="btn btn-danger delete-ai" data-id="${workout.id}">
-                Delete
+              <button class="delete-ai px-3 py-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" data-id="${workout.id}">
+                <span class="material-symbols-outlined text-base">delete</span>
               </button>
-            </div>`;
+            </div>
+          `;
           aiContainer.appendChild(card);
         });
       }
     }
 
     // Bind session + delete buttons
-    document.querySelectorAll(".start-session, .start-ai").forEach((btn) => {
+    document.querySelectorAll(".start-ai").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
         const id = e.target.dataset.id;
         const res = await fetch(`/workout/${id}`, {
@@ -380,7 +386,7 @@ async function loadUserWorkouts() {
 
     document.querySelectorAll(".delete-ai").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
-        const id = e.target.dataset.id;
+        const id = e.currentTarget.dataset.id;
         if (!confirm("Delete this AI workout?")) return;
         await fetch(`/workout/${id}`, {
           method: "DELETE",
@@ -408,7 +414,6 @@ function addHistoryExercisesToSession(historyExercises) {
   let skippedCount = 0;
 
   historyExercises.forEach((ex) => {
-    // Check if exercise already exists in selected
     const alreadyExists = selectedExercises.some(
       (sel) => sel.name.toLowerCase() === ex.name.toLowerCase()
     );
@@ -418,7 +423,6 @@ function addHistoryExercisesToSession(historyExercises) {
       return;
     }
 
-    // Convert history format to selectedExercises format
     selectedExercises.push({
       name: ex.name,
       targetMuscles: ex.targetMuscles || [],
@@ -429,7 +433,7 @@ function addHistoryExercisesToSession(historyExercises) {
       sets: ex.totalSets || ex.sets || 3,
       reps: ex.totalReps || ex.reps || 8,
       isAI: false,
-      fromHistory: true, // Mark as coming from history
+      fromHistory: true,
     });
     addedCount++;
   });
@@ -437,7 +441,6 @@ function addHistoryExercisesToSession(historyExercises) {
   saveSelectedToStorage();
   renderSelectedWorkouts();
 
-  // Provide feedback
   if (addedCount > 0 && skippedCount > 0) {
     alert(`Added ${addedCount} exercise(s). ${skippedCount} already in your session.`);
   } else if (addedCount > 0) {
@@ -446,7 +449,6 @@ function addHistoryExercisesToSession(historyExercises) {
     alert("All exercises are already in your session.");
   }
 
-  // Scroll to the selected workouts section
   const selectedSection = document.getElementById("selected_workouts");
   if (selectedSection) {
     selectedSection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -455,7 +457,7 @@ function addHistoryExercisesToSession(historyExercises) {
 
 
 // =======================================
-// WORKOUT HISTORY (Detailed)
+// WORKOUT HISTORY - TailwindCSS
 // =======================================
 function loadWorkoutHistory() {
   const container = document.getElementById("workout_history_container");
@@ -464,7 +466,6 @@ function loadWorkoutHistory() {
 
   const history = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
 
-  // --- Clear history button ---
   if (clearBtn) {
     clearBtn.onclick = () => {
       if (confirm("Are you sure you want to clear your workout history?")) {
@@ -474,63 +475,55 @@ function loadWorkoutHistory() {
     };
   }
 
-  // --- Empty state ---
   if (!history.length) {
-    container.innerHTML = "<p>No completed sessions yet.</p>";
+    container.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No completed sessions yet.</p>`;
     return;
   }
 
-  // --- Render history entries ---
   container.innerHTML = "";
   history
-    .slice(-10) // last 10
-    .reverse()  // newest first
+    .slice(-10)
+    .reverse()
     .forEach((entry, displayIdx) => {
       const date = new Date(entry.date);
       const mins = Math.floor(entry.durationSeconds / 60);
       const secs = entry.durationSeconds % 60;
       const workoutName = entry.name || `Workout - ${date.toLocaleDateString()}`;
-      const entryId = entry.id || Date.now() + displayIdx; // fallback for old entries
+      const entryId = entry.id || Date.now() + displayIdx;
 
       const card = document.createElement("div");
-      card.className = "workout-card history-card";
+      card.className = "p-4 bg-slate-200 dark:bg-slate-800 rounded-lg";
       card.innerHTML = `
-        <div class="history-card-header">
-          <h3 class="history-workout-name" data-id="${entryId}">${workoutName}</h3>
-          <button class="btn btn-outline btn-edit-name" title="Edit name">✏️</button>
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex-1">
+            <h3 class="font-bold text-slate-900 dark:text-white history-workout-name" data-id="${entryId}">${workoutName}</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">${date.toLocaleDateString()} at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+          </div>
+          <button class="btn-edit-name text-slate-400 hover:text-primary p-1 transition-colors" title="Edit name">
+            <span class="material-symbols-outlined text-base">edit</span>
+          </button>
         </div>
-        <p class="history-date">${date.toLocaleDateString()} — ${date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}</p>
-        <p><strong>Duration:</strong> ${mins}m ${secs}s</p>
-        <div class="history-exercises">
-          <h4>Exercises:</h4>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">
+          <span class="material-symbols-outlined text-base align-middle mr-1">timer</span>
+          ${mins}m ${secs}s
+        </p>
+        <div class="space-y-1 mb-3">
           ${entry.exercises && entry.exercises.length
-          ? entry.exercises
-            .map(
-              (ex) => `
-                <div class="exercise-summary">
-                  <strong>${ex.name}</strong><br>
-                  Sets: ${ex.totalSets || ex.sets || "-"}, 
-                  Reps: ${ex.totalReps || ex.reps || "-"} 
-                  ${ex.totalVolume
-                  ? `, Volume: ${ex.totalVolume.toFixed(1)} kg`
-                  : ""
-                }
+          ? entry.exercises.map((ex) => `
+                <div class="text-sm">
+                  <span class="font-medium text-slate-700 dark:text-slate-300">${ex.name}</span>
+                  <span class="text-slate-500 dark:text-slate-400"> — ${ex.totalSets || ex.sets || "-"} sets, ${ex.totalReps || ex.reps || "-"} reps</span>
                 </div>
-              `
-            )
-            .join("")
-          : "<p>No exercise data recorded.</p>"
+              `).join("")
+          : `<p class="text-slate-500 dark:text-slate-400 text-sm">No exercise data recorded.</p>`
         }
         </div>
-        <div class="history-card-actions">
-          <button class="btn btn-accent btn-add-to-session">Add to Session</button>
-        </div>
+        <button class="btn-add-to-session w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors">
+          <span class="material-symbols-outlined text-base">add</span>
+          Add to Session
+        </button>
       `;
 
-      // Bind edit name button
       const editBtn = card.querySelector(".btn-edit-name");
       const nameEl = card.querySelector(".history-workout-name");
       if (editBtn && nameEl) {
@@ -544,7 +537,6 @@ function loadWorkoutHistory() {
         });
       }
 
-      // Bind add to session button
       const addBtn = card.querySelector(".btn-add-to-session");
       if (addBtn && entry.exercises && entry.exercises.length) {
         addBtn.addEventListener("click", () => {
@@ -552,7 +544,9 @@ function loadWorkoutHistory() {
         });
       } else if (addBtn) {
         addBtn.disabled = true;
-        addBtn.textContent = "No Exercises";
+        addBtn.classList.remove("bg-primary", "hover:bg-primary/90");
+        addBtn.classList.add("bg-slate-400", "cursor-not-allowed");
+        addBtn.innerHTML = `<span class="material-symbols-outlined text-base">block</span> No Exercises`;
       }
 
       container.appendChild(card);
@@ -571,7 +565,6 @@ function updateHistoryEntryName(entryId, newName) {
     localStorage.setItem("workoutHistory", JSON.stringify(history));
   }
 }
-
 
 
 // =======================================

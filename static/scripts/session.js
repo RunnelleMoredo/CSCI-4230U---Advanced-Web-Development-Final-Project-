@@ -1,15 +1,18 @@
 // =======================================
-// THEME (shared with main)
+// THEME (Tailwind dark mode)
 // =======================================
 function applySavedTheme() {
   const saved = localStorage.getItem("theme");
   const checkbox = document.getElementById("theme_toggle_checkbox");
-  if (saved === "dark") {
-    document.body.classList.add("dark-mode");
-    if (checkbox) checkbox.checked = true;
-  } else {
-    document.body.classList.remove("dark-mode");
+  const htmlEl = document.documentElement;
+
+  if (saved === "light") {
+    htmlEl.classList.remove("dark");
     if (checkbox) checkbox.checked = false;
+  } else {
+    // Default to dark
+    htmlEl.classList.add("dark");
+    if (checkbox) checkbox.checked = true;
   }
 }
 applySavedTheme();
@@ -18,7 +21,7 @@ const themeToggle = document.getElementById("theme_toggle_checkbox");
 if (themeToggle) {
   themeToggle.addEventListener("change", (e) => {
     const dark = e.target.checked;
-    document.body.classList.toggle("dark-mode", dark);
+    document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   });
 }
@@ -46,33 +49,58 @@ const exercises =
   activeWorkout?.details?.exercises ||
   JSON.parse(localStorage.getItem("selectedExercises") || "[]");
 
+// Set workout title
+const workoutTitleEl = document.getElementById("workout_title");
+if (workoutTitleEl && activeWorkout.title) {
+  workoutTitleEl.textContent = activeWorkout.title;
+}
+
 if (!exercises.length) {
   sessionContainer.innerHTML = `
-    <h2>No Exercises Selected</h2>
-    <p>Please return to the main page and add or run a workout.</p>
+    <div class="text-center py-12 text-slate-500 dark:text-slate-400">
+      <span class="material-symbols-outlined text-6xl mb-4 block">warning</span>
+      <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">No Exercises Selected</h2>
+      <p>Please return to the main dashboard and add or run a workout.</p>
+      <a href="/main_dashboard" class="inline-block mt-4 px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors">
+        Go to Dashboard
+      </a>
+    </div>
   `;
 } else {
-  sessionContainer.innerHTML = `<h2 class="section-heading">${activeWorkout.title || "Today's Workout"}</h2>`;
+  sessionContainer.innerHTML = "";
 
   exercises.forEach((ex, idx) => {
     const card = document.createElement("div");
-    card.className = "workout-card selected-card session-exercise-card";
+    card.className = "rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6";
 
     card.innerHTML = `
-      <div class="session-exercise-header">
-        <div>
-          <h3>${ex.name}</h3>
-          <p class="session-exercise-meta">
-            Suggested: ${ex.sets} sets × ${ex.reps} reps
-          </p>
-        </div>
-        <img src="${ex.gifUrl || ""}" class="workout-gif session-gif" alt="${ex.name}">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white">${ex.name}</h3>
+        <span class="material-symbols-outlined text-slate-500 dark:text-slate-400">fitness_center</span>
       </div>
-
-      <div id="sets_${idx}" class="logged-sets"></div>
-
-      <div class="session-card-footer">
-        <button class="btn btn-outline btn-add-set">Add Set</button>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Suggested: ${ex.sets || 3} sets × ${ex.reps || 8} reps</p>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-slate-200 dark:border-slate-700">
+              <th class="px-4 py-3 text-left text-slate-500 dark:text-slate-400 w-1/6 text-sm font-medium">SET</th>
+              <th class="px-4 py-3 text-left text-slate-500 dark:text-slate-400 w-2/6 text-sm font-medium">REPS</th>
+              <th class="px-4 py-3 text-left text-slate-500 dark:text-slate-400 w-2/6 text-sm font-medium">WEIGHT (LB)</th>
+              <th class="px-4 py-3 text-center text-slate-500 dark:text-slate-400 w-1/6 text-sm font-medium">✓</th>
+            </tr>
+          </thead>
+          <tbody id="sets_${idx}">
+            <!-- Sets will be added here -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="mt-4 flex justify-between items-center">
+        <button class="btn-add-set flex items-center gap-1 text-primary text-sm font-bold hover:underline">
+          <span class="material-symbols-outlined text-base">add</span>
+          <span>Add Set</span>
+        </button>
       </div>
     `;
 
@@ -82,23 +110,30 @@ if (!exercises.length) {
 
     sessionEntries.push({ exercise: ex, setsContainer });
 
-    addSetBtn.addEventListener("click", () => {
+    // Add one set by default
+    const addSet = () => {
       setCount += 1;
-      const row = document.createElement("div");
-      row.className = "logged-set-row";
+      const row = document.createElement("tr");
+      row.className = "border-b border-slate-200 dark:border-slate-800 set-row";
       row.innerHTML = `
-        <span class="set-label">Set ${setCount}</span>
-        <div class="set-inputs">
-          <span>Reps</span>
-          <input type="number" min="1" value="${ex.reps}" />
-          <span>Weight (lb)</span>
-          <input type="number" min="0" value="0" />
-          <button class="btn btn-danger btn-remove-set">x</button>
-        </div>
+        <td class="h-14 px-4 py-2 text-slate-600 dark:text-slate-300">${setCount}</td>
+        <td class="h-14 px-4 py-2">
+          <input class="reps-input w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-3 py-2" type="number" value="${ex.reps || 8}" min="1">
+        </td>
+        <td class="h-14 px-4 py-2">
+          <input class="weight-input w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-3 py-2" type="number" value="0" min="0">
+        </td>
+        <td class="h-14 px-4 py-2 text-center">
+          <input class="set-complete w-5 h-5 rounded text-primary bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 focus:ring-primary cursor-pointer" type="checkbox">
+        </td>
       `;
-      row.querySelector(".btn-remove-set").addEventListener("click", () => row.remove());
       setsContainer.appendChild(row);
-    });
+    };
+
+    // Add first set automatically
+    addSet();
+
+    addSetBtn.addEventListener("click", addSet);
 
     sessionContainer.appendChild(card);
   });
@@ -106,7 +141,8 @@ if (!exercises.length) {
   // Finish button
   const finishBtn = document.createElement("button");
   finishBtn.textContent = "Finish Workout";
-  finishBtn.className = "btn btn-accent finish-workout-btn";
+  finishBtn.className = "finish-workout-btn w-full flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-14 px-5 bg-primary text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors mt-6";
+  finishBtn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Finish Workout`;
   sessionContainer.appendChild(finishBtn);
 
   finishBtn.addEventListener("click", async () => {
@@ -114,16 +150,15 @@ if (!exercises.length) {
     const token = localStorage.getItem("access_token");
 
     sessionEntries.forEach(({ exercise, setsContainer }) => {
-      const rows = setsContainer.querySelectorAll(".logged-set-row");
+      const rows = setsContainer.querySelectorAll(".set-row");
       if (!rows.length) return;
       let totalSets = rows.length;
       let totalReps = 0;
       let totalVolume = 0;
 
       rows.forEach((row) => {
-        const inputs = row.querySelectorAll("input");
-        const reps = parseInt(inputs[0].value, 10) || 0;
-        const weight = parseFloat(inputs[1].value) || 0;
+        const reps = parseInt(row.querySelector(".reps-input").value, 10) || 0;
+        const weight = parseFloat(row.querySelector(".weight-input").value) || 0;
         totalReps += reps;
         totalVolume += reps * weight;
       });
@@ -136,21 +171,24 @@ if (!exercises.length) {
       });
     });
 
-    const mins = Math.floor(timerSeconds / 60);
+    const hours = Math.floor(timerSeconds / 3600);
+    const mins = Math.floor((timerSeconds % 3600) / 60);
     const secs = timerSeconds % 60;
-    summaryTimeEl.textContent = `Duration: ${mins}m ${secs}s`;
+    summaryTimeEl.textContent = `Duration: ${hours > 0 ? hours + 'h ' : ''}${mins}m ${secs}s`;
 
     summaryExercisesEl.innerHTML = "";
     if (!summaryExercises.length) {
-      summaryExercisesEl.innerHTML = "<p>No sets logged yet.</p>";
+      summaryExercisesEl.innerHTML = `<p class="text-slate-500 dark:text-slate-400">No sets logged yet.</p>`;
     } else {
       summaryExercises.forEach((item) => {
         const row = document.createElement("div");
-        row.className = "summary-row";
+        row.className = "bg-slate-200 dark:bg-slate-800 rounded-lg p-3";
         row.innerHTML = `
-          <strong>${item.name}</strong><br>
-          Sets: ${item.totalSets}, Total reps: ${item.totalReps}
-          ${item.totalVolume ? `, Volume: ${item.totalVolume.toFixed(1)} lb` : ""}
+          <p class="font-semibold text-slate-900 dark:text-white">${item.name}</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400">
+            ${item.totalSets} sets • ${item.totalReps} reps
+            ${item.totalVolume ? ` • ${item.totalVolume.toFixed(0)} lb volume` : ""}
+          </p>
         `;
         summaryExercisesEl.appendChild(row);
       });
@@ -184,7 +222,7 @@ if (!exercises.length) {
         exercises: summaryExercises,
       });
       localStorage.removeItem("activeWorkout");
-      localStorage.removeItem("selectedExercises"); // Clear Today's Workout Plan
+      localStorage.removeItem("selectedExercises");
       window.location.href = "/main_dashboard";
     };
   });
@@ -196,7 +234,7 @@ if (!exercises.length) {
 function saveSessionToHistory(payload) {
   const history = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
   history.push({
-    id: Date.now(), // Unique ID for editing
+    id: Date.now(),
     name: payload.name || `Workout - ${new Date().toLocaleDateString()}`,
     date: new Date().toISOString(),
     durationSeconds: payload.durationSeconds,
@@ -208,6 +246,9 @@ function saveSessionToHistory(payload) {
 // =======================================
 // TIMER
 // =======================================
+const timerHoursEl = document.getElementById("timer_hours");
+const timerMinutesEl = document.getElementById("timer_minutes");
+const timerSecondsEl = document.getElementById("timer_seconds");
 const timerDisplay = document.getElementById("timer_display");
 const btnStart = document.getElementById("btn_timer_start");
 const btnPause = document.getElementById("btn_timer_pause");
@@ -217,13 +258,20 @@ let timerSeconds = 0;
 let timerId = null;
 
 function renderTime() {
-  const m = String(Math.floor(timerSeconds / 60)).padStart(2, "0");
+  const h = String(Math.floor(timerSeconds / 3600)).padStart(2, "0");
+  const m = String(Math.floor((timerSeconds % 3600) / 60)).padStart(2, "0");
   const s = String(timerSeconds % 60).padStart(2, "0");
-  timerDisplay.textContent = `${m}:${s}`;
+
+  if (timerHoursEl) timerHoursEl.textContent = h;
+  if (timerMinutesEl) timerMinutesEl.textContent = m;
+  if (timerSecondsEl) timerSecondsEl.textContent = s;
+  if (timerDisplay) timerDisplay.textContent = `${m}:${s}`;
 }
 
 btnStart?.addEventListener("click", () => {
   if (timerId !== null) return;
+  // Update button to show playing state
+  btnStart.innerHTML = `<span class="material-symbols-outlined">hourglass_top</span><span class="truncate">Running...</span>`;
   timerId = setInterval(() => {
     timerSeconds++;
     renderTime();
@@ -234,6 +282,7 @@ btnPause?.addEventListener("click", () => {
   if (timerId !== null) {
     clearInterval(timerId);
     timerId = null;
+    btnStart.innerHTML = `<span class="material-symbols-outlined">play_arrow</span><span class="truncate">Resume</span>`;
   }
 });
 
@@ -244,6 +293,7 @@ btnReset?.addEventListener("click", () => {
     clearInterval(timerId);
     timerId = null;
   }
+  btnStart.innerHTML = `<span class="material-symbols-outlined">play_arrow</span><span class="truncate">Start</span>`;
 });
 
 renderTime();

@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loading = document.getElementById("loading");
   const resultDiv = document.getElementById("planResult");
   const generateBtn = document.getElementById("generateBtn");
+  const buttonContainer = document.getElementById("actionButtonsContainer") || form.parentElement;
 
   // Create buttons dynamically if missing
   let saveBtn = document.getElementById("savePlanBtn");
@@ -11,19 +12,19 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!saveBtn) {
     saveBtn = document.createElement("button");
     saveBtn.id = "savePlanBtn";
-    saveBtn.className = "switch-btn";
-    saveBtn.textContent = "Save Plan";
+    saveBtn.className = "flex items-center justify-center gap-2 px-6 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 font-medium transition-colors";
+    saveBtn.innerHTML = '<span class="material-symbols-outlined text-base">bookmark</span> Save Plan';
     saveBtn.style.display = "none";
-    form.insertAdjacentElement("afterend", saveBtn);
+    buttonContainer.appendChild(saveBtn);
   }
 
   if (!convertBtn) {
     convertBtn = document.createElement("button");
     convertBtn.id = "convertToRoutineBtn";
-    convertBtn.className = "switch-btn";
-    convertBtn.textContent = "Save as Routine";
+    convertBtn.className = "flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 rounded-lg text-white font-bold transition-colors";
+    convertBtn.innerHTML = '<span class="material-symbols-outlined text-base">fitness_center</span> Save as Routine';
     convertBtn.style.display = "none";
-    form.insertAdjacentElement("afterend", convertBtn);
+    buttonContainer.appendChild(convertBtn);
   }
 
   // Preselect experience from URL ?mode=
@@ -128,59 +129,57 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // -----------------------------
-// CONVERT PLAN → REAL WORKOUT ROUTINE
-// -----------------------------
-convertBtn.addEventListener("click", async () => {
-  const token = localStorage.getItem("access_token");
-  const planId = localStorage.getItem("last_ai_plan_id");
-  if (!planId) {
-    alert("No AI plan found. Please generate and save a plan first.");
-    return;
-  }
-
-  try {
-    const res = await fetch("/workout/ai/workout-plan/save", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({ plan_id: planId }),
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      alert("✅ Routine saved successfully! Check your dashboard.");
-    } else {
-      alert("❌ " + (data.error || "Save failed."));
+  // CONVERT PLAN → REAL WORKOUT ROUTINE
+  // -----------------------------
+  convertBtn.addEventListener("click", async () => {
+    const token = localStorage.getItem("access_token");
+    const planId = localStorage.getItem("last_ai_plan_id");
+    if (!planId) {
+      alert("No AI plan found. Please generate and save a plan first.");
+      return;
     }
-  } catch (err) {
-    alert("❌ Network error while saving routine.");
-  }
-});
 
+    try {
+      const res = await fetch("/workout/ai/workout-plan/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({ plan_id: planId }),
+      });
 
-
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ Routine saved successfully! Check your dashboard.");
+      } else {
+        alert("❌ " + (data.error || "Save failed."));
+      }
+    } catch (err) {
+      alert("❌ Network error while saving routine.");
+    }
+  });
 
   // -----------------------------
   // DISPLAY PLAN
   // -----------------------------
   function displayPlan(plan) {
+    resultDiv.classList.remove("hidden");
     resultDiv.style.opacity = "0";
     resultDiv.style.transition = "opacity 0.6s ease";
 
-    let html = `<h2>Your Weekly Plan</h2>`;
+    let html = `<h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">Your Weekly Plan</h2>`;
     plan.weekly_plan.forEach((day) => {
       html += `
-        <div class="plan-day">
-          <h3>${day.day} – ${day.focus}</h3>
-          <ul>
+        <div class="p-4 bg-slate-200 dark:bg-slate-800 rounded-lg mb-3">
+          <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">${day.day} <span class="text-primary">— ${day.focus}</span></h3>
+          <ul class="space-y-1 mb-3">
             ${day.exercises
-              .map((ex) => `<li>${ex.name} (${ex.sets} x ${ex.reps})</li>`)
-              .join("")}
+          .map((ex) => `<li class="text-slate-700 dark:text-slate-300 text-sm">• ${ex.name} <span class="text-slate-500">(${ex.sets} × ${ex.reps})</span></li>`)
+          .join("")}
           </ul>
-          <p><strong>Warmup:</strong> ${day.warmup || "—"}</p>
-          <p><strong>Cooldown:</strong> ${day.cooldown || "—"}</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400"><strong>Warmup:</strong> ${day.warmup || "—"}</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400"><strong>Cooldown:</strong> ${day.cooldown || "—"}</p>
         </div>`;
     });
 

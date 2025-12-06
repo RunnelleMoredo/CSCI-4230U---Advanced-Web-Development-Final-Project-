@@ -1,247 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>AI Workout Plan Generator</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
-  <script defer src="{{ url_for('static', filename='scripts/ai_workout.js') }}"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Workout Coach - Daily Habit & Workout Hub</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2b6cee",
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+          },
+          fontFamily: { "display": ["Inter"] },
+        },
+      },
+    }
+  </script>
   <style>
-    body {
-      margin: 0;
-      font-family: "Poppins", sans-serif;
-      background: radial-gradient(circle at top, #0f1620, #0a0f14 70%);
-      color: #f0f0f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-      padding: 40px 20px;
-    }
-
-    /* Container styling */
-    .ai-container {
-      width: 100%;
-      max-width: 900px;
-      background: rgba(20, 25, 35, 0.9);
-      border: 1px solid rgba(0, 255, 170, 0.15);
-      border-radius: 16px;
-      box-shadow: 0 0 25px rgba(0, 255, 170, 0.15);
-      padding: 30px 40px;
-      margin-top: 30px;
-      animation: fadeInUp 1s ease;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 2rem;
-      color: #00ffaa;
-      text-shadow: 0 0 12px rgba(0, 255, 170, 0.25);
-    }
-
-    /* Form layout */
-    form {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    input,
-    select {
-      background: #111722;
-      border: 1px solid #00ffaa30;
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      min-width: 160px;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    input:focus,
-    select:focus {
-      outline: none;
-      border-color: #00ffaa;
-      box-shadow: 0 0 8px #00ffaa80;
-    }
-
-    button {
-      background: #00ffaa;
-      border: none;
-      color: #0b0f14;
-      font-weight: 600;
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.3s ease;
-    }
-
-    button:hover {
-      background: #00e699;
-      transform: scale(1.03);
-    }
-
-    /* Loading indicator */
-    #loading {
-      margin-top: 20px;
-      text-align: center;
-      color: #9eeed1;
-      font-size: 0.95rem;
-      display: none;
-    }
-
-    /* Plan display */
-    #planResult {
-      margin-top: 30px;
-      background: #0c1119;
-      border-radius: 12px;
-      padding: 25px;
-      border: 1px solid rgba(0, 255, 170, 0.15);
-      box-shadow: inset 0 0 15px rgba(0, 255, 170, 0.08);
-      min-height: 80px;
-      transition: all 0.3s ease;
-    }
-
-    #planResult h2 {
-      color: #00ffaa;
-      margin-bottom: 15px;
-    }
-
-    .plan-day {
-      background: #131b27;
-      border: 1px solid rgba(0, 255, 170, 0.2);
-      border-radius: 10px;
-      padding: 12px 16px;
-      margin-bottom: 14px;
-    }
-
-    .plan-day h3 {
-      color: #9fffe0;
-      margin-bottom: 8px;
-    }
-
-    .plan-day ul {
-      margin: 0;
-      padding-left: 20px;
-    }
-
-    .plan-day li {
-      font-size: 0.9rem;
-      color: #cfeee3;
-    }
-
-    /* Navigation links */
-    .back-link {
-      color: #00ffaa;
-      text-decoration: none;
-      position: absolute;
-      top: 25px;
-      left: 25px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      opacity: 0.8;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-
-    .back-link:hover {
-      opacity: 1;
-      transform: translateX(-4px);
-    }
-
-    /* Switch section */
-    .switch-section {
-      margin-top: 50px;
-      text-align: center;
-      animation: fadeIn 1s ease;
-    }
-
-    .switch-text {
-      font-size: 1rem;
-      color: #d4d4d4;
-      margin-bottom: 10px;
-    }
-
-    .switch-btn {
-      background: transparent;
-      border: 1.5px solid #00ffaa;
-      color: #00ffaa;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.3s ease;
-    }
-
-    .switch-btn:hover {
-      background: #00ffaa;
-      color: #0a0f14;
-      transform: scale(1.05);
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
   </style>
 </head>
 
-<body>
-  <!-- Back button -->
-  <a href="/fitness_level" class="back-link">← Back to Level Selection</a>
+<body class="font-display bg-background-light dark:bg-background-dark min-h-screen">
+  <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
 
+    <!-- TopNavBar -->
+    <header
+      class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-white/10 px-6 sm:px-10 lg:px-20 py-3 bg-background-light dark:bg-background-dark/80 backdrop-blur-sm sticky top-0 z-10">
+      <div class="flex items-center gap-4 text-slate-800 dark:text-white">
+        <div class="size-6 text-primary">
+          <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M39.5563 34.1455V13.8546C39.5563 15.708 36.8773 17.3437 32.7927 18.3189C30.2914 18.916 27.263 19.2655 24 19.2655C20.737 19.2655 17.7086 18.916 15.2073 18.3189C11.1227 17.3437 8.44365 15.708 8.44365 13.8546V34.1455C8.44365 35.9988 11.1227 37.6346 15.2073 38.6098C17.7086 39.2069 20.737 39.5564 24 39.5564C27.263 39.5564 30.2914 39.2069 32.7927 38.6098C36.8773 37.6346 39.5563 35.9988 39.5563 34.1455Z"
+              fill="currentColor"></path>
+            <path clip-rule="evenodd"
+              d="M10.4485 13.8519C10.4749 13.9271 10.6203 14.246 11.379 14.7361C12.298 15.3298 13.7492 15.9145 15.6717 16.3735C18.0007 16.9296 20.8712 17.2655 24 17.2655C27.1288 17.2655 29.9993 16.9296 32.3283 16.3735C34.2508 15.9145 35.702 15.3298 36.621 14.7361C37.3796 14.246 37.5251 13.9271 37.5515 13.8519C37.5287 13.7876 37.4333 13.5973 37.0635 13.2931C36.5266 12.8516 35.6288 12.3647 34.343 11.9175C31.79 11.0295 28.1333 10.4437 24 10.4437C19.8667 10.4437 16.2099 11.0295 13.657 11.9175C12.3712 12.3647 11.4734 12.8516 10.9365 13.2931C10.5667 13.5973 10.4713 13.7876 10.4485 13.8519ZM41.5563 13.8546V34.1455C41.5563 36.1078 40.158 37.5042 38.7915 38.3869C37.3498 39.3182 35.4192 40.0389 33.2571 40.5551C30.5836 41.1934 27.3973 41.5564 24 41.5564C20.6027 41.5564 17.4164 41.1934 14.7429 40.5551C12.5808 40.0389 10.6502 39.3182 9.20848 38.3869C7.84205 37.5042 6.44365 36.1078 6.44365 34.1455L6.44365 13.8546C6.44365 12.2684 7.37223 11.0454 8.39581 10.2036C9.43325 9.3505 10.8137 8.67141 12.343 8.13948C15.4203 7.06909 19.5418 6.44366 24 6.44366C28.4582 6.44366 32.5797 7.06909 35.657 8.13948C37.1863 8.67141 38.5667 9.3505 39.6042 10.2036C40.6278 11.0454 41.5563 12.2684 41.5563 13.8546Z"
+              fill="currentColor" fill-rule="evenodd"></path>
+          </svg>
+        </div>
+        <h2 class="text-slate-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">The Daily Habit &
+          Workout Hub</h2>
+      </div>
+      <div class="flex flex-1 justify-end items-center gap-4">
+        <nav class="hidden md:flex items-center gap-9">
+          <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+            href="/main_dashboard">Dashboard</a>
+          <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+            href="/session">Workouts</a>
+          <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+            href="/goals_page">Goals</a>
+          <a class="text-primary text-sm font-medium leading-normal" href="#">AI Coach</a>
+        </nav>
+      </div>
+    </header>
 
-  <!-- Main AI Container -->
-  <div class="ai-container">
-    <h1>AI Workout Plan Generator</h1>
+    <main class="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <div class="size-16 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <span class="material-symbols-outlined text-4xl text-primary">smart_toy</span>
+        </div>
+        <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] mb-2">AI Workout
+          Coach</h1>
+        <p class="text-slate-500 dark:text-slate-400 text-lg">Generate a personalized workout plan tailored to your
+          goals.</p>
+      </div>
 
-    <form id="aiWorkoutForm">
-      <input type="text" id="goal" placeholder="Goal (e.g. Lose fat and build strength)" required />
-      <select id="experience">
-        <option value="beginner">Beginner</option>
-        <option value="intermediate">Intermediate</option>
-        <option value="advanced">Advanced</option>
-      </select>
-      <input type="number" id="days_per_week" placeholder="Days per week" min="1" max="7" value="3" required />
-      <input type="text" id="equipment" placeholder="Equipment (e.g. Dumbbells, treadmill)" />
-      <input type="text" id="injuries" placeholder="Injuries or limitations (e.g. Knee pain)" />
-      <button type="submit" id="generateBtn">Generate AI Plan</button>
-    </form>
+      <!-- Form Card -->
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6 mb-6">
+        <form id="aiWorkoutForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="goal" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Your
+                Goal</label>
+              <input type="text" id="goal" required
+                class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3"
+                placeholder="e.g., Lose fat and build strength">
+            </div>
+            <div>
+              <label for="experience"
+                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Experience Level</label>
+              <select id="experience"
+                class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3">
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+            <div>
+              <label for="days_per_week" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Days
+                per Week</label>
+              <input type="number" id="days_per_week" min="1" max="7" value="3" required
+                class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3">
+            </div>
+            <div>
+              <label for="equipment" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Available
+                Equipment</label>
+              <input type="text" id="equipment"
+                class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3"
+                placeholder="e.g., Dumbbells, treadmill">
+            </div>
+          </div>
+          <div>
+            <label for="injuries" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Injuries or
+              Limitations</label>
+            <input type="text" id="injuries"
+              class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3"
+              placeholder="e.g., Bad knees, shoulder pain (leave blank if none)">
+          </div>
+          <button type="submit" id="generateBtn"
+            class="w-full flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+            <span class="material-symbols-outlined">auto_awesome</span>
+            Generate AI Plan
+          </button>
+        </form>
 
-    <div id="loading">Generating your custom AI plan...</div>
-    <div id="planResult"></div>
+        <!-- Button Container for dynamically created Save/Routine buttons -->
+        <div id="actionButtonsContainer" class="flex flex-wrap gap-3 mt-4 justify-center"></div>
+      </div>
 
-    <!-- Save plan section -->
-    <div id="savePlanSection" style="display:none; text-align:center; margin-top:20px;">
-      <button id="savePlanBtn" class="switch-btn">Save Plan to My Profile</button>
-      <p id="saveStatus" style="color:#9fffe0; font-size:0.9rem; margin-top:8px;"></p>
-    </div>
+      <!-- Loading -->
+      <div id="loading" class="text-center py-8 hidden">
+        <span class="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
+        <p class="text-slate-500 dark:text-slate-400 mt-2">Generating your custom AI plan...</p>
+      </div>
 
-    <!-- Navigation -->
-    <div class="switch-section">
-      <p class="switch-text">Looking to add your own workouts?</p>
-      <button id="goToIntermediate" class="switch-btn">Click here</button>
-    </div>
+      <!-- Results -->
+      <div id="planResult"
+        class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6 hidden">
+        <!-- Plan will be injected here -->
+      </div>
+
+      <!-- Save Plan Section -->
+      <div id="savePlanSection" class="text-center mt-6 hidden">
+        <button id="savePlanBtn"
+          class="flex mx-auto cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-8 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+          <span class="material-symbols-outlined">save</span>
+          Save Plan to My Profile
+        </button>
+        <p id="saveStatus" class="text-sm text-slate-500 dark:text-slate-400 mt-2"></p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="text-center mt-12 pt-8 border-t border-slate-200 dark:border-slate-800">
+        <p class="text-slate-500 dark:text-slate-400 mb-4">Looking to add your own workouts?</p>
+        <button id="goToIntermediate"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 font-medium transition-colors">
+          <span class="material-symbols-outlined text-base">dashboard</span>
+          Go to Dashboard
+        </button>
+      </div>
+    </main>
   </div>
 
+  <script src="{{ url_for('static', filename='scripts/ai_workout.js') }}"></script>
   <script>
     // Go to intermediate dashboard
-    document.addEventListener("DOMContentLoaded", () => {
-      const btn = document.getElementById("goToIntermediate");
-      if (btn) {
-        btn.addEventListener("click", () => {
-          window.location.href = "/main_dashboard";
-        });
-      }
+    document.getElementById("goToIntermediate").addEventListener("click", () => {
+      window.location.href = "/main_dashboard";
     });
+
+    // Theme
+    function applySavedTheme() {
+      const saved = localStorage.getItem("theme");
+      if (saved === "light") {
+        document.documentElement.classList.remove("dark");
+      } else {
+        document.documentElement.classList.add("dark");
+      }
+    }
+    applySavedTheme();
   </script>
 </body>
+
 </html>

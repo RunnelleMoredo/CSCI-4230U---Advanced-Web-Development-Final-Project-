@@ -1,54 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html class="dark" lang="en">
 
 <head>
-    <title>Your Goals</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Goals - Daily Habit & Workout Hub</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b6cee",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: { "display": ["Inter"] },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        #modal_container {
+            display: none;
+        }
+
+        #modal_container.visible {
+            display: flex;
+        }
+    </style>
 </head>
 
-<body>
-    <div class="container">
+<body class="font-display bg-background-light dark:bg-background-dark min-h-screen">
+    <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
 
-        <div class="header">
-            <h1>Your Goals</h1>
-            <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
-        </div>
+        <!-- TopNavBar -->
+        <header
+            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-white/10 px-6 sm:px-10 lg:px-20 py-3 bg-background-light dark:bg-background-dark/80 backdrop-blur-sm sticky top-0 z-10">
+            <div class="flex items-center gap-4 text-slate-800 dark:text-white">
+                <div class="size-6 text-primary">
+                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M39.5563 34.1455V13.8546C39.5563 15.708 36.8773 17.3437 32.7927 18.3189C30.2914 18.916 27.263 19.2655 24 19.2655C20.737 19.2655 17.7086 18.916 15.2073 18.3189C11.1227 17.3437 8.44365 15.708 8.44365 13.8546V34.1455C8.44365 35.9988 11.1227 37.6346 15.2073 38.6098C17.7086 39.2069 20.737 39.5564 24 39.5564C27.263 39.5564 30.2914 39.2069 32.7927 38.6098C36.8773 37.6346 39.5563 35.9988 39.5563 34.1455Z"
+                            fill="currentColor"></path>
+                        <path clip-rule="evenodd"
+                            d="M10.4485 13.8519C10.4749 13.9271 10.6203 14.246 11.379 14.7361C12.298 15.3298 13.7492 15.9145 15.6717 16.3735C18.0007 16.9296 20.8712 17.2655 24 17.2655C27.1288 17.2655 29.9993 16.9296 32.3283 16.3735C34.2508 15.9145 35.702 15.3298 36.621 14.7361C37.3796 14.246 37.5251 13.9271 37.5515 13.8519C37.5287 13.7876 37.4333 13.5973 37.0635 13.2931C36.5266 12.8516 35.6288 12.3647 34.343 11.9175C31.79 11.0295 28.1333 10.4437 24 10.4437C19.8667 10.4437 16.2099 11.0295 13.657 11.9175C12.3712 12.3647 11.4734 12.8516 10.9365 13.2931C10.5667 13.5973 10.4713 13.7876 10.4485 13.8519ZM41.5563 13.8546V34.1455C41.5563 36.1078 40.158 37.5042 38.7915 38.3869C37.3498 39.3182 35.4192 40.0389 33.2571 40.5551C30.5836 41.1934 27.3973 41.5564 24 41.5564C20.6027 41.5564 17.4164 41.1934 14.7429 40.5551C12.5808 40.0389 10.6502 39.3182 9.20848 38.3869C7.84205 37.5042 6.44365 36.1078 6.44365 34.1455L6.44365 13.8546C6.44365 12.2684 7.37223 11.0454 8.39581 10.2036C9.43325 9.3505 10.8137 8.67141 12.343 8.13948C15.4203 7.06909 19.5418 6.44366 24 6.44366C28.4582 6.44366 32.5797 7.06909 35.657 8.13948C37.1863 8.67141 38.5667 9.3505 39.6042 10.2036C40.6278 11.0454 41.5563 12.2684 41.5563 13.8546Z"
+                            fill="currentColor" fill-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h2 class="text-slate-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">The Daily
+                    Habit & Workout Hub</h2>
+            </div>
+            <div class="flex flex-1 justify-end items-center gap-4">
+                <nav class="hidden md:flex items-center gap-9">
+                    <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+                        href="/main_dashboard">Dashboard</a>
+                    <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+                        href="/session">Workouts</a>
+                    <a class="text-primary text-sm font-medium leading-normal" href="#">Goals</a>
+                    <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+                        href="/ai_workout">AI Coach</a>
+                </nav>
+                <button onclick="logout()"
+                    class="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-sm font-medium">
+                    <span class="material-symbols-outlined text-base">logout</span>
+                    <span class="hidden sm:inline">Logout</span>
+                </button>
+            </div>
+        </header>
 
-        <div id="goals"></div>
+        <main class="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] mb-2">
+                    Your Goals</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-lg">Track and manage your daily goals.</p>
+            </div>
 
-        <h2 class="section-title">Create a Goal</h2>
+            <!-- Goals List -->
+            <div id="goals" class="space-y-4 mb-8">
+                <p class="text-slate-500 dark:text-slate-400 text-sm text-center py-8">Loading goals...</p>
+            </div>
 
-        <div class="card">
-            <label>Title:</label><br>
-            <input id="title" type="text"><br><br>
+            <!-- Create Goal Card -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-primary">add_circle</span>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Create a Goal</h2>
+                </div>
 
-            <label>Description:</label><br>
-            <textarea id="description" rows="3"></textarea><br><br>
+                <div class="space-y-4">
+                    <div>
+                        <label for="title"
+                            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>
+                        <input id="title" type="text"
+                            class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3"
+                            placeholder="e.g., Complete 100 pushups">
+                    </div>
+                    <div>
+                        <label for="description"
+                            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+                        <textarea id="description" rows="3"
+                            class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3"
+                            placeholder="Add details about your goal..."></textarea>
+                    </div>
+                    <button id="createBtn"
+                        class="w-full flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+                        <span class="material-symbols-outlined">add</span>
+                        Create Goal
+                    </button>
+                </div>
+            </div>
 
-            <button id="createBtn" class="btn btn-accent">Create</button>
-        </div>
-
-        <button class="btn btn-outline" onclick="window.location.href='/main'">Back to Main</button>
-        <button class="btn btn-accent" onclick="logout()">Logout</button>
-
+            <!-- Back Button -->
+            <div class="mt-6">
+                <a href="/main_dashboard"
+                    class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium">
+                    <span class="material-symbols-outlined text-base">arrow_back</span>
+                    Back to Dashboard
+                </a>
+            </div>
+        </main>
     </div>
 
-    <div id="modal_container" class="modal-overlay">
-        <div class="modal-card">
-            <h2>Edit Goal</h2>
+    <!-- Edit Modal -->
+    <div id="modal_container" class="fixed inset-0 bg-black/80 items-center justify-center z-50">
+        <div class="bg-slate-100 dark:bg-slate-900 p-6 rounded-xl w-full max-w-md mx-4">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4">Edit Goal</h2>
 
-            <label>Title:</label><br>
-            <input id="editTitle" type="text"><br><br>
-
-            <label>Description:</label><br>
-            <textarea id="editDescription" rows="3"></textarea><br><br>
-
-            <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
-            <button class="btn btn-accent" onclick="saveGoal()">Save</button>
-
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>
+                    <input id="editTitle" type="text"
+                        class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+                    <textarea id="editDescription" rows="3"
+                        class="w-full bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary px-4 py-3"></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeEditModal()"
+                        class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-200 font-medium transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="saveGoal()"
+                        class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary hover:bg-primary/90 rounded-lg text-white font-medium transition-colors">
+                        <span class="material-symbols-outlined text-base">save</span>
+                        Save
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-
 
     <script>
         const token = localStorage.getItem("access_token");
@@ -58,20 +171,18 @@
             window.location.href = "/";
         }
 
+        // Theme
         function applySavedTheme() {
             const saved = localStorage.getItem("theme");
-            if (saved === "dark") document.body.classList.add("dark-mode");
+            if (saved === "light") {
+                document.documentElement.classList.remove("dark");
+            } else {
+                document.documentElement.classList.add("dark");
+            }
         }
-
-        function toggleTheme() {
-            document.body.classList.toggle("dark-mode");
-            localStorage.setItem("theme",
-                document.body.classList.contains("dark-mode") ? "dark" : "light");
-        }
-
         applySavedTheme();
 
-        /* Load Goals */
+        // Load Goals
         async function loadGoals() {
             const res = await fetch("/goals/", {
                 headers: { "Authorization": "Bearer " + token }
@@ -82,28 +193,35 @@
             container.innerHTML = "";
 
             if (!goals.length) {
-                container.innerHTML = "<p>No goals created yet.</p>";
+                container.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-8">No goals created yet. Create your first goal below!</p>`;
                 return;
             }
 
             goals.forEach(goal => {
-                container.innerHTML += `
-            <div class="goal-card">
-                <h3>${goal.title}</h3>
-                <p>${goal.description}</p>
-                <button class="btn btn-outline" onclick="deleteGoal(${goal.id})">Delete</button>
-                <button class="btn btn-outline" onclick="editGoal(${goal.id}, '${goal.title}', '${goal.description}')">Edit</button>
-            </div>`;
+                const card = document.createElement("div");
+                card.className = "flex items-start justify-between p-4 bg-slate-200 dark:bg-slate-800 rounded-lg";
+                card.innerHTML = `
+          <div class="flex-1">
+            <h3 class="font-bold text-slate-900 dark:text-white">${goal.title}</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">${goal.description || "No description"}</p>
+          </div>
+          <div class="flex gap-2 ml-4">
+            <button onclick="editGoal(${goal.id}, '${goal.title.replace(/'/g, "\\'")}', '${(goal.description || "").replace(/'/g, "\\'")}')" class="p-2 text-slate-500 hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-base">edit</span>
+            </button>
+            <button onclick="deleteGoal(${goal.id})" class="p-2 text-slate-500 hover:text-red-500 transition-colors">
+              <span class="material-symbols-outlined text-base">delete</span>
+            </button>
+          </div>
+        `;
+                container.appendChild(card);
             });
         }
 
-        /* Create Goal */
+        // Create Goal
         document.getElementById("createBtn").addEventListener("click", async () => {
             const title = document.getElementById("title").value.trim();
             const description = document.getElementById("description").value.trim();
-            const token = localStorage.getItem("access_token");
-
-            console.log("Submitting goal:", title, description);
 
             if (!title) {
                 alert("Title required.");
@@ -120,32 +238,29 @@
                     body: JSON.stringify({ title, description })
                 });
 
-                console.log("Response status:", res.status);
-
-                const data = await res.json().catch(() => ({}));
-
                 if (res.ok) {
-                    alert("Goal created!");
+                    document.getElementById("title").value = "";
+                    document.getElementById("description").value = "";
                     loadGoals();
                 } else {
-                    console.log("Server error:", data);
+                    const data = await res.json().catch(() => ({}));
                     alert(data.error || "Error creating goal.");
                 }
             } catch (err) {
-                console.error("JS fetch error:", err);
                 alert("Network error.");
             }
         });
 
-        /* Delete Goal */
+        // Delete Goal
         async function deleteGoal(id) {
+            if (!confirm("Delete this goal?")) return;
+
             const res = await fetch("/goals/" + id, {
                 method: "DELETE",
                 headers: { "Authorization": "Bearer " + token }
             });
 
             if (res.ok) {
-                alert("Goal deleted!");
                 loadGoals();
             } else {
                 alert("Delete failed.");
@@ -154,21 +269,17 @@
 
         let currentEditId = null;
 
-        /* Open the Edit Goal Modal */
         function editGoal(id, title, description) {
             currentEditId = id;
             document.getElementById("editTitle").value = title;
             document.getElementById("editDescription").value = description;
-
-            document.getElementById("modal_container").style.display = "flex";
+            document.getElementById("modal_container").classList.add("visible");
         }
 
-        /* Close the Edit Goal Modal */
-        function closeEditModal(id, title, description) {
-            document.getElementById("modal_container").style.display = "none";
+        function closeEditModal() {
+            document.getElementById("modal_container").classList.remove("visible");
         }
 
-        /* Edit Goal */
         async function saveGoal() {
             const title = document.getElementById("editTitle").value.trim();
             const description = document.getElementById("editDescription").value.trim();
@@ -182,18 +293,15 @@
                 body: JSON.stringify({ title, description })
             });
 
-            const data = await res.json();
-
             if (res.ok) {
-                alert("Goal updated!");
                 closeEditModal();
                 loadGoals();
             } else {
+                const data = await res.json();
                 alert(data.error || "Error editing goal.");
             }
         }
 
-        /* Logout */
         function logout() {
             localStorage.removeItem("access_token");
             window.location.href = "/";
@@ -201,7 +309,6 @@
 
         loadGoals();
     </script>
-
 </body>
 
 </html>
