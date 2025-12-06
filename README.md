@@ -1,56 +1,155 @@
-# Welcome to Coresync!
-**Link:** https://coresync-du88.onrender.com/ 
+# CoreSync - Daily Habit & Workout Hub
 
-This webapp allows you to sync your core fitness goals with careful planning!
+**Live Demo:** https://coresync-du88.onrender.com/
+
+A full-stack Flask web application for fitness tracking with AI-powered workout generation.
 
 **Created By:** Runnelle Moredo (100822547) and Almas Alam (100815977)
 
-**How to use**
-1. Enter a username and password, click signup. Use those credentials to login
-   
-3. If you are a new to fitness and would like guidance on a workout plan, click **Beginner**, otherwise, click **Intermediate**
+---
 
-	a.) If the beginner tab is clicked, enter your goal, difficulty level, select number of workouts, and optionally add equipment and any limitations, then click **generate AI plan**
+## 📚 Documentation
 
-	b.) Once complete, click the **click here** button to go to main dashboard.
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/ARCHITECTURE.md) | System design, UML diagrams |
+| [API Reference](docs/API.md) | All API endpoints |
+| [Deployment Guide](docs/DEPLOYMENT.md) | Deployment and Docker |
+| [Performance](docs/PERFORMANCE.md) | PageSpeed analysis |
 
-4. If you would like to create a goal, enter the title and description in the designated field then click **save goal**
-   
-	a.) You may view your goals by clicking the **View Your Goals** button.
+---
 
-	b.) You may edit, delete, and add new goals in this page.
+## ✨ Features
 
-6. Use the **Exercise Finder** to find exercises that you want to do.
-   
-	a.) You may add the exercises you want to your workout plan, click **details** if you need help on how to do the exercise
+- 🔐 **User Authentication** - JWT-based login/signup
+- 🎯 **Goal Tracking** - Create, edit, delete fitness goals
+- 🔍 **Exercise Finder** - Search from ExerciseDB with GIFs
+- 🤖 **AI Workout Plans** - OpenAI-powered personalized workouts
+- ⏱️ **Session Tracking** - Timer, set/rep logging
+- 📸 **Progress Photos** - Upload photos with each workout
+- 📊 **Workout History** - View and reuse past sessions
+- 🌙 **Dark Mode** - System-wide dark mode support
 
-	b.) Click **start workout session** when you want to begin your workout
+---
 
-	c.) From here you may use a timer and add/remove sets to the workout.
+## 🏗️ Architecture
 
-	d.) After finishing the workout,  workout history will show in the main dashboard.
+- **Backend:** Flask (Python)
+- **Database:** PostgreSQL (SQLAlchemy ORM)
+- **Auth:** JWT (Flask-JWT-Extended)
+- **Frontend:** Jinja2 + TailwindCSS + JavaScript
+- **External APIs:** ExerciseDB, OpenAI
 
-8. You may click **Use AI Helper** if you would like to access the generate AI workout plan option
+See [Architecture Documentation](docs/ARCHITECTURE.md) for UML diagrams.
 
-10. Click **Logout** if you are finished
+---
 
+## 🚀 Quick Start
 
-## Important Features
-* SQLAlchemy used to store information
-* Passwords are hashed for safety
-* Endpoints are protected with JWT  authentication
-* https://www.exercisedb.dev/ used for workout database
-* OpenAI api used for ai workout plan maker
+### Prerequisites
+- Python 3.11+
+- PostgreSQL (or SQLite for development)
 
-## How to run locally
-1. Create and activate virtual environment
-2. run "pip install -r requirements.txt"
-3. create .env file and setup a "DATABASE_URL", "JWT_SECRET_KEY", "OPENAI_API_KEY"
-   
-	a.) **Important:** SQLAlchemy is used for database
+### Local Setup
 
-	b.) secret key can be what you create
+```bash
+# Clone repository
+git clone https://github.com/RunnelleMoredo/CSCI-4230U---Advanced-Web-Development-Final-Project-.git
+cd CSCI-4230U---Advanced-Web-Development-Final-Project-
 
-	c.) You must generate your own openai api key, must have paid openai plan for it to work
+# Create virtual environment
+python -m venv .venv
 
-5. run "flask run"
+# Activate (Windows)
+.venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Environment Variables
+
+Create a `.env` file:
+```env
+DATABASE_URL=sqlite:///local.db
+JWT_SECRET_KEY=your-secret-key
+OPENAI_API_KEY=sk-your-openai-key
+```
+
+### Run
+
+```bash
+flask run
+```
+
+Visit http://localhost:5000
+
+---
+
+## 🐳 Docker
+
+```bash
+# Build and run
+docker build -t coresync .
+docker run -p 5000:5000 coresync
+
+# Or with docker-compose
+docker-compose up
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run unit tests
+pytest tests/test_unit.py -v
+
+# Run Selenium tests (requires browser)
+pytest tests/test_app_sb.py -v
+```
+
+---
+
+## 📁 Project Structure
+
+```
+├── app.py              # Main Flask app
+├── auth.py             # Authentication routes
+├── goals.py            # Goals API
+├── workout.py          # Workout API
+├── models.py           # SQLAlchemy models
+├── schemas.py          # Marshmallow schemas
+├── templates/          # Jinja2 HTML templates
+├── static/
+│   ├── scripts/        # JavaScript files
+│   └── styles/         # CSS files
+├── tests/              # Test files
+├── docs/               # Documentation
+├── Dockerfile          # Container config
+└── .github/workflows/  # CI/CD
+```
+
+---
+
+## 🔒 Security
+
+- Passwords hashed with Werkzeug
+- JWT tokens for API authentication
+- Protected endpoints require authorization
+- HTTPS enabled on production
+
+---
+
+## 📈 CI/CD
+
+GitHub Actions runs on every push:
+- ✅ Lint (flake8)
+- ✅ Unit tests (pytest)
+- ✅ Build verification
+
+---
+
+## 📜 License
+
+MIT License
