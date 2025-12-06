@@ -9,6 +9,7 @@ from models import db, User, WorkoutPlan
 from auth import auth_bp
 from goals import goals_bp
 from workout import workout_bp
+from profile import profile_bp
 
 
 # ---------------------------------------------------------
@@ -33,6 +34,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app.register_blueprint(auth_bp)
 app.register_blueprint(goals_bp)
 app.register_blueprint(workout_bp)
+app.register_blueprint(profile_bp)
 
 
 # ---------------------------------------------------------
@@ -75,6 +77,24 @@ def session_page():
 @app.route("/exercise")
 def exercise_page():
     return render_template("exercise.html")
+
+
+@app.route("/profile_page")
+def profile_page():
+    """User profile page."""
+    return render_template("profile.html")
+
+
+@app.route("/forgot_password")
+def forgot_password_page():
+    """Forgot password page."""
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset_password")
+def reset_password_page():
+    """Reset password page."""
+    return render_template("reset_password.html")
 
 
 # ---------------------------------------------------------

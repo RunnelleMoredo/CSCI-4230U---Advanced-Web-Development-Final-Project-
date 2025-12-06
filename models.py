@@ -87,5 +87,41 @@ class Workout(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+# ---------------------------------------------------------
+# USER PROFILE MODEL
+# ---------------------------------------------------------
+class UserProfile(db.Model):
+    __tablename__ = "user_profiles"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), unique=True, nullable=False)
+    display_name = db.Column(db.String(100))
+    email = db.Column(db.String(255))
+    date_of_birth = db.Column(db.Date)
+    height_cm = db.Column(db.Float)
+    weight_kg = db.Column(db.Float)
+    profile_image_url = db.Column(db.Text)  # Can store Base64 or URL
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship back to user
+    user = db.relationship("User", backref=db.backref("profile", uselist=False))
 
 
+# ---------------------------------------------------------
+# SAVED WORKOUT HISTORY MODEL (Server-side storage)
+# ---------------------------------------------------------
+class SavedWorkoutHistory(db.Model):
+    __tablename__ = "saved_workout_history"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    workout_name = db.Column(db.String(255))
+    duration_seconds = db.Column(db.Integer)
+    exercises = db.Column(db.JSON)
+    progress_photo = db.Column(db.Text)  # Base64 image data
+    completed_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship back to user
+    user = db.relationship("User", backref="saved_history")

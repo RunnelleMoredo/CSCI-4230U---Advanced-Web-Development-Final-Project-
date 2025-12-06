@@ -90,3 +90,81 @@ def me():
     if not user:
         return jsonify({"error": "User not found"}), 404
     return jsonify({"id": user.id, "username": user.username})
+
+
+# ---------------------------------------------------------
+# FORGOT PASSWORD - Request reset email
+# ---------------------------------------------------------
+@auth_bp.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    """Send password reset email"""
+    from email_utils import generate_reset_token, send_reset_email
+    from models import UserProfile
+    
+    data = request.get_json() or {}
+    email = data.get("email", "").strip().lower()
+    
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+    
+    # Find user by email in their profile (case-insensitive)
+    from sqlalchemy import func
+    profile = UserProfile.query.filter(func.lower(UserProfile.email) == email).first()
+    
+    if profile:
+        user = User.query.get(profile.user_id)
+        if user:
+            # Generate reset token
+            token = generate_reset_token(email)
+            
+            # Build reset URL
+            reset_url = request.host_url.rstrip('/') + f"/reset_password?token={token}"
+            
+            # Send email
+            send_reset_email(email, reset_url)
+    
+    # Always return success to prevent email enumeration
+    return jsonify({
+        "message": "If an account with that email exists, a password reset link has been sent."
+    }), 200
+
+
+# ---------------------------------------------------------
+# RESET PASSWORD - Actually reset the password
+# ---------------------------------------------------------
+@auth_bp.route('/reset-password', methods=['POST'])
+def reset_password():
+    """Reset password using token"""
+    from email_utils import verify_reset_token
+    from models import UserProfile
+    
+    data = request.get_json() or {}
+    token = data.get("token", "")
+    new_password = data.get("password", "")
+    
+    if not token or not new_password:
+        return jsonify({"error": "Token and new password are required"}), 400
+    
+    if len(new_password) < 4:
+        return jsonify({"error": "Password must be at least 4 characters"}), 400
+    
+    # Verify token
+    email = verify_reset_token(token)
+    if not email:
+        return jsonify({"error": "Invalid or expired reset token"}), 400
+    
+    # Find user by email
+    profile = UserProfile.query.filter_by(email=email).first()
+    if not profile:
+        return jsonify({"error": "User not found"}), 404
+    
+    user = User.query.get(profile.user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    # Update password
+    user.set_password(new_password)
+    db.session.commit()
+    
+    return jsonify({"message": "Password has been reset successfully"}), 200
+

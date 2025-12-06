@@ -536,6 +536,10 @@ function loadWorkoutHistory() {
           <span class="material-symbols-outlined text-base">add</span>
           Add to Session
         </button>
+        <button class="btn-save-to-profile w-full flex items-center justify-center gap-2 px-4 py-2 mt-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+          <span class="material-symbols-outlined text-base">bookmark_add</span>
+          Save to Profile
+        </button>
       `;
 
       const editBtn = card.querySelector(".btn-edit-name");
@@ -581,6 +585,14 @@ function loadWorkoutHistory() {
         });
       }
 
+      // Bind Save to Profile button
+      const saveBtn = card.querySelector(".btn-save-to-profile");
+      if (saveBtn) {
+        saveBtn.addEventListener("click", () => {
+          saveToProfile(entry);
+        });
+      }
+
       container.appendChild(card);
     });
 }
@@ -606,6 +618,50 @@ function deleteHistoryEntry(entryId) {
   history = history.filter((e) => e.id !== entryId);
   localStorage.setItem("workoutHistory", JSON.stringify(history));
   loadWorkoutHistory(); // Refresh the display
+}
+
+// =======================================
+// SAVE TO PROFILE (Server-side)
+// =======================================
+async function saveToProfile(entry) {
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    alert("Please log in to save workouts to your profile.");
+    window.location.href = "/";
+    return;
+  }
+
+  try {
+    const response = await fetch("/profile/history", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        workout_name: entry.name || "Workout",
+        duration_seconds: entry.durationSeconds || 0,
+        exercises: entry.exercises || [],
+        progress_photo: entry.progressPhoto || null,
+        completed_at: entry.date || new Date().toISOString()
+      })
+    });
+
+    if (response.ok) {
+      alert("Workout saved to your profile! View it on your Profile page.");
+    } else if (response.status === 401 || response.status === 422) {
+      // JWT token expired or invalid
+      alert("Your session has expired. Please log in again.");
+      localStorage.removeItem("access_token");
+      window.location.href = "/";
+    } else {
+      const data = await response.json();
+      alert(data.error || "Failed to save workout");
+    }
+  } catch (err) {
+    console.error("Error saving to profile:", err);
+    alert("Error saving workout to profile");
+  }
 }
 // =======================================
 // PHOTO LIGHTBOX
