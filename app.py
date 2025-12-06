@@ -10,6 +10,7 @@ from auth import auth_bp
 from goals import goals_bp
 from workout import workout_bp
 
+
 # ---------------------------------------------------------
 # BASIC SETUP
 # ---------------------------------------------------------
@@ -33,6 +34,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(goals_bp)
 app.register_blueprint(workout_bp)
 
+
 # ---------------------------------------------------------
 # PAGE ROUTES
 # ---------------------------------------------------------
@@ -49,7 +51,7 @@ def fitness_level():
 
 @app.route("/main_dashboard")
 def main_dashboard():
-    """User's real dashboard (daily goals, workouts, sessions)."""
+    """User's main dashboard."""
     return render_template("main_dashboard.html")
 
 
@@ -86,10 +88,7 @@ def redirect_old_main():
 
 @app.route("/session/complete")
 def complete_session_redirect():
-    """
-    Redirect user to main_dashboard after completing a workout.
-    Triggered from frontend JS after finishing a session.
-    """
+    """Redirect user to dashboard after completing a session."""
     logging.info("Workout session completed — redirecting to dashboard.")
     return redirect(url_for("main_dashboard"))
 
@@ -100,6 +99,7 @@ def complete_session_redirect():
 @app.route("/ai/workout-plan", methods=["POST"])
 @jwt_required()
 def generate_workout_plan():
+    """Generate an AI-powered workout plan and save to DB."""
     user_id = get_jwt_identity()
     data = request.get_json() or {}
 
@@ -178,9 +178,121 @@ def generate_workout_plan():
     }), 201
 
 
+@app.route("/ai/workout-plan/save", methods=["POST"])
+@jwt_required()
+def save_ai_workout_as_routine():
+    """Accepts any AI workout text, parses or reconstructs a structured plan, and saves it."""
+    user_id = get_jwt_identity()
+    data = request.get_json() or {}
+    raw_plan = data.get("plan")
+    user_goal = data.get("goal", "AI Routine")
+
+    # --- 1️⃣ Try to parse as JSON ---
+    try:
+        if isinstance(raw_plan, str):
+            cleaned = (
+                raw_plan.strip()
+                .replace("```json", "")
+                .replace("```", "")
+                .replace("“", '"')
+                .replace("”", '"')
+            )
+            parsed = json.loads(cleaned)
+        else:
+            parsed = raw_plan
+    except Exception:
+        parsed = None
+
+    # --- 2️⃣ If it’s not JSON, reconstruct from text ---
+    if not parsed or not isinstance(parsed, dict):
+        lines = raw_plan.splitlines() if isinstance(raw_plan, str) else []
+        current_day = None
+        weekly_plan = []
+        day_block = {}
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Detect start of a new day
+            if any(day in line.lower() for day in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]):
+                if current_day and day_block:
+                    weekly_plan.append(day_block)
+                    day_block = {}
+                current_day = line.split("–")[0].strip()
+                day_block = {"day": current_day, "focus": line, "exercises": []}
+                continue
+
+            # Detect exercises
+            if "•" in line or "-" in line:
+                name_part = line.replace("•", "").replace("-", "").strip()
+                sets = 3
+                reps = "8–12"
+                if "(" in name_part and ")" in name_part:
+                    inside = name_part[name_part.find("(")+1:name_part.find(")")]
+                    name_part = name_part.split("(")[0].strip()
+                    sets = 3
+                    reps = inside
+                day_block["exercises"].append({"name": name_part, "sets": sets, "reps": reps})
+
+            # Detect warmup / cooldown
+            if "warmup" in line.lower():
+                day_block["warmup"] = line.split(":")[-1].strip()
+            if "cooldown" in line.lower():
+                day_block["cooldown"] = line.split(":")[-1].strip()
+
+        if current_day and day_block:
+            weekly_plan.append(day_block)
+
+        parsed = {"weekly_plan": weekly_plan}
+
+    # --- 3️⃣ Safety check ---
+    if not parsed or "weekly_plan" not in parsed:
+        return jsonify({"error": "Invalid AI plan format"}), 400
+
+    from models import Workout
+    grouped_days = {}
+    for day_entry in parsed["weekly_plan"]:
+        day = day_entry.get("day", "Unspecified")
+        grouped_days.setdefault(day, []).append(day_entry)
+
+    for day, entries in grouped_days.items():
+        exercises = []
+        for e in entries:
+            for ex in e.get("exercises", []):
+                exercises.append(
+                    {
+                        "name": ex.get("name", "Unnamed Exercise"),
+                        "sets": ex.get("sets", 3),
+                        "reps": ex.get("reps", "8–12"),
+                        "category": e.get("focus", "General"),
+                        "warmup": e.get("warmup", ""),
+                        "cooldown": e.get("cooldown", ""),
+                    }
+                )
+
+        if not exercises:
+            continue
+
+        new_workout = Workout(
+            user_id=user_id,
+            title=f"{day} Routine",
+            category="AI Generated Plan",
+            details={"exercises": exercises, "goal": user_goal},
+        )
+        db.session.add(new_workout)
+
+    db.session.commit()
+    return jsonify({"message": "AI plan saved successfully!"}), 201
+
+
+
+
 @app.route("/workout-plans", methods=["GET"])
 @jwt_required()
 def list_workout_plans():
+    """List all saved AI workout plans for the logged-in user."""
     user_id = get_jwt_identity()
     plans = (
         WorkoutPlan.query.filter_by(user_id=user_id)
@@ -205,6 +317,7 @@ def list_workout_plans():
 @app.route("/workout-plans/<int:plan_id>", methods=["GET", "PATCH"])
 @jwt_required()
 def get_or_update_plan(plan_id):
+    """View or edit a specific saved workout plan."""
     user_id = get_jwt_identity()
     plan = WorkoutPlan.query.filter_by(id=plan_id, user_id=user_id).first()
     if not plan:
@@ -235,6 +348,7 @@ def get_or_update_plan(plan_id):
 # ---------------------------------------------------------
 with app.app_context():
     db.create_all()
+
 
 # ---------------------------------------------------------
 # RUN FLASK
