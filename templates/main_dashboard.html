@@ -2,151 +2,165 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Main Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
+  <meta charset="UTF-8">
+  <title>Main Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
 </head>
 
 <body>
-    <div class="dashboard-container">
+  <div class="dashboard-container">
 
-        <!-- HERO HEADER -->
-        <header class="main-hero">
-            <div class="hero-text">
-                <h1>Daily Habit & Workout Hub</h1>
-                <p>Stay consistent, track your goals, and build stronger habits one session at a time.</p>
-            </div>
+    <!-- HERO HEADER -->
+    <header class="main-hero">
+      <div class="hero-text">
+        <h1>Daily Habit & Workout Hub</h1>
+        <p>Stay consistent, track your goals, and build stronger habits one session at a time.</p>
+      </div>
 
-            <div class="hero-right">
-                <!-- Theme switch -->
-                <div class="theme-switch">
-                    <input type="checkbox" id="theme_toggle_checkbox">
-                    <label for="theme_toggle_checkbox" class="theme-slider">
-                        <span class="sun">Light</span>
-                        <span class="moon">Dark</span>
-                    </label>
-                </div>
-            </div>
-        </header>
+      <div class="hero-right">
+        <!-- Theme switch -->
+        <div class="theme-switch">
+          <input type="checkbox" id="theme_toggle_checkbox">
+          <label for="theme_toggle_checkbox" class="theme-slider">
+            <span class="sun">Light</span>
+            <span class="moon">Dark</span>
+          </label>
+        </div>
+      </div>
+    </header>
 
-        <!-- MAIN GRID: GOALS + WORKOUT EXPLORER -->
-        <div class="main-grid">
+    <!-- GRID: GOALS + EXERCISE FINDER -->
+    <div class="main-grid">
 
-            <!-- GOAL CREATION CARD -->
-            <section class="card card-elevated">
-                <h2 class="section-heading">Daily Goals</h2>
-                <p class="section-subtitle">Capture what you want to accomplish today.</p>
+      <!-- GOAL CREATION -->
+      <section class="card card-elevated">
+        <h2 class="section-heading">Daily Goals</h2>
+        <p class="section-subtitle">Capture what you want to accomplish today.</p>
 
-                <label for="text_title">Title</label>
-                <input type="text" id="text_title" class="input-full" placeholder="e.g., Study 2 hours, Hit 8k steps">
+        <label for="text_title">Title</label>
+        <input type="text" id="text_title" class="input-full" placeholder="e.g., Study 2 hours, Hit 8k steps">
 
-                <label for="text_description">Description</label>
-                <textarea id="text_description" rows="4" class="input-full"
-                    placeholder="Add details, time, or any notes..."></textarea>
+        <label for="text_description">Description</label>
+        <textarea id="text_description" rows="4" class="input-full"
+          placeholder="Add details, time, or any notes..."></textarea>
 
-                <button id="btn_submit" class="btn btn-accent full-width">Save Goal</button>
+        <button id="btn_submit" class="btn btn-accent full-width">Save Goal</button>
+        <p id="goal_status" class="goal-status-text"></p>
+      </section>
 
-                <!-- NEW: status line so Selenium can see 'success' / 'Title required' -->
-                <p id="goal_status" class="goal-status-text"></p>
-            </section>
+      <!-- EXERCISE FINDER -->
+      <section class="card card-elevated">
+        <h2 class="section-heading">Exercise Finder</h2>
+        <p class="section-subtitle">Search exercises and build your next workout.</p>
 
-            <!-- WORKOUT EXPLORER -->
-            <section class="card card-elevated">
-                <h2 class="section-heading">Exercise Finder</h2>
-                <p class="section-subtitle">Search exercises and build your next workout.</p>
-
-                <div class="workout-search-row">
-                    <input type="text" id="find_workout" class="input-full"
-                        placeholder="Search exercises (e.g., bench, squat)">
-                    <button id="btn_find_workout" class="btn btn-accent">Search</button>
-                </div>
-
-                <h3 class="subheading-with-line">Search Results</h3>
-                <div id="search_results" class="workout-grid">
-                    <!-- search cards injected here -->
-                </div>
-            </section>
+        <div class="workout-search-row">
+          <input type="text" id="find_workout" class="input-full"
+            placeholder="Search exercises (e.g., bench, squat)">
+          <button id="btn_find_workout" class="btn btn-accent">Search</button>
         </div>
 
-        <!-- SELECTED WORKOUTS (OWN SECTION) -->
-        <section class="card card-elevated">
-            <div class="section-header-row">
-                <div>
-                    <h2 class="section-heading">Today's Workout Plan</h2>
-                    <p class="section-subtitle">Exercises you’ve selected for your upcoming session.</p>
-                </div>
-            </div>
-
-            <div id="selected_workouts" class="workout-grid">
-                <!-- selected cards injected by JS -->
-            </div>
-            <!-- Start Workout Session button is still injected by JS (btn_start_session) -->
-        </section>
-
-        <!-- WORKOUT HISTORY SECTION -->
-        <section class="card card-elevated" id="history_card">
-            <h2 class="section-heading">Previous Sessions</h2>
-            <p class="section-subtitle">Review your recent workouts and volume.</p>
-
-            <div id="history_list"></div>
-
-            <button id="btn_clear_history" class="btn btn-outline" style="margin-top: 12px;">
-                Clear History
-            </button>
-        </section>
-
-        <!-- NAVIGATION CARD -->
-        <div class="nav-buttons-row" style="justify-content: flex-start;">
-            <button class="btn btn-outline" onclick="window.location.href='/fitness_level'">
-                Change Fitness Level
-            </button>
+        <h3 class="subheading-with-line">Search Results</h3>
+        <div id="search_results" class="workout-grid">
+          <!-- search cards injected here -->
         </div>
-
-
-        <section class="card nav-card">
-            <div class="nav-buttons-row">
-                <button id="btn_ai" class="btn btn-outline" onclick="window.location.href='/main'">Use AI Helper</button>
-                <button id="btn_goals" class="btn btn-outline">View Your Goals</button>
-                <button id="btn_logout" class="btn btn-danger">Logout</button>
-            </div>
-        </section>
+      </section>
     </div>
 
-    <!-- MODAL FOR EXERCISE DETAILS -->
-    <div id="modal_container" class="modal-overlay">
-        <div class="modal-card">
-
-            <div class="modal-header">
-                <h2 id="modal_name"></h2>
-                <button id="btn_close_modal" class="modal-close">✕</button>
-            </div>
-
-            <img id="modal_gif" class="modal-gif">
-
-            <div class="modal-section">
-                <h3>Target Muscles</h3>
-                <p id="modal_target_muscles"></p>
-            </div>
-
-            <div class="modal-section">
-                <h3>Secondary Muscles</h3>
-                <p id="modal_secondary_muscles"></p>
-            </div>
-
-            <div class="modal-section">
-                <h3>Equipment</h3>
-                <p id="modal_equipment"></p>
-            </div>
-
-            <div class="modal-section">
-                <h3>Instructions</h3>
-                <p id="modal_instructions"></p>
-            </div>
-
+    <!-- SELECTED WORKOUTS (Manual Section) -->
+    <section class="card card-elevated">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-heading">Today's Workout Plan</h2>
+          <p class="section-subtitle">Exercises you’ve selected for your upcoming session.</p>
         </div>
-    </div>
+      </div>
 
-    <script src="{{ url_for('static', filename='scripts/main_page.js') }}"></script>
+      <div id="selected_workouts" class="workout-grid">
+        <!-- selected cards injected by JS -->
+      </div>
+    </section>
+
+    <!-- AI WORKOUTS SECTION -->
+    <section id="ai_workouts_section" class="card card-elevated" style="margin-top: 25px;">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-heading">AI Generated Plans</h2>
+          <p class="section-subtitle">Automatically designed by your AI coach.</p>
+        </div>
+      </div>
+      <div id="ai_workouts_container" class="workout-grid">Loading AI plans...</div>
+    </section>
+
+    <!-- WORKOUT HISTORY SECTION -->
+    <section id="workout_history_section" class="card card-elevated" style="margin-top: 25px;">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-heading">Workout History</h2>
+          <p class="section-subtitle">Your recent completed sessions.</p>
+        </div>
+      </div>
+      <div id="workout_history_container">No previous sessions yet.</div>
+      <button id="btn_clear_history" class="btn btn-outline" style="margin-top: 12px;">Clear History</button>
+    </section>
+
+    <!-- NAVIGATION & TOOLS SECTION -->
+<section class="card nav-card" style="margin-top: 25px;">
+  <div class="section-header-row">
+    <div>
+      <h2 class="section-heading">Tools & Navigation</h2>
+      <p class="section-subtitle">Quick access to your settings and features.</p>
+    </div>
+  </div>
+
+  <div class="nav-buttons-row" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-start;">
+    <button class="btn btn-outline" onclick="window.location.href='/fitness_level'">
+      Change Fitness Level
+    </button>
+    <button id="btn_goals" class="btn btn-outline">
+      View Your Goals
+    </button>
+    <button id="btn_logout" class="btn btn-danger">
+      Logout
+    </button>
+  </div>
+</section>
+
+
+  </div>
+
+  <!-- EXERCISE DETAILS MODAL -->
+  <div id="modal_container" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal_name"></h2>
+        <button id="btn_close_modal" class="modal-close">✕</button>
+      </div>
+
+      <img id="modal_gif" class="modal-gif" />
+
+      <div class="modal-section">
+        <h3>Target Muscles</h3>
+        <p id="modal_target_muscles"></p>
+      </div>
+
+      <div class="modal-section">
+        <h3>Secondary Muscles</h3>
+        <p id="modal_secondary_muscles"></p>
+      </div>
+
+      <div class="modal-section">
+        <h3>Equipment</h3>
+        <p id="modal_equipment"></p>
+      </div>
+
+      <div class="modal-section">
+        <h3>Instructions</h3>
+        <p id="modal_instructions"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='scripts/main_page.js') }}"></script>
 </body>
 
 </html>
