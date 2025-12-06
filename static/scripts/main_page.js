@@ -499,9 +499,14 @@ function loadWorkoutHistory() {
             <h3 class="font-bold text-slate-900 dark:text-white history-workout-name" data-id="${entryId}">${workoutName}</h3>
             <p class="text-sm text-slate-500 dark:text-slate-400">${date.toLocaleDateString()} at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
           </div>
-          <button class="btn-edit-name text-slate-400 hover:text-primary p-1 transition-colors" title="Edit name">
-            <span class="material-symbols-outlined text-base">edit</span>
-          </button>
+          <div class="flex gap-1">
+            <button class="btn-edit-name text-slate-400 hover:text-primary p-1 transition-colors" title="Edit name">
+              <span class="material-symbols-outlined text-base">edit</span>
+            </button>
+            <button class="btn-delete-entry text-slate-400 hover:text-red-500 p-1 transition-colors" title="Delete workout" data-id="${entryId}">
+              <span class="material-symbols-outlined text-base">delete</span>
+            </button>
+          </div>
         </div>
         <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">
           <span class="material-symbols-outlined text-base align-middle mr-1">timer</span>
@@ -518,6 +523,15 @@ function loadWorkoutHistory() {
           : `<p class="text-slate-500 dark:text-slate-400 text-sm">No exercise data recorded.</p>`
         }
         </div>
+        ${entry.progressPhoto ? `
+          <div class="mb-3">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">photo_camera</span>
+              Progress Photo
+            </p>
+            <img src="${entry.progressPhoto}" alt="Progress photo" class="w-full max-h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity progress-photo-thumb" data-photo-src="${entry.progressPhoto}">
+          </div>
+        ` : ""}
         <button class="btn-add-to-session w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors">
           <span class="material-symbols-outlined text-base">add</span>
           Add to Session
@@ -537,6 +551,16 @@ function loadWorkoutHistory() {
         });
       }
 
+      // Bind delete button
+      const deleteBtn = card.querySelector(".btn-delete-entry");
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", () => {
+          if (confirm("Delete this workout from history?")) {
+            deleteHistoryEntry(entryId);
+          }
+        });
+      }
+
       const addBtn = card.querySelector(".btn-add-to-session");
       if (addBtn && entry.exercises && entry.exercises.length) {
         addBtn.addEventListener("click", () => {
@@ -547,6 +571,14 @@ function loadWorkoutHistory() {
         addBtn.classList.remove("bg-primary", "hover:bg-primary/90");
         addBtn.classList.add("bg-slate-400", "cursor-not-allowed");
         addBtn.innerHTML = `<span class="material-symbols-outlined text-base">block</span> No Exercises`;
+      }
+
+      // Bind progress photo to lightbox
+      const photoThumb = card.querySelector(".progress-photo-thumb");
+      if (photoThumb) {
+        photoThumb.addEventListener("click", () => {
+          openPhotoLightbox(photoThumb.dataset.photoSrc);
+        });
       }
 
       container.appendChild(card);
@@ -565,6 +597,40 @@ function updateHistoryEntryName(entryId, newName) {
     localStorage.setItem("workoutHistory", JSON.stringify(history));
   }
 }
+
+// =======================================
+// DELETE HISTORY ENTRY
+// =======================================
+function deleteHistoryEntry(entryId) {
+  let history = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
+  history = history.filter((e) => e.id !== entryId);
+  localStorage.setItem("workoutHistory", JSON.stringify(history));
+  loadWorkoutHistory(); // Refresh the display
+}
+// =======================================
+// PHOTO LIGHTBOX
+// =======================================
+function openPhotoLightbox(src) {
+  const lightbox = document.getElementById("photo_lightbox");
+  const image = document.getElementById("lightbox_image");
+  if (lightbox && image) {
+    image.src = src;
+    lightbox.classList.remove("hidden");
+    lightbox.classList.add("flex");
+  }
+}
+
+function closePhotoLightbox() {
+  const lightbox = document.getElementById("photo_lightbox");
+  if (lightbox) {
+    lightbox.classList.add("hidden");
+    lightbox.classList.remove("flex");
+  }
+}
+
+// Make functions globally accessible
+window.openPhotoLightbox = openPhotoLightbox;
+window.closePhotoLightbox = closePhotoLightbox;
 
 
 // =======================================

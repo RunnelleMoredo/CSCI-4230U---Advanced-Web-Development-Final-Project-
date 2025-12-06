@@ -42,6 +42,7 @@ const summaryExercisesEl = document.getElementById("summary_exercises");
 const summaryCloseBtn = document.getElementById("summary_close");
 
 let sessionEntries = [];
+let progressPhotoData = null; // Stores base64 image data
 
 // Load workout from activeWorkout (manual or AI)
 const activeWorkout = JSON.parse(localStorage.getItem("activeWorkout") || "{}");
@@ -220,6 +221,7 @@ if (!exercises.length) {
         name: workoutName,
         durationSeconds: timerSeconds,
         exercises: summaryExercises,
+        progressPhoto: progressPhotoData, // Include progress photo
       });
       localStorage.removeItem("activeWorkout");
       localStorage.removeItem("selectedExercises");
@@ -239,6 +241,7 @@ function saveSessionToHistory(payload) {
     date: new Date().toISOString(),
     durationSeconds: payload.durationSeconds,
     exercises: payload.exercises,
+    progressPhoto: payload.progressPhoto || null, // Store progress photo
   });
   localStorage.setItem("workoutHistory", JSON.stringify(history));
 }
@@ -297,3 +300,62 @@ btnReset?.addEventListener("click", () => {
 });
 
 renderTime();
+
+// =======================================
+// PROGRESS PHOTO UPLOAD
+// =======================================
+const photoUploadArea = document.getElementById("photo_upload_area");
+const photoInput = document.getElementById("progress_photo_input");
+const photoPlaceholder = document.getElementById("photo_placeholder");
+const photoPreviewContainer = document.getElementById("photo_preview_container");
+const photoPreview = document.getElementById("photo_preview");
+const removePhotoBtn = document.getElementById("remove_photo_btn");
+
+// Click upload area to trigger file input
+if (photoUploadArea && photoInput) {
+  photoUploadArea.addEventListener("click", (e) => {
+    // Don't trigger if clicking the remove button
+    if (e.target.closest("#remove_photo_btn")) return;
+    photoInput.click();
+  });
+
+  // Handle file selection
+  photoInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file.");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image too large. Please select an image under 5MB.");
+      return;
+    }
+
+    // Read and preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      progressPhotoData = event.target.result; // Store base64 data
+      photoPreview.src = progressPhotoData;
+      photoPlaceholder.classList.add("hidden");
+      photoPreviewContainer.classList.remove("hidden");
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Remove photo button
+if (removePhotoBtn) {
+  removePhotoBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    progressPhotoData = null;
+    photoInput.value = "";
+    photoPreview.src = "";
+    photoPreviewContainer.classList.add("hidden");
+    photoPlaceholder.classList.remove("hidden");
+  });
+}

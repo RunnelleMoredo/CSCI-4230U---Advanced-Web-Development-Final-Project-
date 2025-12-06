@@ -201,6 +201,30 @@
         <!-- Exercise summaries injected here -->
       </div>
 
+      <!-- Progress Photo Upload -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <span class="material-symbols-outlined text-base align-middle mr-1">add_a_photo</span>
+          Progress Photo (optional)
+        </label>
+        <div id="photo_upload_area"
+          class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors">
+          <input type="file" id="progress_photo_input" accept="image/*" class="hidden">
+          <div id="photo_placeholder">
+            <span class="material-symbols-outlined text-4xl text-slate-400 dark:text-slate-500 mb-2">photo_camera</span>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Click to upload a progress photo</p>
+          </div>
+          <div id="photo_preview_container" class="hidden">
+            <img id="photo_preview" class="max-h-48 mx-auto rounded-lg mb-2" alt="Progress photo preview">
+            <button id="remove_photo_btn" type="button"
+              class="text-red-500 text-sm hover:underline flex items-center justify-center gap-1 mx-auto">
+              <span class="material-symbols-outlined text-base">delete</span>
+              Remove photo
+            </button>
+          </div>
+        </div>
+      </div>
+
       <button id="summary_close"
         class="w-full flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
         <span class="material-symbols-outlined">save</span>
