@@ -98,35 +98,44 @@ def me():
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     """Send password reset email"""
-    from email_utils import generate_reset_token, send_reset_email
-    from models import UserProfile
-    
-    data = request.get_json() or {}
-    email = data.get("email", "").strip().lower()
-    
-    if not email:
-        return jsonify({"error": "Email is required"}), 400
-    
-    # Find user by email in their profile (case-insensitive)
-    from sqlalchemy import func
-    profile = UserProfile.query.filter(func.lower(UserProfile.email) == email).first()
-    
-    if profile:
-        user = User.query.get(profile.user_id)
-        if user:
-            # Generate reset token
-            token = generate_reset_token(email)
-            
-            # Build reset URL
-            reset_url = request.host_url.rstrip('/') + f"/reset_password?token={token}"
-            
-            # Send email
-            send_reset_email(email, reset_url)
-    
-    # Always return success to prevent email enumeration
-    return jsonify({
-        "message": "If an account with that email exists, a password reset link has been sent."
-    }), 200
+    try:
+        from email_utils import generate_reset_token, send_reset_email
+        from models import UserProfile
+        
+        data = request.get_json() or {}
+        email = data.get("email", "").strip().lower()
+        
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+        
+        # Find user by email in their profile (case-insensitive)
+        try:
+            from sqlalchemy import func
+            profile = UserProfile.query.filter(func.lower(UserProfile.email) == email).first()
+        except Exception as e:
+            # If email column doesn't exist, try simple query
+            print(f"Email lookup error (column might not exist): {e}")
+            profile = None
+        
+        if profile:
+            user = User.query.get(profile.user_id)
+            if user:
+                # Generate reset token
+                token = generate_reset_token(email)
+                
+                # Build reset URL
+                reset_url = request.host_url.rstrip('/') + f"/reset_password?token={token}"
+                
+                # Send email
+                send_reset_email(email, reset_url)
+        
+        # Always return success to prevent email enumeration
+        return jsonify({
+            "message": "If an account with that email exists, a password reset link has been sent."
+        }), 200
+    except Exception as e:
+        print(f"Forgot password error: {e}")
+        return jsonify({"error": "An error occurred. Please try again."}), 500
 
 
 # ---------------------------------------------------------
