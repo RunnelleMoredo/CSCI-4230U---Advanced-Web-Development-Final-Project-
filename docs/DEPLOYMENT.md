@@ -119,8 +119,8 @@ flask db upgrade
 
 ## Security Checklist
 
-- ✅ HTTPS enabled (Render automatic SSL)
-- ✅ JWT authentication for protected routes
-- ✅ Password hashing with Werkzeug
-- ✅ Environment variables for secrets
-- ✅ CORS configured for API access
+-  HTTPS enabled (Render automatic SSL)
+-  JWT authentication for protected routes
+-  Password hashing with Werkzeug
+-  Environment variables for secrets
+-  CORS configured for API access
