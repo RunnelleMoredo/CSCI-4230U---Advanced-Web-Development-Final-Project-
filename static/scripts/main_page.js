@@ -311,6 +311,44 @@ if (foodSearchBtn && foodSearchInput) {
   });
 }
 
+// AI Meal Generator
+const aiMealBtn = document.getElementById("btn_ai_meal");
+if (aiMealBtn) {
+  aiMealBtn.addEventListener("click", async () => {
+    const token = localStorage.getItem("access_token");
+    aiMealBtn.disabled = true;
+    aiMealBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Generating...`;
+
+    try {
+      const res = await fetch("/api/food/ai-meal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ meal_type: "any" })
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.meal) {
+        // Open serving modal with AI-generated meal
+        openServingModal(data.meal);
+      } else if (data.fallback_meal) {
+        openServingModal(data.fallback_meal);
+      } else {
+        alert("Could not generate meal. Try again.");
+      }
+    } catch (e) {
+      console.error("AI meal error:", e);
+      alert("Failed to generate meal.");
+    } finally {
+      aiMealBtn.disabled = false;
+      aiMealBtn.innerHTML = `<span class="material-symbols-outlined">auto_awesome</span> AI Suggest Meal`;
+    }
+  });
+}
+
 // Open serving modal
 window.openServingModal = function (food) {
   selectedFood = food;

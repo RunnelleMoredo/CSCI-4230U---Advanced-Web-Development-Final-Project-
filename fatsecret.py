@@ -1,14 +1,16 @@
 """
 Food API Integration Module
-Supports USDA FoodData Central (primary) and FatSecret (backup) APIs.
+Supports USDA FoodData Central (primary) and AI meal generation via OpenAI.
 """
 
 import os
 import time
+import json
 import requests
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, UserProfile
+from openai import OpenAI
 
 fatsecret_bp = Blueprint("fatsecret", __name__, url_prefix="/api/food")
 
@@ -240,3 +242,88 @@ def calculate_bmr():
         "height_cm": height_cm,
         "age": age
     }), 200
+
+
+@fatsecret_bp.route("/ai-meal", methods=["POST"])
+@jwt_required()
+def generate_ai_meal():
+    """Generate meal suggestions using OpenAI based on calorie target."""
+    user_id = get_jwt_identity()
+    
+    # Get user's calorie target
+    profile = UserProfile.query.filter_by(user_id=user_id).first()
+    
+    weight_kg = profile.weight_kg if profile else 70
+    height_cm = profile.height_cm if profile else 170
+    age = 25
+    if profile and profile.date_of_birth:
+        from datetime import date
+        today = date.today()
+        age = today.year - profile.date_of_birth.year
+    
+    # Calculate BMR
+    bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) + 5
+    daily_target = int(bmr * 1.55)  # Moderate activity
+    
+    # Get meal type from request
+    data = request.get_json() or {}
+    meal_type = data.get("meal_type", "any")  # breakfast, lunch, dinner, snack, any
+    calorie_limit = data.get("calorie_limit", daily_target // 3)  # Default to 1/3 of daily
+    
+    try:
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
+        prompt = f"""Generate a single meal suggestion for {meal_type} that fits within {calorie_limit} calories.
+        
+Return ONLY a JSON object in this exact format (no markdown, no extra text):
+{{
+    "meal_name": "Name of the meal",
+    "description": "Brief 1-sentence description",
+    "calories": <number>,
+    "protein": <grams as number>,
+    "carbs": <grams as number>,
+    "fat": <grams as number>,
+    "ingredients": ["ingredient 1", "ingredient 2", "ingredient 3"]
+}}"""
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=300
+        )
+        
+        meal_text = response.choices[0].message.content.strip()
+        
+        # Parse JSON from response
+        # Sometimes GPT wraps in markdown code blocks
+        if "```json" in meal_text:
+            meal_text = meal_text.split("```json")[1].split("```")[0]
+        elif "```" in meal_text:
+            meal_text = meal_text.split("```")[1].split("```")[0]
+        
+        meal_data = json.loads(meal_text)
+        meal_data["serving"] = "1 serving"
+        meal_data["food_name"] = meal_data.pop("meal_name", "AI Generated Meal")
+        
+        return jsonify({
+            "success": True,
+            "meal": meal_data,
+            "calorie_target": calorie_limit
+        }), 200
+        
+    except Exception as e:
+        print(f"AI meal generation error: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "fallback_meal": {
+                "food_name": "Grilled Chicken Salad",
+                "description": "Healthy grilled chicken with mixed greens",
+                "calories": 350,
+                "protein": 35,
+                "carbs": 15,
+                "fat": 18,
+                "serving": "1 serving"
+            }
+        }), 200
