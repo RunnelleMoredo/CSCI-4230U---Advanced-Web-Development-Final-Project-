@@ -25,7 +25,6 @@ _token_cache = {
 
 def get_fatsecret_token():
     """Get OAuth 2.0 access token from FatSecret API with caching."""
-    global _token_cache
     
     # Check if cached token is still valid
     if _token_cache["access_token"] and time.time() < _token_cache["expires_at"] - 60:
