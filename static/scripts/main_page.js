@@ -344,7 +344,7 @@ async function loadUserWorkouts() {
     if (aiContainer) {
       aiContainer.innerHTML = "";
       if (aiWorkouts.length === 0) {
-        aiContainer.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No AI-generated plans yet. <a href="/ai_workout" class="text-primary hover:underline">Create one →</a></p>`;
+        aiContainer.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No AI-generated plans yet.</p>`;
       } else {
         aiWorkouts.forEach((workout) => {
           const exercises = workout.details?.exercises || [];
