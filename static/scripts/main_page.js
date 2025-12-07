@@ -546,6 +546,9 @@ function loadWorkoutHistory() {
         <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">
           <span class="material-symbols-outlined text-base align-middle mr-1">timer</span>
           ${mins}m ${secs}s
+          ${entry.totalVolume ? ` • <span class="text-green-500 font-medium">${entry.totalVolume.toLocaleString()} lb</span> volume` : ""}
+          ${entry.totalSets ? ` • ${entry.totalSets} sets` : ""}
+          ${entry.totalReps ? ` • ${entry.totalReps} reps` : ""}
         </p>
         <div class="space-y-1 mb-3">
           ${entry.exercises && entry.exercises.length
@@ -678,7 +681,10 @@ async function saveToProfile(entry) {
         duration_seconds: entry.durationSeconds || 0,
         exercises: entry.exercises || [],
         progress_photo: entry.progressPhoto || null,
-        completed_at: entry.date || new Date().toISOString()
+        completed_at: entry.date || new Date().toISOString(),
+        total_volume: entry.totalVolume || 0,
+        total_sets: entry.totalSets || 0,
+        total_reps: entry.totalReps || 0
       })
     });
 

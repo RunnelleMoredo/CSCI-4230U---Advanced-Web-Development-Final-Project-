@@ -106,6 +106,9 @@ def get_saved_history():
             "progress_photo": h.progress_photo,
             "completed_at": h.completed_at.isoformat() if h.completed_at else None,
             "created_at": h.created_at.isoformat() if h.created_at else None,
+            "total_volume": h.total_volume or 0,
+            "total_sets": h.total_sets or 0,
+            "total_reps": h.total_reps or 0,
         }
         for h in history
     ]), 200
@@ -126,6 +129,9 @@ def save_to_history():
     exercises = data.get("exercises", [])
     progress_photo = data.get("progress_photo")
     completed_at_str = data.get("completed_at")
+    total_volume = data.get("total_volume", 0)
+    total_sets = data.get("total_sets", 0)
+    total_reps = data.get("total_reps", 0)
     
     # Parse completed_at if provided
     completed_at = None
@@ -144,6 +150,9 @@ def save_to_history():
         exercises=exercises,
         progress_photo=progress_photo,
         completed_at=completed_at,
+        total_volume=total_volume,
+        total_sets=total_sets,
+        total_reps=total_reps,
     )
     
     db.session.add(history_entry)

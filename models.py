@@ -122,6 +122,9 @@ class SavedWorkoutHistory(db.Model):
     progress_photo = db.Column(db.Text)  # Base64 image data
     completed_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    total_volume = db.Column(db.Integer, default=0)
+    total_sets = db.Column(db.Integer, default=0)
+    total_reps = db.Column(db.Integer, default=0)
 
     # Relationship back to user
     user = db.relationship("User", backref="saved_history")

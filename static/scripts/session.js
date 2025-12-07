@@ -299,11 +299,19 @@ if (!exercises.length) {
       const workoutNameInput = document.getElementById("workout_name_input");
       const workoutName = workoutNameInput?.value.trim() || `Workout - ${new Date().toLocaleDateString()}`;
 
+      // Calculate total session volume
+      const totalSessionVolume = summaryExercises.reduce((sum, ex) => sum + (ex.totalVolume || 0), 0);
+      const totalSessionSets = summaryExercises.reduce((sum, ex) => sum + (ex.totalSets || 0), 0);
+      const totalSessionReps = summaryExercises.reduce((sum, ex) => sum + (ex.totalReps || 0), 0);
+
       saveSessionToHistory({
         name: workoutName,
         durationSeconds: timerSeconds,
         exercises: summaryExercises,
-        progressPhoto: progressPhotoData, // Include progress photo
+        progressPhoto: progressPhotoData,
+        totalVolume: totalSessionVolume,
+        totalSets: totalSessionSets,
+        totalReps: totalSessionReps,
       });
       localStorage.removeItem("activeWorkout");
       localStorage.removeItem("selectedExercises");
@@ -323,7 +331,10 @@ function saveSessionToHistory(payload) {
     date: new Date().toISOString(),
     durationSeconds: payload.durationSeconds,
     exercises: payload.exercises,
-    progressPhoto: payload.progressPhoto || null, // Store progress photo
+    progressPhoto: payload.progressPhoto || null,
+    totalVolume: payload.totalVolume || 0,
+    totalSets: payload.totalSets || 0,
+    totalReps: payload.totalReps || 0,
   });
   localStorage.setItem("workoutHistory", JSON.stringify(history));
 }

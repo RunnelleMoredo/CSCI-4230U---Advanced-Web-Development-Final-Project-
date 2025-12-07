@@ -143,6 +143,12 @@ function renderSavedHistory(history) {
                         <span class="material-symbols-outlined text-base">exercise</span>
                         ${exerciseCount} exercises
                     </span>
+                    ${entry.total_volume ? `
+                    <span class="flex items-center gap-1 text-green-500 font-medium">
+                        <span class="material-symbols-outlined text-base">monitoring</span>
+                        ${entry.total_volume.toLocaleString()} lb
+                    </span>
+                    ` : ""}
                 </div>
                 ${entry.exercises ? `
                     <div class="mt-3 flex flex-wrap gap-2">
