@@ -128,6 +128,63 @@ function updateCalorieDisplay() {
     remainingEl.textContent = netRemaining.toLocaleString();
     remainingEl.className = `text-3xl font-bold ${netRemaining >= 0 ? 'text-green-500' : 'text-red-500'}`;
   }
+
+  // Update macro chart
+  updateMacroChart();
+}
+
+function updateMacroChart() {
+  const totalProtein = foodLog.reduce((sum, f) => sum + (f.protein || 0), 0);
+  const totalCarbs = foodLog.reduce((sum, f) => sum + (f.carbs || 0), 0);
+  const totalFat = foodLog.reduce((sum, f) => sum + (f.fat || 0), 0);
+
+  // Update text displays
+  const proteinEl = document.getElementById("totalProteinG");
+  const carbsEl = document.getElementById("totalCarbsG");
+  const fatEl = document.getElementById("totalFatG");
+  const calDisplayEl = document.getElementById("macroCalDisplay");
+
+  if (proteinEl) proteinEl.textContent = Math.round(totalProtein);
+  if (carbsEl) carbsEl.textContent = Math.round(totalCarbs);
+  if (fatEl) fatEl.textContent = Math.round(totalFat);
+  if (calDisplayEl) calDisplayEl.textContent = caloriesConsumed;
+
+  // Calculate calories from macros (protein 4cal/g, carbs 4cal/g, fat 9cal/g)
+  const proteinCal = totalProtein * 4;
+  const carbsCal = totalCarbs * 4;
+  const fatCal = totalFat * 9;
+  const totalMacroCal = proteinCal + carbsCal + fatCal;
+
+  // SVG arc calculations (circumference = 2 * π * 40 ≈ 251.2)
+  const circumference = 251.2;
+
+  if (totalMacroCal > 0) {
+    const proteinRatio = proteinCal / totalMacroCal;
+    const carbsRatio = carbsCal / totalMacroCal;
+    const fatRatio = fatCal / totalMacroCal;
+
+    const proteinArc = document.getElementById("proteinArc");
+    const carbsArc = document.getElementById("carbsArc");
+    const fatArc = document.getElementById("fatArc");
+
+    // Protein arc (starts at 0)
+    if (proteinArc) {
+      proteinArc.setAttribute("stroke-dasharray", `${proteinRatio * circumference} ${circumference}`);
+      proteinArc.setAttribute("stroke-dashoffset", "0");
+    }
+
+    // Carbs arc (starts after protein)
+    if (carbsArc) {
+      carbsArc.setAttribute("stroke-dasharray", `${carbsRatio * circumference} ${circumference}`);
+      carbsArc.setAttribute("stroke-dashoffset", `${-proteinRatio * circumference}`);
+    }
+
+    // Fat arc (starts after protein + carbs)
+    if (fatArc) {
+      fatArc.setAttribute("stroke-dasharray", `${fatRatio * circumference} ${circumference}`);
+      fatArc.setAttribute("stroke-dashoffset", `${-(proteinRatio + carbsRatio) * circumference}`);
+    }
+  }
 }
 
 function renderFoodLog() {
@@ -136,16 +193,18 @@ function renderFoodLog() {
 
   if (foodLog.length === 0) {
     logContainer.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-2">No foods logged yet.</p>`;
+    updateMacroChart();
     return;
   }
 
   logContainer.innerHTML = foodLog.map((food, idx) => `
-    <div class="flex items-center justify-between p-2 bg-slate-200 dark:bg-slate-800 rounded-lg">
-      <div>
-        <p class="text-sm font-medium text-slate-900 dark:text-white">${food.name}</p>
+    <div class="flex items-center gap-2 p-2 bg-slate-200 dark:bg-slate-800 rounded-lg">
+      <span class="text-xl">${getFoodEmoji(food.name)}</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-slate-900 dark:text-white truncate">${food.name}</p>
         <p class="text-xs text-slate-500 dark:text-slate-400">${food.serving}</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 shrink-0">
         <span class="text-sm font-bold text-amber-500">${food.calories} cal</span>
         <button class="text-red-500 hover:bg-red-500/10 rounded p-1" onclick="removeFoodFromLog(${idx})">
           <span class="material-symbols-outlined text-sm">close</span>
@@ -153,6 +212,8 @@ function renderFoodLog() {
       </div>
     </div>
   `).join("");
+
+  updateMacroChart();
 }
 
 function addFoodToLog(food) {
@@ -171,6 +232,32 @@ window.removeFoodFromLog = function (idx) {
   updateCalorieDisplay();
   renderFoodLog();
 };
+
+// Food images lookup (simple icon-based approach)
+const foodImages = {
+  chicken: "🍗", beef: "🥩", steak: "🥩", salmon: "🐟", fish: "🐟", tuna: "🐟", shrimp: "🦐",
+  egg: "🥚", rice: "🍚", bread: "🍞", pasta: "🍝", oatmeal: "🥣",
+  banana: "🍌", apple: "🍎", orange: "🍊", strawberry: "🍓", blueberry: "🫐",
+  broccoli: "🥦", spinach: "🥬", potato: "🥔", avocado: "🥑", carrot: "🥕",
+  yogurt: "🥛", milk: "🥛", cheese: "🧀", butter: "🧈",
+  pizza: "🍕", burger: "🍔", fries: "🍟", ice: "🍦", chocolate: "🍫",
+  coffee: "☕", juice: "🧃", shake: "🥤", protein: "💪",
+  default: "🍽️"
+};
+
+function getFoodEmoji(foodName) {
+  const lower = foodName.toLowerCase();
+  for (const [key, emoji] of Object.entries(foodImages)) {
+    if (lower.includes(key)) return emoji;
+  }
+  return foodImages.default;
+}
+
+// Serving modal elements
+let selectedFood = null;
+const servingModal = document.getElementById("servingModal");
+const servingAmount = document.getElementById("servingAmount");
+const servingUnit = document.getElementById("servingUnit");
 
 // Food search
 const foodSearchBtn = document.getElementById("btn_food_search");
@@ -192,14 +279,18 @@ if (foodSearchBtn && foodSearchInput) {
       if (foodSearchResults) {
         foodSearchResults.classList.remove("hidden");
         if (data.foods && data.foods.length > 0) {
-          foodSearchResults.innerHTML = data.foods.map(food => `
-            <div class="flex items-center justify-between p-2 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-700" 
-                 onclick='addFoodToLogFromSearch(${JSON.stringify(food).replace(/'/g, "\\'")})'>
-              <div>
+          foodSearchResults.innerHTML = data.foods.map((food, idx) => `
+            <div class="flex items-center gap-3 p-3 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors" 
+                 onclick='openServingModal(${JSON.stringify(food).replace(/'/g, "\\'")})'>
+              <div class="text-3xl">${getFoodEmoji(food.food_name)}</div>
+              <div class="flex-1">
                 <p class="text-sm font-medium text-slate-900 dark:text-white">${food.food_name}</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">${food.serving} • ${food.protein}g P / ${food.carbs}g C / ${food.fat}g F</p>
               </div>
-              <span class="text-sm font-bold text-green-500">${food.calories} cal</span>
+              <div class="text-right">
+                <p class="text-lg font-bold text-green-500">${food.calories}</p>
+                <p class="text-xs text-slate-400">cal</p>
+              </div>
             </div>
           `).join("");
         } else {
@@ -217,17 +308,85 @@ if (foodSearchBtn && foodSearchInput) {
   });
 }
 
-window.addFoodToLogFromSearch = function (food) {
-  addFoodToLog({
-    name: food.food_name,
-    calories: food.calories,
-    serving: food.serving,
-    protein: food.protein,
-    carbs: food.carbs,
-    fat: food.fat
-  });
+// Open serving modal
+window.openServingModal = function (food) {
+  selectedFood = food;
+  document.getElementById("modalFoodName").textContent = food.food_name;
+  document.getElementById("modalFoodServing").textContent = `Per ${food.serving}`;
+  document.getElementById("modalFoodImage").style.display = "none";
+
+  // Reset to default values
+  if (servingAmount) servingAmount.value = 100;
+  if (servingUnit) servingUnit.value = "g";
+
+  updateServingPreview();
+
+  if (servingModal) {
+    servingModal.classList.remove("hidden");
+    servingModal.classList.add("flex");
+  }
   if (foodSearchResults) foodSearchResults.classList.add("hidden");
+};
+
+// Update serving preview
+function updateServingPreview() {
+  if (!selectedFood) return;
+
+  const amount = parseFloat(servingAmount?.value) || 100;
+  const unit = servingUnit?.value || "g";
+
+  // Calculate based on per-100g values
+  let multiplier = amount / 100;
+  if (unit === "serving") multiplier = amount;
+
+  const calories = Math.round(selectedFood.calories * multiplier);
+  const protein = Math.round(selectedFood.protein * multiplier * 10) / 10;
+  const carbs = Math.round(selectedFood.carbs * multiplier * 10) / 10;
+  const fat = Math.round(selectedFood.fat * multiplier * 10) / 10;
+
+  document.getElementById("servingPreview").textContent = unit === "g" ? `${amount}g` : `${amount} serving(s)`;
+  document.getElementById("previewCal").textContent = calories;
+  document.getElementById("previewProtein").textContent = protein;
+  document.getElementById("previewCarbs").textContent = carbs;
+  document.getElementById("previewFat").textContent = fat;
+}
+
+// Serving input listeners
+if (servingAmount) servingAmount.addEventListener("input", updateServingPreview);
+if (servingUnit) servingUnit.addEventListener("change", updateServingPreview);
+
+// Cancel serving modal
+document.getElementById("cancelServing")?.addEventListener("click", () => {
+  servingModal?.classList.add("hidden");
+  servingModal?.classList.remove("flex");
+});
+
+// Confirm serving modal - add to log
+document.getElementById("confirmServing")?.addEventListener("click", () => {
+  if (!selectedFood) return;
+
+  const amount = parseFloat(servingAmount?.value) || 100;
+  const unit = servingUnit?.value || "g";
+  let multiplier = amount / 100;
+  if (unit === "serving") multiplier = amount;
+
+  addFoodToLog({
+    name: selectedFood.food_name,
+    calories: Math.round(selectedFood.calories * multiplier),
+    serving: unit === "g" ? `${amount}g` : `${amount} serving(s)`,
+    protein: Math.round(selectedFood.protein * multiplier * 10) / 10,
+    carbs: Math.round(selectedFood.carbs * multiplier * 10) / 10,
+    fat: Math.round(selectedFood.fat * multiplier * 10) / 10
+  });
+
+  servingModal?.classList.add("hidden");
+  servingModal?.classList.remove("flex");
   if (foodSearchInput) foodSearchInput.value = "";
+});
+
+// Legacy function for backwards compatibility
+window.addFoodToLogFromSearch = function (food) {
+  openServingModal(food);
 };
 
 // Init on load
