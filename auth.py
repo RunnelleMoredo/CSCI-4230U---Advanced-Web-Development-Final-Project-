@@ -162,18 +162,29 @@ def reset_password():
     if not email:
         return jsonify({"error": "Invalid or expired reset token"}), 400
     
-    # Find user by email
-    profile = UserProfile.query.filter_by(email=email).first()
+    print(f"🔑 Reset password request for email: {email}")
+    
+    # Find user by email (case-insensitive)
+    try:
+        from sqlalchemy import func
+        profile = UserProfile.query.filter(func.lower(UserProfile.email) == email.lower()).first()
+    except Exception as e:
+        print(f"❌ Error finding profile by email: {e}")
+        profile = None
+    
     if not profile:
+        print(f"❌ No profile found for email: {email}")
         return jsonify({"error": "User not found"}), 404
     
     user = User.query.get(profile.user_id)
     if not user:
+        print(f"❌ No user found for user_id: {profile.user_id}")
         return jsonify({"error": "User not found"}), 404
     
     # Update password
     user.set_password(new_password)
     db.session.commit()
     
+    print(f"✅ Password reset successful for user: {user.username}")
     return jsonify({"message": "Password has been reset successfully"}), 200
 
