@@ -33,6 +33,48 @@ const backBtn = document.getElementById("btn_back_main");
 if (backBtn) backBtn.onclick = () => (window.location.href = "/main_dashboard");
 
 // =======================================
+// SESSION GOAL MODAL
+// =======================================
+const goalModal = document.getElementById("goalModal");
+const quickGoalBtns = document.querySelectorAll(".quick-goal");
+const customGoalInput = document.getElementById("customSessionGoal");
+const startSessionBtn = document.getElementById("startSessionBtn");
+
+let sessionGoal = "";
+
+// Quick goal button click
+quickGoalBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    quickGoalBtns.forEach(b => b.classList.remove("border-primary", "bg-primary/10"));
+    btn.classList.add("border-primary", "bg-primary/10");
+    sessionGoal = btn.dataset.goal;
+    customGoalInput.value = "";
+  });
+});
+
+// Custom goal input
+customGoalInput?.addEventListener("input", (e) => {
+  if (e.target.value.trim()) {
+    sessionGoal = e.target.value.trim();
+    quickGoalBtns.forEach(b => b.classList.remove("border-primary", "bg-primary/10"));
+  }
+});
+
+// Start session button
+startSessionBtn?.addEventListener("click", () => {
+  if (!sessionGoal) {
+    alert("Please select or enter a goal for this session");
+    return;
+  }
+
+  // Store goal for this session
+  localStorage.setItem("currentSessionGoal", sessionGoal);
+
+  // Hide modal
+  goalModal.classList.add("hidden");
+});
+
+// =======================================
 // SESSION RENDERING
 // =======================================
 const sessionContainer = document.getElementById("session_container");
