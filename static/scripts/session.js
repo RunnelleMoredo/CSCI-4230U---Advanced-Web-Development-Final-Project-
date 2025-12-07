@@ -323,6 +323,13 @@ if (!exercises.length) {
       const totalSessionSets = summaryExercises.reduce((sum, ex) => sum + (ex.totalSets || 0), 0);
       const totalSessionReps = summaryExercises.reduce((sum, ex) => sum + (ex.totalReps || 0), 0);
 
+      // Calculate calories burned using MET formula
+      // MET = 5.0 for moderate weight training, Weight = 70kg default, Duration in hours
+      const durationHours = timerSeconds / 3600;
+      const userWeight = parseFloat(localStorage.getItem("userWeightKg")) || 70;
+      const MET = 5.0; // Moderate weight training
+      const caloriesBurned = Math.round(MET * userWeight * durationHours);
+
       saveSessionToHistory({
         name: workoutName,
         durationSeconds: timerSeconds,
@@ -331,6 +338,7 @@ if (!exercises.length) {
         totalVolume: totalSessionVolume,
         totalSets: totalSessionSets,
         totalReps: totalSessionReps,
+        caloriesBurned: caloriesBurned,
       });
       localStorage.removeItem("activeWorkout");
       localStorage.removeItem("selectedExercises");
@@ -354,6 +362,7 @@ function saveSessionToHistory(payload) {
     totalVolume: payload.totalVolume || 0,
     totalSets: payload.totalSets || 0,
     totalReps: payload.totalReps || 0,
+    caloriesBurned: payload.caloriesBurned || 0,
   });
   localStorage.setItem("workoutHistory", JSON.stringify(history));
 }
@@ -501,8 +510,18 @@ function updateSessionStats() {
   const volumeEl = document.getElementById('totalVolume');
   const setsEl = document.getElementById('totalSets');
   const repsEl = document.getElementById('totalReps');
+  const calBurnedEl = document.getElementById('estCaloriesBurned');
 
   if (volumeEl) volumeEl.textContent = totalVolume.toLocaleString();
   if (setsEl) setsEl.textContent = totalSets;
   if (repsEl) repsEl.textContent = totalReps;
+
+  // Calculate estimated calories burned based on current timer
+  if (calBurnedEl) {
+    const durationHours = timerSeconds / 3600;
+    const userWeight = parseFloat(localStorage.getItem("userWeightKg")) || 70;
+    const MET = 5.0;
+    const estCals = Math.round(MET * userWeight * durationHours);
+    calBurnedEl.textContent = estCals;
+  }
 }

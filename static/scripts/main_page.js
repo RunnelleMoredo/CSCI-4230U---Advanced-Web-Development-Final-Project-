@@ -58,42 +58,180 @@ function blockWorkoutAccessIfNoGoal() {
 
 
 // =======================================
-// CREATE GOAL
+// CALORIE TRACKER
 // =======================================
-const submitGoalBtn = document.getElementById("btn_submit");
-if (submitGoalBtn) {
-  submitGoalBtn.addEventListener("click", async () => {
-    const title = document.getElementById("text_title").value.trim();
-    const description = document.getElementById("text_description").value.trim();
-    const token = localStorage.getItem("access_token");
+let dailyCalorieTarget = 2000;
+let caloriesConsumed = 0;
+let caloriesBurned = 0;
+let foodLog = [];
 
-    if (!title) return alert("Title required");
+// Initialize calorie tracker on page load
+async function initCalorieTracker() {
+  // Set today's date
+  const dateEl = document.getElementById("calorie_date");
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString();
 
+  // Load food log from localStorage
+  const savedLog = localStorage.getItem("todayFoodLog");
+  const savedDate = localStorage.getItem("foodLogDate");
+  const today = new Date().toDateString();
+
+  if (savedLog && savedDate === today) {
+    foodLog = JSON.parse(savedLog);
+    caloriesConsumed = foodLog.reduce((sum, f) => sum + (f.calories || 0), 0);
+  } else {
+    // New day, reset log
+    foodLog = [];
+    localStorage.setItem("todayFoodLog", "[]");
+    localStorage.setItem("foodLogDate", today);
+  }
+
+  // Load burned calories from today's sessions
+  const history = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
+  const todayStr = new Date().toDateString();
+  caloriesBurned = history
+    .filter(h => new Date(h.date).toDateString() === todayStr)
+    .reduce((sum, h) => sum + (h.caloriesBurned || 0), 0);
+
+  // Fetch personalized BMR target
+  const token = localStorage.getItem("access_token");
+  if (token) {
     try {
-      const res = await fetch("/goals/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({ title, description }),
+      const res = await fetch("/api/food/bmr", {
+        headers: { Authorization: `Bearer ${token}` }
       });
-
-      const data = await res.json();
       if (res.ok) {
-        document.getElementById("goal_status").innerHTML = `<span class="text-green-500">✓ Goal created!</span>`;
-        document.getElementById("text_title").value = "";
-        document.getElementById("text_description").value = "";
-        markGoalCreated();
-        blockWorkoutAccessIfNoGoal();
-      } else {
-        alert(data.error || "Failed to create goal.");
+        const data = await res.json();
+        dailyCalorieTarget = data.daily_target;
       }
-    } catch {
-      alert("Network error.");
+    } catch (e) {
+      console.log("Could not fetch BMR, using default");
     }
+  }
+
+  updateCalorieDisplay();
+  renderFoodLog();
+}
+
+function updateCalorieDisplay() {
+  const targetEl = document.getElementById("cal_target");
+  const consumedEl = document.getElementById("cal_consumed");
+  const burnedEl = document.getElementById("cal_burned");
+  const remainingEl = document.getElementById("cal_remaining");
+
+  if (targetEl) targetEl.textContent = dailyCalorieTarget.toLocaleString();
+  if (consumedEl) consumedEl.textContent = caloriesConsumed.toLocaleString();
+  if (burnedEl) burnedEl.textContent = caloriesBurned.toLocaleString();
+
+  const netRemaining = dailyCalorieTarget - caloriesConsumed + caloriesBurned;
+  if (remainingEl) {
+    remainingEl.textContent = netRemaining.toLocaleString();
+    remainingEl.className = `text-3xl font-bold ${netRemaining >= 0 ? 'text-green-500' : 'text-red-500'}`;
+  }
+}
+
+function renderFoodLog() {
+  const logContainer = document.getElementById("food_log");
+  if (!logContainer) return;
+
+  if (foodLog.length === 0) {
+    logContainer.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-2">No foods logged yet.</p>`;
+    return;
+  }
+
+  logContainer.innerHTML = foodLog.map((food, idx) => `
+    <div class="flex items-center justify-between p-2 bg-slate-200 dark:bg-slate-800 rounded-lg">
+      <div>
+        <p class="text-sm font-medium text-slate-900 dark:text-white">${food.name}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">${food.serving}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-bold text-amber-500">${food.calories} cal</span>
+        <button class="text-red-500 hover:bg-red-500/10 rounded p-1" onclick="removeFoodFromLog(${idx})">
+          <span class="material-symbols-outlined text-sm">close</span>
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function addFoodToLog(food) {
+  foodLog.push(food);
+  caloriesConsumed += food.calories || 0;
+  localStorage.setItem("todayFoodLog", JSON.stringify(foodLog));
+  localStorage.setItem("foodLogDate", new Date().toDateString());
+  updateCalorieDisplay();
+  renderFoodLog();
+}
+
+window.removeFoodFromLog = function (idx) {
+  const removed = foodLog.splice(idx, 1)[0];
+  caloriesConsumed -= removed.calories || 0;
+  localStorage.setItem("todayFoodLog", JSON.stringify(foodLog));
+  updateCalorieDisplay();
+  renderFoodLog();
+};
+
+// Food search
+const foodSearchBtn = document.getElementById("btn_food_search");
+const foodSearchInput = document.getElementById("food_search_input");
+const foodSearchResults = document.getElementById("food_search_results");
+
+if (foodSearchBtn && foodSearchInput) {
+  const searchFood = async () => {
+    const query = foodSearchInput.value.trim();
+    if (!query) return;
+
+    const token = localStorage.getItem("access_token");
+    try {
+      const res = await fetch(`/api/food/search?q=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      if (foodSearchResults) {
+        foodSearchResults.classList.remove("hidden");
+        if (data.foods && data.foods.length > 0) {
+          foodSearchResults.innerHTML = data.foods.map(food => `
+            <div class="flex items-center justify-between p-2 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-700" 
+                 onclick='addFoodToLogFromSearch(${JSON.stringify(food).replace(/'/g, "\\'")})'>
+              <div>
+                <p class="text-sm font-medium text-slate-900 dark:text-white">${food.food_name}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">${food.serving} • ${food.protein}g P / ${food.carbs}g C / ${food.fat}g F</p>
+              </div>
+              <span class="text-sm font-bold text-green-500">${food.calories} cal</span>
+            </div>
+          `).join("");
+        } else {
+          foodSearchResults.innerHTML = `<p class="text-slate-500 text-sm p-2">No foods found.</p>`;
+        }
+      }
+    } catch (e) {
+      console.error("Food search error:", e);
+    }
+  };
+
+  foodSearchBtn.addEventListener("click", searchFood);
+  foodSearchInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") searchFood();
   });
 }
+
+window.addFoodToLogFromSearch = function (food) {
+  addFoodToLog({
+    name: food.food_name,
+    calories: food.calories,
+    serving: food.serving,
+    protein: food.protein,
+    carbs: food.carbs,
+    fat: food.fat
+  });
+  if (foodSearchResults) foodSearchResults.classList.add("hidden");
+  if (foodSearchInput) foodSearchInput.value = "";
+};
+
+// Init on load
+initCalorieTracker();
 
 
 // =======================================

@@ -10,6 +10,7 @@ from auth import auth_bp
 from goals import goals_bp
 from workout import workout_bp
 from profile import profile_bp
+from fatsecret import fatsecret_bp
 
 
 # ---------------------------------------------------------
@@ -35,6 +36,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(goals_bp)
 app.register_blueprint(workout_bp)
 app.register_blueprint(profile_bp)
+app.register_blueprint(fatsecret_bp)
 
 
 # ---------------------------------------------------------
