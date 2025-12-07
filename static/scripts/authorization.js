@@ -122,6 +122,40 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      // Password length validation
+      if (password.length < 8) {
+        if (msgEl) {
+          msgEl.textContent = "Password must be at least 8 characters.";
+          msgEl.style.color = "red";
+        }
+        return;
+      }
+
+      // DOB age validation (must be 13+)
+      if (dob) {
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        if (age < 13) {
+          if (msgEl) {
+            msgEl.textContent = "You must be at least 13 years old to register.";
+            msgEl.style.color = "red";
+          }
+          return;
+        }
+        if (birthDate > today) {
+          if (msgEl) {
+            msgEl.textContent = "Date of birth cannot be in the future.";
+            msgEl.style.color = "red";
+          }
+          return;
+        }
+      }
+
       try {
         // Step 1: Register the user
         const res = await fetch("/auth/register", {

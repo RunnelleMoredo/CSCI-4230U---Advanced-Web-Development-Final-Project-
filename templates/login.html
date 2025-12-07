@@ -166,7 +166,9 @@
                         <label for="signup_dob" class="block text-sm font-medium text-slate-300 mb-1">Date of
                             Birth</label>
                         <input type="date" id="signup_dob"
-                            class="w-full bg-slate-800/50 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-primary focus:border-primary px-4 py-3">
+                            class="w-full bg-slate-800/50 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-primary focus:border-primary px-4 py-3"
+                            max="2011-12-31">
+                        <p class="text-xs text-slate-500 mt-1">Must be 13+ years old to register</p>
                     </div>
 
                     <!-- Height & Weight Row -->
@@ -200,9 +202,10 @@
                     <div>
                         <label for="signup_password"
                             class="block text-sm font-medium text-slate-300 mb-1">Password</label>
-                        <input type="password" id="signup_password"
+                        <input type="password" id="signup_password" minlength="8"
                             class="w-full bg-slate-800/50 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-primary focus:border-primary px-4 py-3"
-                            placeholder="Create a password">
+                            placeholder="Minimum 8 characters">
+                        <p class="text-xs text-slate-500 mt-1">At least 8 characters required</p>
                     </div>
 
                     <button id="btn_signup"

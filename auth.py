@@ -23,6 +23,10 @@ def register():
     username = data.get("username")
     password = data.get("password")
 
+    # Password length validation
+    if len(password) < 8:
+        return jsonify({"error": "Password must be at least 8 characters"}), 400
+
     # Check duplicate
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "User already exists"}), 409
