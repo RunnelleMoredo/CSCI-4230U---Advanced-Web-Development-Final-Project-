@@ -107,7 +107,35 @@ If you did not request this reset, please ignore this email.
 - The CoreSync Team
 """
     
-    # Try SendGrid first (works on Render)
+    # Try Brevo (Sendinblue) first - works on Render!
+    brevo_api_key = os.environ.get('BREVO_API_KEY')
+    if brevo_api_key:
+        try:
+            import requests
+            response = requests.post(
+                'https://api.brevo.com/v3/smtp/email',
+                headers={
+                    'api-key': brevo_api_key,
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json'
+                },
+                json={
+                    'sender': {'name': 'CoreSync', 'email': mail_username},
+                    'to': [{'email': to_email}],
+                    'subject': 'CoreSync - Password Reset Request',
+                    'textContent': plain_text,
+                    'htmlContent': html_content
+                }
+            )
+            if response.status_code in [200, 201, 202]:
+                print(f"✅ Password reset email sent via Brevo to {to_email}")
+                return True
+            else:
+                print(f"❌ Brevo error: {response.status_code} - {response.text}")
+        except Exception as e:
+            print(f"❌ Brevo failed: {e}")
+    
+    # Try SendGrid as fallback
     if sendgrid_api_key:
         try:
             import requests
