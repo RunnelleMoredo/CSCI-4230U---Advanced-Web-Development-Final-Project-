@@ -40,48 +40,20 @@ def verify_reset_token(token, max_age=3600):
 
 def send_reset_email(to_email, reset_url):
     """
-    Send a password reset email via Gmail SMTP.
+    Send a password reset email via SendGrid API (preferred) or Gmail SMTP (fallback).
     
-    Required environment variables:
+    Preferred: SendGrid API (works on Render free tier)
+    - SENDGRID_API_KEY: Your SendGrid API key
+    
+    Fallback: Gmail SMTP (blocked on some platforms)
     - MAIL_USERNAME: Your Gmail address
     - MAIL_PASSWORD: Your Gmail App Password
     """
-    mail_username = os.environ.get('MAIL_USERNAME')
-    mail_password = os.environ.get('MAIL_PASSWORD')
+    sendgrid_api_key = os.environ.get('SENDGRID_API_KEY')
+    mail_username = os.environ.get('MAIL_USERNAME', 'CoreSyncNoReply@gmail.com')
     
-    # If email not configured, print to console for demo purposes
-    if not mail_username or not mail_password:
-        print("\n" + "="*60)
-        print("📧 PASSWORD RESET EMAIL (Demo Mode - Email not configured)")
-        print("="*60)
-        print(f"To: {to_email}")
-        print(f"Reset URL: {reset_url}")
-        print("="*60 + "\n")
-        return True
-    
-    # Create message
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = 'CoreSync - Password Reset Request'
-    msg['From'] = mail_username
-    msg['To'] = to_email
-    
-    # Plain text version
-    text = f"""
-CoreSync Password Reset
-
-You have requested to reset your password. Click the link below to reset it:
-
-{reset_url}
-
-This link will expire in 1 hour.
-
-If you did not request this reset, please ignore this email.
-
-- The CoreSync Team
-"""
-    
-    # HTML version
-    html = f"""
+    # Build email HTML content
+    html_content = f"""
 <!DOCTYPE html>
 <html>
 <head>
@@ -121,18 +93,75 @@ If you did not request this reset, please ignore this email.
 </html>
 """
     
-    msg.attach(MIMEText(text, 'plain'))
-    msg.attach(MIMEText(html, 'html'))
+    plain_text = f"""
+CoreSync Password Reset
+
+You have requested to reset your password. Click the link below to reset it:
+
+{reset_url}
+
+This link will expire in 1 hour.
+
+If you did not request this reset, please ignore this email.
+
+- The CoreSync Team
+"""
     
-    try:
-        # Connect to Gmail SMTP
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(mail_username, mail_password)
-        server.sendmail(mail_username, to_email, msg.as_string())
-        server.quit()
-        print(f"✅ Password reset email sent to {to_email}")
-        return True
-    except Exception as e:
-        print(f"❌ Failed to send email: {e}")
-        return False
+    # Try SendGrid first (works on Render)
+    if sendgrid_api_key:
+        try:
+            import requests
+            response = requests.post(
+                'https://api.sendgrid.com/v3/mail/send',
+                headers={
+                    'Authorization': f'Bearer {sendgrid_api_key}',
+                    'Content-Type': 'application/json'
+                },
+                json={
+                    'personalizations': [{'to': [{'email': to_email}]}],
+                    'from': {'email': mail_username, 'name': 'CoreSync'},
+                    'subject': 'CoreSync - Password Reset Request',
+                    'content': [
+                        {'type': 'text/plain', 'value': plain_text},
+                        {'type': 'text/html', 'value': html_content}
+                    ]
+                }
+            )
+            if response.status_code in [200, 202]:
+                print(f"✅ Password reset email sent via SendGrid to {to_email}")
+                return True
+            else:
+                print(f"❌ SendGrid error: {response.status_code} - {response.text}")
+        except Exception as e:
+            print(f"❌ SendGrid failed: {e}")
+    
+    # Fallback to Gmail SMTP
+    mail_password = os.environ.get('MAIL_PASSWORD')
+    if mail_username and mail_password:
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = 'CoreSync - Password Reset Request'
+            msg['From'] = mail_username
+            msg['To'] = to_email
+            msg.attach(MIMEText(plain_text, 'plain'))
+            msg.attach(MIMEText(html_content, 'html'))
+            
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(mail_username, mail_password)
+            server.sendmail(mail_username, to_email, msg.as_string())
+            server.quit()
+            print(f"✅ Password reset email sent via Gmail SMTP to {to_email}")
+            return True
+        except Exception as e:
+            print(f"❌ Failed to send email via SMTP: {e}")
+    
+    # Demo mode - print to console
+    print("\n" + "="*60)
+    print("📧 PASSWORD RESET EMAIL (Demo Mode - Email not configured)")
+    print("="*60)
+    print(f"To: {to_email}")
+    print(f"Reset URL: {reset_url}")
+    print("="*60 + "\n")
+    return True
+
