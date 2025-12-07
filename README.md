@@ -1,6 +1,6 @@
 # CoreSync - Daily Habit & Workout Hub
 
-**Live Demo:** https://coresync-du88.onrender.com/
+**Live Demo:** https://coresync-940t.onrender.com/
 
 A full-stack Flask web application for fitness tracking with AI-powered workout generation.
 
