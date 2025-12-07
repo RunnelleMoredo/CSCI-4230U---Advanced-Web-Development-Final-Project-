@@ -1,6 +1,6 @@
 """
 Food API Integration Module
-Supports USDA FoodData Central (primary) and AI meal generation via OpenAI.
+Supports USDA FoodData Central (primary) and AI meal generation via Google Gemini.
 """
 
 import os
@@ -10,7 +10,7 @@ import requests
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, UserProfile
-from openai import OpenAI
+import google.generativeai as genai
 
 fatsecret_bp = Blueprint("fatsecret", __name__, url_prefix="/api/food")
 
@@ -255,7 +255,9 @@ def search_ai_meal():
         return jsonify({"success": False, "error": "Please provide a meal name"}), 400
     
     try:
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # Configure Gemini
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = f"""Provide the nutritional information for: "{meal_query}"
 
@@ -271,14 +273,8 @@ Return ONLY a JSON object in this exact format (no markdown, no extra text):
 
 Be accurate and realistic with the nutrition values based on typical serving sizes."""
 
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
-            max_tokens=200
-        )
-        
-        meal_text = response.choices[0].message.content.strip()
+        response = model.generate_content(prompt)
+        meal_text = response.text.strip()
         
         # Parse JSON from response
         if "```json" in meal_text:
