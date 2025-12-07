@@ -45,10 +45,18 @@ let sessionGoal = "";
 // Quick goal button click
 quickGoalBtns.forEach(btn => {
   btn.addEventListener("click", () => {
-    quickGoalBtns.forEach(b => b.classList.remove("border-primary", "bg-primary/10"));
-    btn.classList.add("border-primary", "bg-primary/10");
+    // Remove selected state from all buttons
+    quickGoalBtns.forEach(b => {
+      b.style.borderColor = "";
+      b.style.backgroundColor = "";
+      b.classList.remove("selected");
+    });
+    // Add selected state to clicked button
+    btn.style.borderColor = "#2b6cee";
+    btn.style.backgroundColor = "rgba(43, 108, 238, 0.15)";
+    btn.classList.add("selected");
     sessionGoal = btn.dataset.goal;
-    customGoalInput.value = "";
+    if (customGoalInput) customGoalInput.value = "";
   });
 });
 
@@ -56,7 +64,12 @@ quickGoalBtns.forEach(btn => {
 customGoalInput?.addEventListener("input", (e) => {
   if (e.target.value.trim()) {
     sessionGoal = e.target.value.trim();
-    quickGoalBtns.forEach(b => b.classList.remove("border-primary", "bg-primary/10"));
+    // Remove selected state from all quick goal buttons
+    quickGoalBtns.forEach(b => {
+      b.style.borderColor = "";
+      b.style.backgroundColor = "";
+      b.classList.remove("selected");
+    });
   }
 });
 
