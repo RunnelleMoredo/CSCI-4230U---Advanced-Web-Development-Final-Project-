@@ -328,6 +328,16 @@ if (aiMealBtn && aiMealInput) {
     const originalHTML = aiMealBtn.innerHTML;
     aiMealBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span>`;
 
+    // Get or create the AI results container
+    let aiResultsContainer = document.getElementById("ai_meal_results");
+    if (!aiResultsContainer) {
+      aiResultsContainer = document.createElement("div");
+      aiResultsContainer.id = "ai_meal_results";
+      aiResultsContainer.className = "mt-2 space-y-2 max-h-64 overflow-y-auto";
+      aiMealInput.parentElement.parentElement.appendChild(aiResultsContainer);
+    }
+    aiResultsContainer.innerHTML = `<p class="text-purple-400 text-sm text-center py-2">Searching for meals...</p>`;
+
     try {
       const res = await fetch("/api/food/ai-meal", {
         method: "POST",
@@ -340,16 +350,32 @@ if (aiMealBtn && aiMealInput) {
 
       const data = await res.json();
 
-      if (data.success && data.meal) {
-        // Open serving modal with AI-found meal nutrition
-        openServingModal(data.meal);
-        aiMealInput.value = "";
+      if (data.success && data.meals && data.meals.length > 0) {
+        // Display meals as a list
+        const sourceLabel = data.source === "ai" ? "AI Suggestions" : (data.source === "usda" ? "USDA Database" : "Local Database");
+        aiResultsContainer.innerHTML = `
+          <p class="text-xs text-purple-400 mb-2">${sourceLabel} for "${mealName}":</p>
+          ${data.meals.map((meal, idx) => `
+            <div class="flex items-center gap-3 p-3 bg-purple-900/30 border border-purple-500/30 rounded-lg cursor-pointer hover:bg-purple-800/40 transition-colors"
+                 onclick='selectAIMeal(${JSON.stringify(meal).replace(/'/g, "\\'")})'>
+              <div class="text-2xl">${getFoodEmoji(meal.food_name)}</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-white truncate">${meal.food_name}</p>
+                <p class="text-xs text-purple-300">${meal.serving || '1 serving'} • ${meal.protein || 0}g P / ${meal.carbs || 0}g C / ${meal.fat || 0}g F</p>
+              </div>
+              <div class="text-right shrink-0">
+                <p class="text-lg font-bold text-purple-300">${meal.calories || 0}</p>
+                <p class="text-xs text-purple-400">cal</p>
+              </div>
+            </div>
+          `).join("")}
+        `;
       } else {
-        alert(data.error || "Could not find meal nutrition. Try a different name.");
+        aiResultsContainer.innerHTML = `<p class="text-red-400 text-sm text-center py-2">${data.error || "No meals found. Try a different search."}</p>`;
       }
     } catch (e) {
       console.error("AI meal error:", e);
-      alert("Failed to search meal.");
+      aiResultsContainer.innerHTML = `<p class="text-red-400 text-sm text-center py-2">Failed to search. Try again.</p>`;
     } finally {
       aiMealBtn.disabled = false;
       aiMealBtn.innerHTML = originalHTML;
@@ -361,6 +387,16 @@ if (aiMealBtn && aiMealInput) {
     if (e.key === "Enter") searchAIMeal();
   });
 }
+
+// Select AI meal and open serving modal
+window.selectAIMeal = function (meal) {
+  openServingModal(meal);
+  // Hide results after selection
+  const aiResultsContainer = document.getElementById("ai_meal_results");
+  if (aiResultsContainer) aiResultsContainer.innerHTML = "";
+  const aiInput = document.getElementById("ai_meal_input");
+  if (aiInput) aiInput.value = "";
+};
 
 // Open serving modal
 window.openServingModal = function (food) {

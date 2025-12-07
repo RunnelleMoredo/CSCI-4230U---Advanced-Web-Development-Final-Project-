@@ -247,7 +247,7 @@ def calculate_bmr():
 @fatsecret_bp.route("/ai-meal", methods=["POST"])
 @jwt_required()
 def search_ai_meal():
-    """Search for meal nutrition facts using OpenAI."""
+    """Search for meal options using AI and return multiple suggestions with nutrition."""
     data = request.get_json() or {}
     meal_query = data.get("meal_name", "").strip()
     
@@ -259,19 +259,24 @@ def search_ai_meal():
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        prompt = f"""Provide the nutritional information for: "{meal_query}"
+        prompt = f"""Based on the search query "{meal_query}", suggest 5 different meal options that match or are related.
 
-Return ONLY a JSON object in this exact format (no markdown, no extra text):
-{{
-    "meal_name": "{meal_query}",
-    "calories": <number for a typical serving>,
-    "protein": <grams as number>,
-    "carbs": <grams as number>,
-    "fat": <grams as number>,
-    "serving": "description of typical serving size"
-}}
+Return ONLY a JSON array with exactly 5 meals in this format (no markdown, no extra text):
+[
+    {{
+        "food_name": "Specific meal name",
+        "calories": <number>,
+        "protein": <grams>,
+        "carbs": <grams>,
+        "fat": <grams>,
+        "serving": "serving size description"
+    }},
+    ...
+]
 
-Be accurate and realistic with the nutrition values based on typical serving sizes."""
+Be specific with meal names (e.g., "Spaghetti Carbonara" not just "Pasta"). 
+Include variety - different preparations, brands, or variations.
+Use realistic nutrition values for typical serving sizes."""
 
         response = model.generate_content(prompt)
         meal_text = response.text.strip()
@@ -282,12 +287,15 @@ Be accurate and realistic with the nutrition values based on typical serving siz
         elif "```" in meal_text:
             meal_text = meal_text.split("```")[1].split("```")[0]
         
-        meal_data = json.loads(meal_text)
-        meal_data["food_name"] = meal_data.pop("meal_name", meal_query)
+        meals = json.loads(meal_text)
+        
+        # Ensure we have a list
+        if isinstance(meals, dict):
+            meals = [meals]
         
         return jsonify({
             "success": True,
-            "meal": meal_data,
+            "meals": meals,
             "source": "ai"
         }), 200
         
@@ -295,11 +303,11 @@ Be accurate and realistic with the nutrition values based on typical serving siz
         print(f"AI meal search error: {e} - falling back to USDA")
         
         # Fallback to USDA API search
-        usda_results = search_usda_foods(meal_query, max_results=1)
+        usda_results = search_usda_foods(meal_query, max_results=5)
         if usda_results and len(usda_results) > 0:
             return jsonify({
                 "success": True,
-                "meal": usda_results[0],
+                "meals": usda_results,
                 "source": "usda"
             }), 200
         
@@ -308,11 +316,11 @@ Be accurate and realistic with the nutrition values based on typical serving siz
         if fallback and len(fallback) > 0:
             return jsonify({
                 "success": True,
-                "meal": fallback[0],
+                "meals": fallback,
                 "source": "fallback"
             }), 200
         
         return jsonify({
             "success": False,
-            "error": "Could not find nutrition info. Try searching in the food search below."
+            "error": "Could not find meals. Try a different search term."
         }), 200
