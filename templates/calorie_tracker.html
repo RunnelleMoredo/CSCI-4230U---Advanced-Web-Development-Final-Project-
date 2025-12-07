@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie Tracker - Daily Habit & Workout Hub</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b6cee",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="font-display bg-background-light dark:bg-background-dark min-h-screen">
+    <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+
+        <!-- TopNavBar -->
+        <header
+            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-white/10 px-6 sm:px-10 lg:px-20 py-3 bg-background-light dark:bg-background-dark/80 backdrop-blur-sm sticky top-0 z-10">
+            <div class="flex items-center gap-4 text-slate-800 dark:text-white">
+                <div class="size-6 text-primary">
+                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M39.5563 34.1455V13.8546C39.5563 15.708 36.8773 17.3437 32.7927 18.3189C30.2914 18.916 27.263 19.2655 24 19.2655C20.737 19.2655 17.7086 18.916 15.2073 18.3189C11.1227 17.3437 8.44365 15.708 8.44365 13.8546V34.1455C8.44365 35.9988 11.1227 37.6346 15.2073 38.6098C17.7086 39.2069 20.737 39.5564 24 39.5564C27.263 39.5564 30.2914 39.2069 32.7927 38.6098C36.8773 37.6346 39.5563 35.9988 39.5563 34.1455Z"
+                            fill="currentColor"></path>
+                        <path clip-rule="evenodd"
+                            d="M10.4485 13.8519C10.4749 13.9271 10.6203 14.246 11.379 14.7361C12.298 15.3298 13.7492 15.9145 15.6717 16.3735C18.0007 16.9296 20.8712 17.2655 24 17.2655C27.1288 17.2655 29.9993 16.9296 32.3283 16.3735C34.2508 15.9145 35.702 15.3298 36.621 14.7361C37.3796 14.246 37.5251 13.9271 37.5515 13.8519C37.5287 13.7876 37.4333 13.5973 37.0635 13.2931C36.5266 12.8516 35.6288 12.3647 34.343 11.9175C31.79 11.0295 28.1333 10.4437 24 10.4437C19.8667 10.4437 16.2099 11.0295 13.657 11.9175C12.3712 12.3647 11.4734 12.8516 10.9365 13.2931C10.5667 13.5973 10.4713 13.7876 10.4485 13.8519ZM37.5563 18.7877C36.3176 19.3925 34.8502 19.8839 33.2571 20.2642C30.5836 20.9025 27.3973 21.2655 24 21.2655C20.6027 21.2655 17.4164 20.9025 14.7429 20.2642C13.1498 19.8839 11.6824 19.3925 10.4436 18.7877V34.1275C10.4515 34.1545 10.5427 34.4867 11.379 35.027C12.298 35.6207 13.7492 36.2054 15.6717 36.6644C18.0007 37.2205 20.8712 37.5564 24 37.5564C27.1288 37.5564 29.9993 37.2205 32.3283 36.6644C34.2508 36.2054 35.702 35.6207 36.621 35.027C37.4573 34.4867 37.5485 34.1546 37.5563 34.1275V18.7877ZM41.5563 13.8546V34.1455C41.5563 36.1078 40.158 37.5042 38.7915 38.3869C37.3498 39.3182 35.4192 40.0389 33.2571 40.5551C30.5836 41.1934 27.3973 41.5564 24 41.5564C20.6027 41.5564 17.4164 41.1934 14.7429 40.5551C12.5808 40.0389 10.6502 39.3182 9.20848 38.3869C7.84205 37.5042 6.44365 36.1078 6.44365 34.1455L6.44365 13.8546C6.44365 12.2684 7.37223 11.0454 8.39581 10.2036C9.43325 9.3505 10.8137 8.67141 12.343 8.13948C15.4203 7.06909 19.5418 6.44366 24 6.44366C28.4582 6.44366 32.5797 7.06909 35.657 8.13948C37.1863 8.67141 38.5667 9.3505 39.6042 10.2036C40.6278 11.0454 41.5563 12.2684 41.5563 13.8546Z"
+                            fill="currentColor" fill-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h2 class="text-slate-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">The Daily
+                    Habit &
+                    Workout Hub</h2>
+            </div>
+            <div class="flex flex-1 justify-end items-center gap-4">
+                <nav class="hidden md:flex items-center gap-9">
+                    <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+                        href="/ai_workout">AI Coach</a>
+                    <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+                        href="/main_dashboard">Dashboard</a>
+                    <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+                        href="/session">Workouts</a>
+                    <a class="text-primary text-sm font-medium leading-normal" href="#">Calorie Tracker</a>
+                    <a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
+                        href="/profile_page">Profile</a>
+                </nav>
+                <!-- Theme Toggle -->
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="theme_toggle_checkbox" class="sr-only peer">
+                    <div
+                        class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                    </div>
+                    <span class="ml-2 text-sm text-slate-600 dark:text-slate-300">
+                        <span class="material-symbols-outlined text-base align-middle">dark_mode</span>
+                    </span>
+                </label>
+                <button id="btn_logout"
+                    class="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-sm font-medium">
+                    <span class="material-symbols-outlined text-base">logout</span>
+                    <span class="hidden sm:inline">Logout</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h1
+                    class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] mb-2 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-green-500 text-4xl">local_fire_department</span>
+                    Calorie Tracker
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 text-lg">Track your daily nutrition and stay on top of your
+                    goals.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Stats & Chart -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Calorie Summary -->
+                    <div
+                        class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Today's Summary</h2>
+                            <span id="calorie_date" class="text-xs text-slate-500 dark:text-slate-400"></span>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div
+                                class="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                                <span class="text-sm text-slate-600 dark:text-slate-400">Target</span>
+                                <span class="text-2xl font-bold text-green-500" id="cal_target">--</span>
+                            </div>
+                            <div
+                                class="flex items-center justify-between p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                <span class="text-sm text-slate-600 dark:text-slate-400">Consumed</span>
+                                <span class="text-2xl font-bold text-amber-500" id="cal_consumed">0</span>
+                            </div>
+                            <div
+                                class="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                <span class="text-sm text-slate-600 dark:text-slate-400">Burned</span>
+                                <span class="text-2xl font-bold text-blue-500" id="cal_burned">0</span>
+                            </div>
+                            <div
+                                class="flex items-center justify-between p-4 rounded-lg bg-slate-200 dark:bg-slate-800">
+                                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Net
+                                    Remaining</span>
+                                <span class="text-3xl font-bold text-slate-900 dark:text-white"
+                                    id="cal_remaining">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Macro Chart -->
+                    <div
+                        class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6">
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Macros Breakdown</h2>
+                        <div class="flex items-center justify-center gap-6">
+                            <div class="relative w-32 h-32">
+                                <svg id="macroChart" viewBox="0 0 100 100" class="transform -rotate-90">
+                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="12" />
+                                    <circle id="proteinArc" cx="50" cy="50" r="40" fill="none" stroke="#10b981"
+                                        stroke-width="12" stroke-dasharray="0 251.2" stroke-linecap="round" />
+                                    <circle id="carbsArc" cx="50" cy="50" r="40" fill="none" stroke="#f59e0b"
+                                        stroke-width="12" stroke-dasharray="0 251.2" stroke-linecap="round" />
+                                    <circle id="fatArc" cx="50" cy="50" r="40" fill="none" stroke="#ef4444"
+                                        stroke-width="12" stroke-dasharray="0 251.2" stroke-linecap="round" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span id="macroCalDisplay"
+                                        class="text-xl font-bold text-slate-900 dark:text-white">0</span>
+                                </div>
+                            </div>
+                            <div class="text-sm space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-block w-4 h-4 bg-green-500 rounded-full"></span>
+                                    <span class="text-slate-600 dark:text-slate-400">Protein: <strong id="totalProteinG"
+                                            class="text-white">0</strong>g</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-block w-4 h-4 bg-amber-500 rounded-full"></span>
+                                    <span class="text-slate-600 dark:text-slate-400">Carbs: <strong id="totalCarbsG"
+                                            class="text-white">0</strong>g</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-block w-4 h-4 bg-red-500 rounded-full"></span>
+                                    <span class="text-slate-600 dark:text-slate-400">Fat: <strong id="totalFatG"
+                                            class="text-white">0</strong>g</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Search & Log -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- AI Meal Search -->
+                    <div
+                        class="rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-indigo-900/20 p-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="material-symbols-outlined text-purple-400">auto_awesome</span>
+                            <h2 class="text-lg font-bold text-white">AI Meal Lookup</h2>
+                        </div>
+                        <p class="text-purple-300 text-sm mb-4">Search any meal and get AI-powered nutrition
+                            suggestions.</p>
+                        <div class="flex gap-2">
+                            <input type="text" id="ai_meal_input"
+                                class="flex-1 bg-slate-900 border-purple-500/30 rounded-lg text-white focus:ring-purple-500 focus:border-purple-500 px-4 py-3"
+                                placeholder="Search any meal (e.g., pasta carbonara, butter chicken)">
+                            <button id="btn_ai_meal"
+                                class="flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-base font-bold leading-normal tracking-[0.015em] hover:from-purple-700 hover:to-indigo-700 transition-all">
+                                <span class="material-symbols-outlined">search</span>
+                                Search
+                            </button>
+                        </div>
+                        <div id="ai_meal_results" class="mt-4 space-y-2 max-h-80 overflow-y-auto">
+                            <!-- AI meal results will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Food Database Search -->
+                    <div
+                        class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="material-symbols-outlined text-green-500">restaurant</span>
+                            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Food Database</h2>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">Search our database of common foods
+                            with accurate nutrition data.</p>
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="food_search_input"
+                                class="flex-1 bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-green-500 focus:border-green-500 px-4 py-3"
+                                placeholder="Search food (e.g., chicken breast, rice, banana)">
+                            <button id="btn_food_search"
+                                class="flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-6 bg-green-600 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-green-700 transition-colors">
+                                <span class="material-symbols-outlined">search</span>
+                                Search
+                            </button>
+                        </div>
+                        <div id="food_search_results" class="space-y-2 max-h-64 overflow-y-auto hidden">
+                            <!-- Search results will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Today's Food Log -->
+                    <div
+                        class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/50 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-amber-500">menu_book</span>
+                                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Today's Food Log</h2>
+                            </div>
+                            <button id="clearFoodLog"
+                                class="text-xs text-red-400 hover:text-red-300 transition-colors">Clear All</button>
+                        </div>
+                        <div id="food_log" class="space-y-2 max-h-80 overflow-y-auto">
+                            <p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No foods logged yet.
+                                Search and add foods above!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Serving Size Modal -->
+        <div id="servingModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl w-full max-w-sm mx-4">
+                <div class="flex items-center gap-3 mb-4">
+                    <img id="modalFoodImage" src="" alt="" class="w-16 h-16 rounded-lg object-cover bg-slate-200">
+                    <div>
+                        <h3 id="modalFoodName" class="font-bold text-slate-900 dark:text-white">Food Name</h3>
+                        <p id="modalFoodServing" class="text-sm text-slate-500">Per 100g</p>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Serving
+                        Size</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="servingAmount" value="100" min="1"
+                            class="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white">
+                        <select id="servingUnit"
+                            class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white">
+                            <option value="g">grams</option>
+                            <option value="serving">serving</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-1">Nutrition for <span
+                            id="servingPreview">100g</span>:</p>
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div>
+                            <p id="previewCal" class="text-lg font-bold text-amber-500">0</p>
+                            <p class="text-xs text-slate-500">cal</p>
+                        </div>
+                        <div>
+                            <p id="previewProtein" class="text-lg font-bold text-green-500">0</p>
+                            <p class="text-xs text-slate-500">protein</p>
+                        </div>
+                        <div>
+                            <p id="previewCarbs" class="text-lg font-bold text-blue-500">0</p>
+                            <p class="text-xs text-slate-500">carbs</p>
+                        </div>
+                        <div>
+                            <p id="previewFat" class="text-lg font-bold text-red-500">0</p>
+                            <p class="text-xs text-slate-500">fat</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button id="cancelServing"
+                        class="flex-1 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium">Cancel</button>
+                    <button id="confirmServing"
+                        class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium">Add to
+                        Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='scripts/calorie_tracker.js') }}"></script>
+</body>
+
+</html>

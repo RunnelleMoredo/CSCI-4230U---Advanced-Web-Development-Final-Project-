@@ -76,6 +76,12 @@ def goals_page():
     return render_template("goals.html")
 
 
+@app.route("/calorie_tracker")
+def calorie_tracker_page():
+    """Calorie tracker page."""
+    return render_template("calorie_tracker.html")
+
+
 @app.route("/session")
 def session_page():
     """Workout session page."""
