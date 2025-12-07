@@ -253,8 +253,8 @@ def generate_ai_meal():
     # Get user's calorie target
     profile = UserProfile.query.filter_by(user_id=user_id).first()
     
-    weight_kg = profile.weight_kg if profile else 70
-    height_cm = profile.height_cm if profile else 170
+    weight_kg = (profile.weight_kg if profile and profile.weight_kg else 70)
+    height_cm = (profile.height_cm if profile and profile.height_cm else 170)
     age = 25
     if profile and profile.date_of_birth:
         from datetime import date
