@@ -356,6 +356,9 @@ async function loadUserWorkouts() {
               <p class="text-sm text-slate-500 dark:text-slate-400">${exercises.length} exercises</p>
             </div>
             <div class="flex gap-2">
+              <button class="add-to-session-ai px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors" data-id="${workout.id}" title="Add exercises to current session">
+                <span class="material-symbols-outlined text-base align-middle">add</span>
+              </button>
               <button class="start-ai px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors" data-id="${workout.id}">
                 Run Plan
               </button>
@@ -393,6 +396,38 @@ async function loadUserWorkouts() {
           headers: { Authorization: "Bearer " + token },
         });
         loadUserWorkouts();
+      });
+    });
+
+    // Add to Session button - adds AI exercises to current session
+    document.querySelectorAll(".add-to-session-ai").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const id = e.currentTarget.dataset.id;
+        try {
+          const res = await fetch(`/workout/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const workout = await res.json();
+          if (res.ok && workout.details?.exercises) {
+            const exercises = workout.details.exercises;
+            exercises.forEach(ex => {
+              addWorkout({
+                name: ex.name || ex.title || "Exercise",
+                bodyPart: ex.bodyPart || ex.targetMuscles?.[0] || "",
+                equipment: ex.equipment || ex.equipments?.[0] || "",
+                gifUrl: ex.gifUrl || "",
+                sets: ex.sets || 3,
+                reps: ex.reps || 10
+              });
+            });
+            alert(`Added ${exercises.length} exercises from "${workout.title}" to your session!`);
+          } else {
+            alert("Error loading workout exercises.");
+          }
+        } catch (err) {
+          console.error("Error adding AI exercises:", err);
+          alert("Failed to add exercises.");
+        }
       });
     });
   } catch (err) {
