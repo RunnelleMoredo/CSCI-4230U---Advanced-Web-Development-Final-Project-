@@ -202,6 +202,15 @@ if (!exercises.length) {
         </td>
       `;
       setsContainer.appendChild(row);
+
+      // Add event listeners for volume calculation
+      const repsInput = row.querySelector('.reps-input');
+      const weightInput = row.querySelector('.weight-input');
+      const checkbox = row.querySelector('.set-complete');
+
+      repsInput.addEventListener('input', updateSessionStats);
+      weightInput.addEventListener('input', updateSessionStats);
+      checkbox.addEventListener('change', updateSessionStats);
     };
 
     // Add first set automatically
@@ -431,4 +440,39 @@ if (removePhotoBtn) {
     photoPreviewContainer.classList.add("hidden");
     photoPlaceholder.classList.remove("hidden");
   });
+}
+
+// =======================================
+// SESSION STATS (Volume Calculator)
+// =======================================
+function updateSessionStats() {
+  const allRows = document.querySelectorAll('.set-row');
+  let totalVolume = 0;
+  let totalSets = 0;
+  let totalReps = 0;
+
+  allRows.forEach(row => {
+    const checkbox = row.querySelector('.set-complete');
+    const repsInput = row.querySelector('.reps-input');
+    const weightInput = row.querySelector('.weight-input');
+
+    // Only count completed sets for volume
+    if (checkbox && checkbox.checked) {
+      const reps = parseInt(repsInput?.value) || 0;
+      const weight = parseFloat(weightInput?.value) || 0;
+
+      totalSets++;
+      totalReps += reps;
+      totalVolume += reps * weight;
+    }
+  });
+
+  // Update display
+  const volumeEl = document.getElementById('totalVolume');
+  const setsEl = document.getElementById('totalSets');
+  const repsEl = document.getElementById('totalReps');
+
+  if (volumeEl) volumeEl.textContent = totalVolume.toLocaleString();
+  if (setsEl) setsEl.textContent = totalSets;
+  if (repsEl) repsEl.textContent = totalReps;
 }
