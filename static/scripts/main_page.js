@@ -311,13 +311,22 @@ if (foodSearchBtn && foodSearchInput) {
   });
 }
 
-// AI Meal Generator
+// AI Meal Search
 const aiMealBtn = document.getElementById("btn_ai_meal");
-if (aiMealBtn) {
-  aiMealBtn.addEventListener("click", async () => {
+const aiMealInput = document.getElementById("ai_meal_input");
+
+if (aiMealBtn && aiMealInput) {
+  const searchAIMeal = async () => {
+    const mealName = aiMealInput.value.trim();
+    if (!mealName) {
+      alert("Please enter a meal name to search");
+      return;
+    }
+
     const token = localStorage.getItem("access_token");
     aiMealBtn.disabled = true;
-    aiMealBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Generating...`;
+    const originalHTML = aiMealBtn.innerHTML;
+    aiMealBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span>`;
 
     try {
       const res = await fetch("/api/food/ai-meal", {
@@ -326,26 +335,30 @@ if (aiMealBtn) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ meal_type: "any" })
+        body: JSON.stringify({ meal_name: mealName })
       });
 
       const data = await res.json();
 
       if (data.success && data.meal) {
-        // Open serving modal with AI-generated meal
+        // Open serving modal with AI-found meal nutrition
         openServingModal(data.meal);
-      } else if (data.fallback_meal) {
-        openServingModal(data.fallback_meal);
+        aiMealInput.value = "";
       } else {
-        alert("Could not generate meal. Try again.");
+        alert(data.error || "Could not find meal nutrition. Try a different name.");
       }
     } catch (e) {
       console.error("AI meal error:", e);
-      alert("Failed to generate meal.");
+      alert("Failed to search meal.");
     } finally {
       aiMealBtn.disabled = false;
-      aiMealBtn.innerHTML = `<span class="material-symbols-outlined">auto_awesome</span> AI Suggest Meal`;
+      aiMealBtn.innerHTML = originalHTML;
     }
+  };
+
+  aiMealBtn.addEventListener("click", searchAIMeal);
+  aiMealInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") searchAIMeal();
   });
 }
 

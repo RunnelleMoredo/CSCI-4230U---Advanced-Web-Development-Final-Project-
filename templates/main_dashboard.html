@@ -164,12 +164,21 @@
             <p class="text-3xl font-bold text-slate-900 dark:text-white" id="cal_remaining">--</p>
           </div>
 
-          <!-- AI Suggest Meal Button -->
-          <button id="btn_ai_meal"
-            class="w-full mb-4 flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-base font-bold leading-normal tracking-[0.015em] hover:from-purple-700 hover:to-indigo-700 transition-all">
-            <span class="material-symbols-outlined">auto_awesome</span>
-            AI Suggest Meal
-          </button>
+          <!-- AI Meal Search -->
+          <div class="mb-4">
+            <p class="text-xs font-medium text-purple-400 mb-2 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">auto_awesome</span> AI Meal Lookup
+            </p>
+            <div class="flex gap-2">
+              <input type="text" id="ai_meal_input"
+                class="flex-1 bg-slate-200 dark:bg-background-dark border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-purple-500 focus:border-purple-500 px-4 py-3"
+                placeholder="Search any meal (e.g., pasta carbonara)">
+              <button id="btn_ai_meal"
+                class="flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-base font-bold leading-normal tracking-[0.015em] hover:from-purple-700 hover:to-indigo-700 transition-all">
+                <span class="material-symbols-outlined">search</span>
+              </button>
+            </div>
+          </div>
 
           <!-- Food Search -->
           <div class="mb-4">
