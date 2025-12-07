@@ -114,6 +114,56 @@ def complete_session_redirect():
 
 
 # ---------------------------------------------------------
+# EXERCISE SEARCH API (External ExerciseDB)
+# ---------------------------------------------------------
+@app.route("/api/exercises/search", methods=["GET"])
+@jwt_required()
+def api_exercise_search():
+    """Search exercises from ExerciseDB API."""
+    import requests as req
+    
+    query = request.args.get("q", "")
+    body_part = request.args.get("bodyPart", "")
+    
+    if not query and not body_part:
+        return jsonify({"error": "Please provide a search query or body part"}), 400
+    
+    # ExerciseDB API
+    EXERCISE_API_URL = "https://www.exercisedb.dev/api/v1/exercises"
+    
+    try:
+        if query:
+            url = f"{EXERCISE_API_URL}/search?q={query}"
+        elif body_part:
+            url = f"{EXERCISE_API_URL}/bodyPart/{body_part}"
+        else:
+            url = f"{EXERCISE_API_URL}?limit=20"
+        
+        response = req.get(url, timeout=10)
+        
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to fetch exercises from API"}), 500
+        
+        data = response.json()
+        exercises = data.get("data", []) if isinstance(data, dict) else data
+        
+        # Clean and format the response
+        cleaned = [{
+            "name": ex.get("name", "Unknown"),
+            "bodyPart": ex.get("bodyPart", ex.get("targetMuscles", [""])[0] if ex.get("targetMuscles") else ""),
+            "target": ex.get("target", ", ".join(ex.get("targetMuscles", []))),
+            "equipment": ex.get("equipment", ", ".join(ex.get("equipments", []))),
+            "gifUrl": ex.get("gifUrl", ""),
+        } for ex in exercises[:20]]  # Limit to 20 results
+        
+        return jsonify(cleaned), 200
+        
+    except Exception as e:
+        logging.error(f"Exercise search error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ---------------------------------------------------------
 # AI WORKOUT PLAN ENDPOINTS
 # ---------------------------------------------------------
 @app.route("/ai/workout-plan", methods=["POST"])
