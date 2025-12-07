@@ -158,9 +158,14 @@ function renderSavedHistory(history) {
                     <img src="${entry.progress_photo}" alt="Progress" class="w-full h-full object-cover hover:scale-110 transition" />
                 </div>
             ` : ""}
-            <button onclick="deleteSavedHistory(${entry.id})" class="self-start p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition" title="Delete">
-                <span class="material-symbols-outlined">delete</span>
-            </button>
+            <div class="flex flex-col gap-2 self-start">
+                <button onclick="useInSession(${entry.id})" class="p-2 text-primary hover:bg-primary/10 rounded-lg transition" title="Use in New Session">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                </button>
+                <button onclick="deleteSavedHistory(${entry.id})" class="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition" title="Delete">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+            </div>
         `;
         container.appendChild(card);
     });
@@ -184,6 +189,55 @@ function formatDuration(seconds) {
 }
 
 // ---------------------------------------------------------
+// Use Saved Workout in New Session
+// ---------------------------------------------------------
+async function useInSession(id) {
+    const token = getToken();
+    try {
+        // Get saved history to find the entry
+        const response = await fetch('/profile/history', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            alert("Failed to load workout data");
+            return;
+        }
+
+        const savedHistory = await response.json();
+        const entry = savedHistory.find(e => e.id === id);
+
+        if (!entry || !entry.exercises || entry.exercises.length === 0) {
+            alert("This workout has no exercises to use");
+            return;
+        }
+
+        // Store exercises in localStorage for the session page to pick up
+        const sessionExercises = entry.exercises.map(ex => ({
+            name: typeof ex === 'string' ? ex : ex.name,
+            sets: ex.sets || 3,
+            reps: ex.reps || 10,
+            equipment: ex.equipment || '',
+            bodyPart: ex.bodyPart || '',
+            gifUrl: ex.gifUrl || ''
+        }));
+
+        localStorage.setItem('sessionExercises', JSON.stringify(sessionExercises));
+        localStorage.setItem('sessionTitle', entry.workout_name || 'Saved Workout');
+
+        // Redirect to session page
+        window.location.href = '/session';
+
+    } catch (err) {
+        console.error("Error loading workout:", err);
+        alert("Failed to load workout");
+    }
+}
+
+// Make functions globally accessible
+window.useInSession = useInSession;
+
+// ---------------------------------------------------------
 // Delete Saved History Entry
 // ---------------------------------------------------------
 async function deleteSavedHistory(id) {
@@ -205,6 +259,8 @@ async function deleteSavedHistory(id) {
         console.error("Error deleting:", err);
     }
 }
+
+window.deleteSavedHistory = deleteSavedHistory;
 
 // ---------------------------------------------------------
 // Edit Profile Modal

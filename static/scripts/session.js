@@ -44,16 +44,26 @@ const summaryCloseBtn = document.getElementById("summary_close");
 let sessionEntries = [];
 let progressPhotoData = null; // Stores base64 image data
 
-// Load workout from activeWorkout (manual or AI)
+// Load workout from activeWorkout (manual or AI) or from profile saved workouts
 const activeWorkout = JSON.parse(localStorage.getItem("activeWorkout") || "{}");
+const sessionExercisesFromProfile = JSON.parse(localStorage.getItem("sessionExercises") || "[]");
+const sessionTitleFromProfile = localStorage.getItem("sessionTitle") || "";
+
+// Clear the sessionExercises after reading (one-time use)
+if (sessionExercisesFromProfile.length > 0) {
+  localStorage.removeItem("sessionExercises");
+  localStorage.removeItem("sessionTitle");
+}
+
 const exercises =
   activeWorkout?.details?.exercises ||
+  sessionExercisesFromProfile ||
   JSON.parse(localStorage.getItem("selectedExercises") || "[]");
 
 // Set workout title
 const workoutTitleEl = document.getElementById("workout_title");
-if (workoutTitleEl && activeWorkout.title) {
-  workoutTitleEl.textContent = activeWorkout.title;
+if (workoutTitleEl) {
+  workoutTitleEl.textContent = activeWorkout.title || sessionTitleFromProfile || "Workout Session";
 }
 
 if (!exercises.length) {
