@@ -207,10 +207,10 @@ def search_foods():
     # Fallback to built-in food database
     fallback_results = search_fallback_foods(query)
     if fallback_results:
-        return jsonify({"foods": fallback_results, "source": "local"}), 200
+        return jsonify({"foods": fallback_results, "source": "fallback", "is_fallback": True}), 200
     
     # If no fallback results, return empty
-    return jsonify({"foods": [], "message": f"No foods found for '{query}'"}), 200
+    return jsonify({"foods": [], "message": f"No foods found for '{query}'", "is_fallback": True}), 200
 
 
 @fatsecret_bp.route("/bmr", methods=["GET"])

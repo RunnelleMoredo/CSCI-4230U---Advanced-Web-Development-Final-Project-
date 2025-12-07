@@ -279,7 +279,10 @@ if (foodSearchBtn && foodSearchInput) {
       if (foodSearchResults) {
         foodSearchResults.classList.remove("hidden");
         if (data.foods && data.foods.length > 0) {
-          foodSearchResults.innerHTML = data.foods.map((food, idx) => `
+          const fallbackBadge = data.is_fallback
+            ? `<div class="text-xs text-amber-500 font-medium mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm">info</span> Using offline database (API unavailable)</div>`
+            : '';
+          foodSearchResults.innerHTML = fallbackBadge + data.foods.map((food, idx) => `
             <div class="flex items-center gap-3 p-3 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors" 
                  onclick='openServingModal(${JSON.stringify(food).replace(/'/g, "\\'")})'>
               <div class="text-3xl">${getFoodEmoji(food.food_name)}</div>
