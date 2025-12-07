@@ -150,7 +150,12 @@ if (!exercises.length) {
     card.innerHTML = `
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-bold text-slate-900 dark:text-white">${ex.name}</h3>
-        <span class="material-symbols-outlined text-slate-500 dark:text-slate-400">fitness_center</span>
+        <div class="flex items-center gap-2">
+          <button class="btn-remove-exercise text-red-500 hover:bg-red-500/10 rounded-lg p-1 transition-colors" title="Remove exercise">
+            <span class="material-symbols-outlined text-base">close</span>
+          </button>
+          <span class="material-symbols-outlined text-slate-500 dark:text-slate-400">fitness_center</span>
+        </div>
       </div>
       <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Suggested: ${ex.sets || 3} sets × ${ex.reps || 8} reps</p>
       
@@ -217,6 +222,20 @@ if (!exercises.length) {
     addSet();
 
     addSetBtn.addEventListener("click", addSet);
+
+    // Remove exercise button
+    const removeBtn = card.querySelector(".btn-remove-exercise");
+    if (removeBtn) {
+      removeBtn.addEventListener("click", () => {
+        if (confirm(`Remove "${ex.name}" from this session?`)) {
+          card.remove();
+          // Remove from sessionEntries array
+          const entryIdx = sessionEntries.findIndex(e => e.exercise.name === ex.name);
+          if (entryIdx > -1) sessionEntries.splice(entryIdx, 1);
+          updateSessionStats();
+        }
+      });
+    }
 
     sessionContainer.appendChild(card);
   });
