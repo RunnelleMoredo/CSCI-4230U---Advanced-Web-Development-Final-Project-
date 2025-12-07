@@ -1,6 +1,6 @@
 """
-FatSecret API Integration Module
-Handles OAuth 2.0 authentication and food search for calorie tracking.
+Food API Integration Module
+Supports USDA FoodData Central (primary) and FatSecret (backup) APIs.
 """
 
 import os
@@ -12,15 +12,69 @@ from models import db, UserProfile
 
 fatsecret_bp = Blueprint("fatsecret", __name__, url_prefix="/api/food")
 
-# FatSecret API endpoints
+# USDA FoodData Central API (Primary - free, no IP restrictions)
+USDA_API_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
+USDA_API_KEY = os.getenv("USDA_API_KEY", "DEMO_KEY")  # DEMO_KEY works for testing
+
+# FatSecret API endpoints (Backup)
 FATSECRET_TOKEN_URL = "https://oauth.fatsecret.com/connect/token"
 FATSECRET_API_URL = "https://platform.fatsecret.com/rest/server.api"
 
-# Token cache
+# Token cache for FatSecret
 _token_cache = {
     "access_token": None,
     "expires_at": 0
 }
+
+
+def search_usda_foods(query, max_results=10):
+    """Search foods using USDA FoodData Central API."""
+    api_key = os.getenv("USDA_API_KEY", "DEMO_KEY")
+    
+    try:
+        response = requests.get(
+            USDA_API_URL,
+            params={
+                "api_key": api_key,
+                "query": query,
+                "pageSize": max_results,
+                "dataType": ["Survey (FNDDS)", "Foundation", "SR Legacy", "Branded"]
+            },
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            foods = []
+            
+            for food in data.get("foods", [])[:max_results]:
+                # Extract nutrients
+                nutrients = {n.get("nutrientName", ""): n.get("value", 0) for n in food.get("foodNutrients", [])}
+                
+                calories = nutrients.get("Energy", 0)
+                protein = nutrients.get("Protein", 0)
+                fat = nutrients.get("Total lipid (fat)", 0)
+                carbs = nutrients.get("Carbohydrate, by difference", 0)
+                
+                foods.append({
+                    "food_id": food.get("fdcId"),
+                    "food_name": food.get("description", "Unknown"),
+                    "brand": food.get("brandOwner", ""),
+                    "calories": round(calories),
+                    "protein": round(protein, 1),
+                    "carbs": round(carbs, 1),
+                    "fat": round(fat, 1),
+                    "serving": "100g"
+                })
+            
+            return foods
+        else:
+            print(f"USDA API error: {response.status_code}")
+            return None
+            
+    except Exception as e:
+        print(f"USDA API exception: {e}")
+        return None
 
 
 def get_fatsecret_token():
@@ -114,102 +168,24 @@ def search_fallback_foods(query):
 @fatsecret_bp.route("/search", methods=["GET"])
 @jwt_required()
 def search_foods():
-    """Search for foods using FatSecret API with fallback to built-in database."""
+    """Search for foods using USDA API (primary) with fallback to local database."""
     query = request.args.get("q", "").strip()
     if not query:
         return jsonify({"error": "Missing search query ?q="}), 400
     
-    token = get_fatsecret_token()
-    
-    # Try FatSecret API first if we have a token
-    if token:
-        try:
-            response = requests.post(
-                FATSECRET_API_URL,
-                data={
-                    "method": "foods.search",
-                    "search_expression": query,
-                    "format": "json",
-                    "max_results": 10
-                },
-                headers={"Authorization": f"Bearer {token}"}
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                print(f"FatSecret raw response: {data}")  # Debug log
-                
-                # Check if we got an error response - fall back to local database
-                if "error" in data:
-                    print(f"FatSecret API error: {data['error']} - using fallback database")
-                    # Fall through to fallback below
-                else:
-                    foods_data = data.get("foods", {}).get("food", [])
-                    
-                    # Normalize to list
-                    if isinstance(foods_data, dict):
-                        foods_data = [foods_data]
-                    
-                    if foods_data:  # Only return if we got results
-                        # Parse and format results
-                        foods = []
-                        for food in foods_data:
-                            description = food.get("food_description", "")
-                            calories = 0
-                            protein = 0
-                            carbs = 0
-                            fat = 0
-                            
-                            if "Calories:" in description:
-                                try:
-                                    cal_part = description.split("Calories:")[1].split("|")[0]
-                                    calories = int(float(cal_part.replace("kcal", "").strip()))
-                                except:
-                                    pass
-                            
-                            if "Fat:" in description:
-                                try:
-                                    fat_part = description.split("Fat:")[1].split("|")[0]
-                                    fat = float(fat_part.replace("g", "").strip())
-                                except:
-                                    pass
-                            
-                            if "Carbs:" in description:
-                                try:
-                                    carbs_part = description.split("Carbs:")[1].split("|")[0]
-                                    carbs = float(carbs_part.replace("g", "").strip())
-                                except:
-                                    pass
-                            
-                            if "Protein:" in description:
-                                try:
-                                    protein_part = description.split("Protein:")[1].split("|")[0]
-                                    protein = float(protein_part.replace("g", "").strip())
-                                except:
-                                    pass
-                            
-                            foods.append({
-                                "food_id": food.get("food_id"),
-                                "food_name": food.get("food_name"),
-                                "brand": food.get("brand_name", ""),
-                                "calories": calories,
-                                "protein": protein,
-                                "carbs": carbs,
-                                "fat": fat,
-                                "serving": description.split(" - ")[0] if " - " in description else "1 serving"
-                            })
-                        
-                        return jsonify({"foods": foods}), 200
-                        
-        except Exception as e:
-            print(f"FatSecret search error: {e} - using fallback database")
+    # Try USDA FoodData Central API first (free, no IP restrictions)
+    usda_results = search_usda_foods(query)
+    if usda_results:
+        print(f"USDA API returned {len(usda_results)} results for '{query}'")
+        return jsonify({"foods": usda_results, "source": "usda"}), 200
     
     # Fallback to built-in food database
+    print(f"USDA API failed, using fallback for '{query}'")
     fallback_results = search_fallback_foods(query)
     if fallback_results:
         return jsonify({"foods": fallback_results, "source": "fallback", "is_fallback": True}), 200
     
-    # If no fallback results, return empty
+    # If no results at all
     return jsonify({"foods": [], "message": f"No foods found for '{query}'", "is_fallback": True}), 200
 
 
