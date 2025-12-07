@@ -45,6 +45,12 @@ def home():
     return render_template("login.html")
 
 
+@app.route("/goal_setup")
+def goal_setup():
+    """Goal setup page after signup."""
+    return render_template("goal_setup.html")
+
+
 @app.route("/fitness_level")
 def fitness_level():
     """Page where users pick Beginner or Intermediate."""

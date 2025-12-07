@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             setTimeout(() => {
-              window.location.href = "/fitness_level";
+              window.location.href = "/goal_setup";
             }, 800);
           } else {
             if (msgEl) msgEl.textContent = "Signup success. Please login manually.";
