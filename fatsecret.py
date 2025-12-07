@@ -291,12 +291,32 @@ Be accurate and realistic with the nutrition values based on typical serving siz
         
         return jsonify({
             "success": True,
-            "meal": meal_data
+            "meal": meal_data,
+            "source": "ai"
         }), 200
         
     except Exception as e:
-        print(f"AI meal search error: {e}")
+        print(f"AI meal search error: {e} - falling back to USDA")
+        
+        # Fallback to USDA API search
+        usda_results = search_usda_foods(meal_query, max_results=1)
+        if usda_results and len(usda_results) > 0:
+            return jsonify({
+                "success": True,
+                "meal": usda_results[0],
+                "source": "usda"
+            }), 200
+        
+        # Fallback to local database
+        fallback = search_fallback_foods(meal_query)
+        if fallback and len(fallback) > 0:
+            return jsonify({
+                "success": True,
+                "meal": fallback[0],
+                "source": "fallback"
+            }), 200
+        
         return jsonify({
             "success": False,
-            "error": str(e)
+            "error": "Could not find nutrition info. Try searching in the food search below."
         }), 200
