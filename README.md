@@ -46,6 +46,44 @@ See [Architecture Documentation](docs/ARCHITECTURE.md) for UML diagrams.
 
 ---
 
+## How to Use
+
+### Getting Started
+1. **Sign Up** - Create an account with your email, name, and basic fitness info (height/weight)
+2. **Select Fitness Level** - Choose Beginner, Intermediate, or Advanced
+3. You'll be directed to either the AI Workout page (Beginner) or Main Dashboard
+
+### AI-Generated Workout Plans (Beginner Path)
+1. Navigate to **AI Coach** from the menu
+2. Click **Generate Workout Plan** - AI creates a personalized weekly plan
+3. Click **View Your AI Plan** to see it on the dashboard
+4. Your plan appears on the left with exercises organized by day
+
+### Manual Workout Creation (Dashboard)
+1. Go to **Dashboard** from the navigation
+2. Use **Search Exercises** to find exercises from the database
+3. Click an exercise card to **add it to your session**
+4. Added exercises appear in **Today's Workout** panel
+
+### Starting a Workout Session
+1. From the dashboard, click **Start Workout** when you have exercises added
+2. The session page opens with a timer and your exercises
+3. For each exercise: enter reps/sets completed
+4. Optionally **upload a progress photo**
+5. Click **End Workout** when finished
+
+### Saving Workouts
+- **Workout History** - All completed workouts are saved automatically
+- **Save to Profile** - Click the save button on a history entry to keep it in your profile permanently
+- View saved workouts on your **Profile** page
+
+### Managing Goals
+1. Navigate to **Goals** from the menu
+2. Create fitness goals with target dates
+3. Mark goals as complete when achieved
+
+---
+
 ## Quick Start
 
 ### Prerequisites
