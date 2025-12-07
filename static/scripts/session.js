@@ -70,6 +70,14 @@ startSessionBtn?.addEventListener("click", () => {
   // Store goal for this session
   localStorage.setItem("currentSessionGoal", sessionGoal);
 
+  // Show goal banner
+  const goalBanner = document.getElementById("goalBanner");
+  const goalText = document.getElementById("goalText");
+  if (goalBanner && goalText) {
+    goalText.textContent = sessionGoal;
+    goalBanner.classList.remove("hidden");
+  }
+
   // Hide modal
   goalModal.classList.add("hidden");
 });
