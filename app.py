@@ -367,7 +367,17 @@ def get_or_update_plan(plan_id):
 # DATABASE INITIALIZATION
 # ---------------------------------------------------------
 with app.app_context():
-    db.create_all()
+    from sqlalchemy import inspect
+    inspector = inspect(db.engine)
+    existing_tables = inspector.get_table_names()
+    
+    # Only create tables if they don't exist
+    if not existing_tables:
+        db.create_all()
+        print("Database tables created.")
+    else:
+        # Tables exist, just ensure our models' columns exist
+        print(f"Database already has {len(existing_tables)} tables, skipping create_all()")
 
 
 # ---------------------------------------------------------
