@@ -257,7 +257,7 @@ def search_ai_meal():
     try:
         # Configure Gemini
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-pro')
         
         prompt = f"""Based on the search query "{meal_query}", suggest 5 different meal options that match or are related.
 
