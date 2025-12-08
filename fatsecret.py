@@ -243,84 +243,35 @@ def calculate_bmr():
         "age": age
     }), 200
 
-
 @fatsecret_bp.route("/ai-meal", methods=["POST"])
 @jwt_required()
 def search_ai_meal():
-    """Search for meal options using AI and return multiple suggestions with nutrition."""
+    """Search for meal options using USDA database."""
     data = request.get_json() or {}
     meal_query = data.get("meal_name", "").strip()
     
     if not meal_query:
         return jsonify({"success": False, "error": "Please provide a meal name"}), 400
     
-    try:
-        # Configure Gemini
-        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-        model = genai.GenerativeModel('gemini-1.0-pro')
-        
-        prompt = f"""Based on the search query "{meal_query}", suggest 5 different meal options that match or are related.
-
-Return ONLY a JSON array with exactly 5 meals in this format (no markdown, no extra text):
-[
-    {{
-        "food_name": "Specific meal name",
-        "calories": <number>,
-        "protein": <grams>,
-        "carbs": <grams>,
-        "fat": <grams>,
-        "serving": "serving size description"
-    }},
-    ...
-]
-
-Be specific with meal names (e.g., "Spaghetti Carbonara" not just "Pasta"). 
-Include variety - different preparations, brands, or variations.
-Use realistic nutrition values for typical serving sizes."""
-
-        response = model.generate_content(prompt)
-        meal_text = response.text.strip()
-        
-        # Parse JSON from response
-        if "```json" in meal_text:
-            meal_text = meal_text.split("```json")[1].split("```")[0]
-        elif "```" in meal_text:
-            meal_text = meal_text.split("```")[1].split("```")[0]
-        
-        meals = json.loads(meal_text)
-        
-        # Ensure we have a list
-        if isinstance(meals, dict):
-            meals = [meals]
-        
+    # Search USDA database
+    usda_results = search_usda_foods(meal_query, max_results=5)
+    if usda_results and len(usda_results) > 0:
         return jsonify({
             "success": True,
-            "meals": meals,
-            "source": "ai"
+            "meals": usda_results,
+            "source": "usda"
         }), 200
-        
-    except Exception as e:
-        print(f"AI meal search error: {e} - falling back to USDA")
-        
-        # Fallback to USDA API search
-        usda_results = search_usda_foods(meal_query, max_results=5)
-        if usda_results and len(usda_results) > 0:
-            return jsonify({
-                "success": True,
-                "meals": usda_results,
-                "source": "usda"
-            }), 200
-        
-        # Fallback to local database
-        fallback = search_fallback_foods(meal_query)
-        if fallback and len(fallback) > 0:
-            return jsonify({
-                "success": True,
-                "meals": fallback,
-                "source": "fallback"
-            }), 200
-        
+    
+    # Fallback to local database
+    fallback = search_fallback_foods(meal_query)
+    if fallback and len(fallback) > 0:
         return jsonify({
-            "success": False,
-            "error": "Could not find meals. Try a different search term."
+            "success": True,
+            "meals": fallback,
+            "source": "fallback"
         }), 200
+    
+    return jsonify({
+        "success": False,
+        "error": "No meals found. Try a different search term."
+    }), 200
