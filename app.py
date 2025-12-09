@@ -82,6 +82,12 @@ def calorie_tracker_page():
     return render_template("calorie_tracker.html")
 
 
+@app.route("/food_search")
+def food_search_page():
+    """Food search page with CalorieNinjas API."""
+    return render_template("food_search.html")
+
+
 @app.route("/session")
 def session_page():
     """Workout session page."""

@@ -1,6 +1,6 @@
 """
 Food API Integration Module
-Supports USDA FoodData Central (primary) and AI meal generation via Google Gemini.
+Supports CalorieNinjas (primary) and USDA FoodData Central (fallback).
 """
 
 import os
@@ -10,13 +10,15 @@ import requests
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, UserProfile
-import google.generativeai as genai
 
 fatsecret_bp = Blueprint("fatsecret", __name__, url_prefix="/api/food")
 
-# USDA FoodData Central API (Primary - free, no IP restrictions)
+# CalorieNinjas API (Primary - accurate nutrition data)
+CALORIENINJAS_API_URL = "https://api.calorieninjas.com/v1/nutrition"
+
+# USDA FoodData Central API (Fallback)
 USDA_API_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
-USDA_API_KEY = os.getenv("USDA_API_KEY", "DEMO_KEY")  # DEMO_KEY works for testing
+USDA_API_KEY = os.getenv("USDA_API_KEY", "DEMO_KEY")
 
 # FatSecret API endpoints (Backup)
 FATSECRET_TOKEN_URL = "https://oauth.fatsecret.com/connect/token"
@@ -27,6 +29,51 @@ _token_cache = {
     "access_token": None,
     "expires_at": 0
 }
+
+
+def search_calorieninjas(query, max_results=5):
+    """Search foods using CalorieNinjas API."""
+    api_key = os.getenv("CALORIENINJAS_API_KEY")
+    
+    if not api_key:
+        print("CalorieNinjas API key not configured")
+        return None
+    
+    try:
+        response = requests.get(
+            CALORIENINJAS_API_URL,
+            params={"query": query},
+            headers={"X-Api-Key": api_key},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            foods = []
+            
+            for item in data.get("items", [])[:max_results]:
+                foods.append({
+                    "food_name": item.get("name", query).title(),
+                    "calories": round(item.get("calories", 0)),
+                    "protein": round(item.get("protein_g", 0), 1),
+                    "carbs": round(item.get("carbohydrates_total_g", 0), 1),
+                    "fat": round(item.get("fat_total_g", 0), 1),
+                    "fiber": round(item.get("fiber_g", 0), 1),
+                    "sugar": round(item.get("sugar_g", 0), 1),
+                    "serving": item.get("serving_size_g", 100),
+                    "source": "calorieninjas"
+                })
+            
+            if foods:
+                print(f"CalorieNinjas returned {len(foods)} results for '{query}'")
+                return foods
+        else:
+            print(f"CalorieNinjas API error: {response.status_code}")
+            
+    except Exception as e:
+        print(f"CalorieNinjas search error: {e}")
+    
+    return None
 
 
 def search_usda_foods(query, max_results=10):
@@ -246,14 +293,23 @@ def calculate_bmr():
 @fatsecret_bp.route("/ai-meal", methods=["POST"])
 @jwt_required()
 def search_ai_meal():
-    """Search for meal options using USDA database."""
+    """Search for meal options using CalorieNinjas API."""
     data = request.get_json() or {}
     meal_query = data.get("meal_name", "").strip()
     
     if not meal_query:
         return jsonify({"success": False, "error": "Please provide a meal name"}), 400
     
-    # Search USDA database
+    # Primary: CalorieNinjas API
+    ninja_results = search_calorieninjas(meal_query, max_results=5)
+    if ninja_results and len(ninja_results) > 0:
+        return jsonify({
+            "success": True,
+            "meals": ninja_results,
+            "source": "calorieninjas"
+        }), 200
+    
+    # Fallback 1: USDA database
     usda_results = search_usda_foods(meal_query, max_results=5)
     if usda_results and len(usda_results) > 0:
         return jsonify({
@@ -262,7 +318,7 @@ def search_ai_meal():
             "source": "usda"
         }), 200
     
-    # Fallback to local database
+    # Fallback 2: Local database
     fallback = search_fallback_foods(meal_query)
     if fallback and len(fallback) > 0:
         return jsonify({
