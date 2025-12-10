@@ -488,6 +488,21 @@ with app.app_context():
                         except Exception as e:
                             # If column exists, DB throws error. We ignore it.
                             pass
+                    
+                    # Check saved_workout_history columns
+                    history_columns = [
+                        ("total_volume", "INTEGER DEFAULT 0"),
+                        ("total_sets", "INTEGER DEFAULT 0"),
+                        ("total_reps", "INTEGER DEFAULT 0")
+                    ]
+                    
+                    for col_name, col_def in history_columns:
+                        try:
+                            # Try to add the column. If it fails, we assume it exists.
+                            conn.execute(text(f"ALTER TABLE saved_workout_history ADD COLUMN {col_name} {col_def}"))
+                            print(f"Migrated: Added {col_name} to saved_workout_history")
+                        except Exception as e:
+                            pass
                             
                     transaction.commit()
                     print("Migration check complete.")
