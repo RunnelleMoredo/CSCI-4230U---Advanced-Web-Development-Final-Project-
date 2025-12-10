@@ -292,6 +292,7 @@ def get_food_by_barcode(barcode):
     """Get food by barcode using FatSecret food.find_id_for_barcode.v2 API."""
     token = get_fatsecret_token()
     if not token:
+        print("FatSecret barcode: No token available")
         return None
     
     try:
@@ -308,12 +309,30 @@ def get_food_by_barcode(barcode):
             }
         )
         
+        print(f"FatSecret barcode response status: {response.status_code}")
+        print(f"FatSecret barcode response: {response.text[:500]}")
+        
         if response.status_code == 200:
             data = response.json()
-            food_id = data.get("food_id", {}).get("value")
+            # Check multiple possible response formats
+            food_id = None
+            if "food_id" in data:
+                food_id_obj = data.get("food_id")
+                if isinstance(food_id_obj, dict):
+                    food_id = food_id_obj.get("value")
+                else:
+                    food_id = food_id_obj
+            
+            print(f"FatSecret barcode food_id: {food_id}")
+            
             if food_id:
                 # Now get the full food details
                 return get_food_by_id(food_id)
+            
+            # Check for error in response
+            if "error" in data:
+                print(f"FatSecret barcode API error: {data.get('error')}")
+            
             return None
         else:
             print(f"FatSecret barcode error: {response.status_code} - {response.text}")
@@ -626,6 +645,42 @@ def autocomplete():
         "suggestions": [],
         "query": query
     }), 200
+
+
+@fatsecret_bp.route("/test-fatsecret", methods=["GET"])
+@jwt_required()
+def test_fatsecret():
+    """Test FatSecret API connection and credentials."""
+    import os
+    
+    client_id = os.getenv("FATSECRET_CLIENT_ID")
+    client_secret = os.getenv("FATSECRET_CLIENT_SECRET")
+    
+    results = {
+        "client_id_present": bool(client_id),
+        "client_id_length": len(client_id) if client_id else 0,
+        "client_secret_present": bool(client_secret),
+        "client_secret_length": len(client_secret) if client_secret else 0,
+    }
+    
+    # Try to get token
+    token = get_fatsecret_token()
+    results["token_obtained"] = bool(token)
+    results["token_length"] = len(token) if token else 0
+    
+    if token:
+        # Try a simple search
+        foods = search_fatsecret_foods("chicken", max_results=3)
+        results["search_works"] = bool(foods)
+        results["search_count"] = len(foods) if foods else 0
+        
+        # Try barcode lookup
+        barcode_result = get_food_by_barcode("049000042566")
+        results["barcode_works"] = bool(barcode_result)
+        if barcode_result:
+            results["barcode_food_name"] = barcode_result.get("food_name", "Unknown")
+    
+    return jsonify(results), 200
 
 
 @fatsecret_bp.route("/categories", methods=["GET"])
