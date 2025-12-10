@@ -103,6 +103,15 @@ class UserProfile(db.Model):
     profile_image_url = db.Column(db.Text)  # Can store Base64 or URL
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Goal settings
+    gender = db.Column(db.String(20), default="male")  # male, female
+    goal_type = db.Column(db.String(20), default="maintain")  # lose, maintain, gain
+    target_weight_kg = db.Column(db.Float)  # Target weight to reach
+    goal_timeline_weeks = db.Column(db.Integer)  # How many weeks to reach goal
+    activity_level = db.Column(db.String(20), default="moderate")  # sedentary, light, moderate, active, very_active
+    daily_calorie_target = db.Column(db.Integer)  # Calculated calorie goal
+    goal_set_at = db.Column(db.DateTime)  # When the goal was set
 
     # Relationship back to user
     user = db.relationship("User", backref=db.backref("profile", uselist=False))

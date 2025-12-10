@@ -341,6 +341,7 @@ def calculate_bmr():
     # Get profile data
     weight_kg = profile.weight_kg or 70  # Default 70kg
     height_cm = profile.height_cm or 170  # Default 170cm
+    gender = getattr(profile, 'gender', 'male') or 'male'
     
     # Calculate age from date of birth
     age = 25  # Default age
@@ -351,9 +352,17 @@ def calculate_bmr():
         if (today.month, today.day) < (profile.date_of_birth.month, profile.date_of_birth.day):
             age -= 1
     
-    # Mifflin-St Jeor Equation (using male formula as default, could add gender later)
+    # Mifflin-St Jeor Equation (gender-aware)
     # Men: BMR = (10 × weight) + (6.25 × height) - (5 × age) + 5
-    bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) + 5
+    # Women: BMR = (10 × weight) + (6.25 × height) - (5 × age) - 161
+    bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age)
+    if gender == 'female':
+        bmr -= 161
+    else:
+        bmr += 5
+    
+    # Use saved activity level from profile if available
+    activity = getattr(profile, 'activity_level', None) or request.args.get("activity", "moderate")
     
     # Activity level multipliers
     activity_levels = {
@@ -364,20 +373,63 @@ def calculate_bmr():
         "very_active": 1.9
     }
     
-    # Default to moderate activity
-    activity = request.args.get("activity", "moderate")
     multiplier = activity_levels.get(activity, 1.55)
+    tdee = int(bmr * multiplier)
     
-    daily_target = int(bmr * multiplier)
+    # Use saved daily calorie target if user has set a goal
+    daily_target = getattr(profile, 'daily_calorie_target', None) or tdee
+    goal_type = getattr(profile, 'goal_type', 'maintain') or 'maintain'
+    target_weight = getattr(profile, 'target_weight_kg', None)
+    goal_weeks = getattr(profile, 'goal_timeline_weeks', None)
     
     return jsonify({
         "bmr": int(bmr),
+        "tdee": tdee,
         "daily_target": daily_target,
         "activity_level": activity,
         "weight_kg": weight_kg,
         "height_cm": height_cm,
-        "age": age
+        "age": age,
+        "gender": gender,
+        "goal_type": goal_type,
+        "target_weight_kg": target_weight,
+        "goal_timeline_weeks": goal_weeks,
+        "has_goal": daily_target != tdee
     }), 200
+
+
+@fatsecret_bp.route("/set-goal", methods=["POST"])
+@jwt_required()
+def set_goal():
+    """Save user's calorie/weight goal settings."""
+    from datetime import datetime
+    
+    user_id = get_jwt_identity()
+    data = request.get_json() or {}
+    
+    profile = UserProfile.query.filter_by(user_id=user_id).first()
+    if not profile:
+        return jsonify({"success": False, "error": "Profile not found"}), 404
+    
+    # Update goal fields
+    profile.goal_type = data.get("goal_type", "maintain")
+    profile.target_weight_kg = data.get("target_weight_kg")
+    profile.goal_timeline_weeks = data.get("goal_timeline_weeks")
+    profile.activity_level = data.get("activity_level", "moderate")
+    profile.gender = data.get("gender", "male")
+    profile.daily_calorie_target = data.get("daily_calorie_target")
+    profile.goal_set_at = datetime.utcnow()
+    
+    try:
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": "Goal saved successfully",
+            "daily_target": profile.daily_calorie_target
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @fatsecret_bp.route("/ai-meal", methods=["POST"])
 @jwt_required()

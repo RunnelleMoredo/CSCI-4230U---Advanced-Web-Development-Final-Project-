@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Set Calorie Goal - FitTrack Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .goal-card {
+            transition: all 0.3s ease;
+        }
+
+        .goal-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .goal-card.selected {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .timeline-option.selected {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border-color: transparent;
+        }
+
+        .activity-option.selected,
+        .gender-option.selected {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+    <div class="container max-w-2xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center gap-2 bg-green-600/20 px-4 py-2 rounded-full mb-4">
+                <span class="material-symbols-outlined text-green-400">target</span>
+                <span class="text-green-400 font-medium">Calorie Goal</span>
+            </div>
+            <h1 class="text-3xl font-bold mb-2">Set Your Calorie Target</h1>
+            <p class="text-slate-400">We'll calculate your personalized daily calorie goal</p>
+        </div>
+
+        <!-- Step 1: Choose Goal Type -->
+        <div id="step1" class="mb-8">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-sm">1</span>
+                What's your goal?
+            </h2>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="goal-card bg-slate-800/50 border-2 border-slate-700 rounded-xl p-5 text-center cursor-pointer"
+                    data-goal="lose">
+                    <div class="text-4xl mb-3">🔥</div>
+                    <h3 class="font-semibold mb-1">Lose Weight</h3>
+                    <p class="text-xs text-slate-400">Burn fat</p>
+                </div>
+                <div class="goal-card bg-slate-800/50 border-2 border-slate-700 rounded-xl p-5 text-center cursor-pointer"
+                    data-goal="maintain">
+                    <div class="text-4xl mb-3">⚖️</div>
+                    <h3 class="font-semibold mb-1">Maintain</h3>
+                    <p class="text-xs text-slate-400">Stay same</p>
+                </div>
+                <div class="goal-card bg-slate-800/50 border-2 border-slate-700 rounded-xl p-5 text-center cursor-pointer"
+                    data-goal="gain">
+                    <div class="text-4xl mb-3">💪</div>
+                    <h3 class="font-semibold mb-1">Gain Mass</h3>
+                    <p class="text-xs text-slate-400">Build muscle</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Target Weight -->
+        <div id="step2" class="mb-8 hidden">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-sm">2</span>
+                <span id="step2Title">Target Weight</span>
+            </h2>
+            <div class="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+                <div class="flex items-center justify-center gap-8 mb-4">
+                    <div class="text-center">
+                        <p class="text-sm text-slate-400 mb-1">Current</p>
+                        <p id="currentWeight" class="text-2xl font-bold">70 kg</p>
+                    </div>
+                    <span class="material-symbols-outlined text-green-500 text-3xl">arrow_forward</span>
+                    <div class="text-center">
+                        <p class="text-sm text-slate-400 mb-1">Target</p>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="targetWeight" value="65" min="40" max="200"
+                                class="w-20 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-xl font-bold text-center">
+                            <span class="text-xl">kg</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="weightDiff" class="text-center text-green-400 font-medium">You want to lose 5 kg</div>
+            </div>
+        </div>
+
+        <!-- Step 3: Timeline -->
+        <div id="step3" class="mb-8 hidden">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-sm">3</span>
+                How fast?
+            </h2>
+            <div class="space-y-3">
+                <div class="timeline-option bg-slate-800/50 border-2 border-slate-700 rounded-xl p-4 cursor-pointer flex justify-between items-center"
+                    data-rate="slow">
+                    <div>
+                        <h3 class="font-semibold">🐢 Gradual</h3>
+                        <p class="text-sm text-slate-400">0.25 kg/week - Sustainable</p>
+                    </div>
+                    <div id="slowWeeks" class="text-right">
+                        <p class="text-lg font-bold text-green-400">20 weeks</p>
+                    </div>
+                </div>
+                <div class="timeline-option bg-slate-800/50 border-2 border-slate-700 rounded-xl p-4 cursor-pointer flex justify-between items-center"
+                    data-rate="moderate">
+                    <div>
+                        <h3 class="font-semibold">🚶 Moderate</h3>
+                        <p class="text-sm text-slate-400">0.5 kg/week - Balanced</p>
+                    </div>
+                    <div id="moderateWeeks" class="text-right">
+                        <p class="text-lg font-bold text-amber-400">10 weeks</p>
+                    </div>
+                </div>
+                <div class="timeline-option bg-slate-800/50 border-2 border-slate-700 rounded-xl p-4 cursor-pointer flex justify-between items-center"
+                    data-rate="fast">
+                    <div>
+                        <h3 class="font-semibold">🏃 Aggressive</h3>
+                        <p class="text-sm text-slate-400">1 kg/week - Intensive</p>
+                    </div>
+                    <div id="fastWeeks" class="text-right">
+                        <p class="text-lg font-bold text-red-400">5 weeks</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Activity Level -->
+        <div id="step4" class="mb-8 hidden">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-sm"
+                    id="step4Num">4</span>
+                Activity Level
+            </h2>
+            <div class="grid grid-cols-5 gap-2">
+                <div class="activity-option bg-slate-800/50 border-2 border-slate-700 rounded-lg p-3 cursor-pointer text-center"
+                    data-activity="sedentary">
+                    <span class="text-2xl">🪑</span>
+                    <p class="text-xs mt-1">Sedentary</p>
+                </div>
+                <div class="activity-option bg-slate-800/50 border-2 border-slate-700 rounded-lg p-3 cursor-pointer text-center"
+                    data-activity="light">
+                    <span class="text-2xl">🚶</span>
+                    <p class="text-xs mt-1">Light</p>
+                </div>
+                <div class="activity-option bg-slate-800/50 border-2 border-slate-700 rounded-lg p-3 cursor-pointer text-center selected"
+                    data-activity="moderate">
+                    <span class="text-2xl">🏋️</span>
+                    <p class="text-xs mt-1">Moderate</p>
+                </div>
+                <div class="activity-option bg-slate-800/50 border-2 border-slate-700 rounded-lg p-3 cursor-pointer text-center"
+                    data-activity="active">
+                    <span class="text-2xl">🏃</span>
+                    <p class="text-xs mt-1">Active</p>
+                </div>
+                <div class="activity-option bg-slate-800/50 border-2 border-slate-700 rounded-lg p-3 cursor-pointer text-center"
+                    data-activity="very_active">
+                    <span class="text-2xl">🔥</span>
+                    <p class="text-xs mt-1">V. Active</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Gender -->
+        <div id="step5" class="mb-8 hidden">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-sm"
+                    id="step5Num">5</span>
+                Biological Sex
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="gender-option bg-slate-800/50 border-2 border-slate-700 rounded-xl p-4 text-center cursor-pointer selected"
+                    data-gender="male">
+                    <span class="text-3xl">👨</span>
+                    <p class="font-medium mt-1">Male</p>
+                </div>
+                <div class="gender-option bg-slate-800/50 border-2 border-slate-700 rounded-xl p-4 text-center cursor-pointer"
+                    data-gender="female">
+                    <span class="text-3xl">👩</span>
+                    <p class="font-medium mt-1">Female</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Preview -->
+        <div id="resultPreview" class="mb-8 hidden">
+            <div class="bg-gradient-to-br from-green-900/50 to-emerald-900/50 border border-green-700 rounded-xl p-6">
+                <h2 class="text-lg font-semibold mb-4 text-center">Your Daily Target</h2>
+                <div class="text-center mb-4">
+                    <p id="resultCalories" class="text-5xl font-bold text-green-400">1,850</p>
+                    <p class="text-slate-400">calories per day</p>
+                </div>
+                <div id="resultTimeline" class="text-center text-sm text-slate-300">
+                    Reach <span id="resultWeight" class="font-bold text-green-400">65 kg</span> by
+                    <span id="resultDate" class="font-bold text-green-400">March 2025</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <button id="saveGoal"
+            class="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50"
+            disabled>
+            <span class="material-symbols-outlined">check_circle</span>
+            Save & Continue
+        </button>
+        <p class="text-center text-sm text-slate-500 mt-4"><a href="/main_dashboard" class="hover:text-green-400">Skip
+                for now →</a></p>
+    </div>
+
+    <script>
+        let g = { goal_type: null, target_weight: null, timeline_weeks: null, activity_level: 'moderate', gender: 'male', current_weight: 70, height_cm: 170, age: 25 };
+
+        async function init() {
+            const token = localStorage.getItem('access_token');
+            try {
+                const res = await fetch('/profile/profile_api', { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.weight_kg) g.current_weight = data.weight_kg;
+                if (data.height_cm) g.height_cm = data.height_cm;
+                if (data.date_of_birth) g.age = new Date().getFullYear() - new Date(data.date_of_birth).getFullYear();
+                document.getElementById('currentWeight').textContent = `${g.current_weight} kg`;
+                document.getElementById('targetWeight').value = Math.round(g.current_weight - 5);
+            } catch (e) { console.error(e); }
+        }
+
+        document.querySelectorAll('.goal-card').forEach(c => c.addEventListener('click', () => {
+            document.querySelectorAll('.goal-card').forEach(x => x.classList.remove('selected'));
+            c.classList.add('selected');
+            g.goal_type = c.dataset.goal;
+            if (g.goal_type === 'maintain') {
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.add('hidden');
+                document.getElementById('step4Num').textContent = '2';
+                document.getElementById('step5Num').textContent = '3';
+            } else {
+                document.getElementById('step2').classList.remove('hidden');
+                document.getElementById('step4Num').textContent = '4';
+                document.getElementById('step5Num').textContent = '5';
+                document.getElementById('targetWeight').value = Math.round(g.current_weight + (g.goal_type === 'lose' ? -5 : 5));
+                updateWeightDiff();
+            }
+            document.getElementById('step4').classList.remove('hidden');
+            document.getElementById('step5').classList.remove('hidden');
+            updateResult();
+        }));
+
+        document.getElementById('targetWeight').addEventListener('input', () => { updateWeightDiff(); updateTimelines(); updateResult(); });
+
+        function updateWeightDiff() {
+            const t = parseFloat(document.getElementById('targetWeight').value) || 0;
+            const diff = Math.abs(t - g.current_weight).toFixed(1);
+            document.getElementById('weightDiff').textContent = `You want to ${g.goal_type === 'lose' ? 'lose' : 'gain'} ${diff} kg`;
+            g.target_weight = t;
+            if (g.goal_type !== 'maintain') document.getElementById('step3').classList.remove('hidden');
+            updateTimelines();
+        }
+
+        function updateTimelines() {
+            const diff = Math.abs(g.target_weight - g.current_weight);
+            document.getElementById('slowWeeks').innerHTML = `<p class="text-lg font-bold text-green-400">${Math.ceil(diff / 0.25)} wks</p>`;
+            document.getElementById('moderateWeeks').innerHTML = `<p class="text-lg font-bold text-amber-400">${Math.ceil(diff / 0.5)} wks</p>`;
+            document.getElementById('fastWeeks').innerHTML = `<p class="text-lg font-bold text-red-400">${Math.ceil(diff / 1)} wks</p>`;
+        }
+
+        document.querySelectorAll('.timeline-option').forEach(o => o.addEventListener('click', () => {
+            document.querySelectorAll('.timeline-option').forEach(x => x.classList.remove('selected'));
+            o.classList.add('selected');
+            const diff = Math.abs(g.target_weight - g.current_weight);
+            const rates = { slow: 0.25, moderate: 0.5, fast: 1 };
+            g.timeline_weeks = Math.ceil(diff / rates[o.dataset.rate]);
+            g.rate = o.dataset.rate;
+            updateResult();
+        }));
+
+        document.querySelectorAll('.activity-option').forEach(o => o.addEventListener('click', () => {
+            document.querySelectorAll('.activity-option').forEach(x => x.classList.remove('selected'));
+            o.classList.add('selected');
+            g.activity_level = o.dataset.activity;
+            updateResult();
+        }));
+
+        document.querySelectorAll('.gender-option').forEach(o => o.addEventListener('click', () => {
+            document.querySelectorAll('.gender-option').forEach(x => x.classList.remove('selected'));
+            o.classList.add('selected');
+            g.gender = o.dataset.gender;
+            updateResult();
+        }));
+
+        function calcBMR() {
+            let bmr = (10 * g.current_weight) + (6.25 * g.height_cm) - (5 * g.age);
+            return bmr + (g.gender === 'male' ? 5 : -161);
+        }
+
+        function calcTDEE() {
+            const m = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
+            return calcBMR() * (m[g.activity_level] || 1.55);
+        }
+
+        function updateResult() {
+            if (!g.goal_type) return;
+            const tdee = calcTDEE();
+            let cal;
+            if (g.goal_type === 'maintain') { cal = Math.round(tdee); g.timeline_weeks = null; }
+            else if (g.goal_type === 'lose') {
+                if (!g.rate) return;
+                const def = { slow: 250, moderate: 500, fast: 1000 };
+                cal = Math.max(1200, Math.round(tdee - def[g.rate]));
+            } else {
+                if (!g.rate) return;
+                const sur = { slow: 250, moderate: 350, fast: 500 };
+                cal = Math.round(tdee + sur[g.rate]);
+            }
+            g.daily_calories = cal;
+            document.getElementById('resultCalories').textContent = cal.toLocaleString();
+            if (g.timeline_weeks && g.target_weight) {
+                const d = new Date(); d.setDate(d.getDate() + g.timeline_weeks * 7);
+                document.getElementById('resultWeight').textContent = `${g.target_weight} kg`;
+                document.getElementById('resultDate').textContent = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                document.getElementById('resultTimeline').classList.remove('hidden');
+            } else { document.getElementById('resultTimeline').classList.add('hidden'); }
+            document.getElementById('resultPreview').classList.remove('hidden');
+            document.getElementById('saveGoal').disabled = false;
+        }
+
+        document.getElementById('saveGoal').addEventListener('click', async () => {
+            const btn = document.getElementById('saveGoal');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-symbols-outlined animate-spin">progress_activity</span> Saving...`;
+            try {
+                const res = await fetch('/api/food/set-goal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+                    body: JSON.stringify({ goal_type: g.goal_type, target_weight_kg: g.target_weight, goal_timeline_weeks: g.timeline_weeks, activity_level: g.activity_level, gender: g.gender, daily_calorie_target: g.daily_calories })
+                });
+                const data = await res.json();
+                if (data.success) { btn.innerHTML = `<span class="material-symbols-outlined">check</span> Saved!`; setTimeout(() => window.location.href = '/main_dashboard', 800); }
+                else { alert('Error: ' + (data.error || 'Unknown')); btn.disabled = false; btn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Save & Continue`; }
+            } catch (e) { alert('Failed to save'); btn.disabled = false; btn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Save & Continue`; }
+        });
+
+        init();
+    </script>
+</body>
+
+</html>
