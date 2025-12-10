@@ -424,6 +424,32 @@ def search_ai_meal():
     }), 200
 
 
+@fatsecret_bp.route("/ai-estimate", methods=["POST"])
+@jwt_required()
+def get_ai_estimate():
+    """Force AI estimation for a food query (bypasses database search)."""
+    data = request.get_json() or {}
+    meal_query = data.get("meal_name", "").strip()
+    
+    if not meal_query:
+        return jsonify({"success": False, "error": "Please provide a meal name"}), 400
+    
+    # Directly use Gemini AI estimation
+    gemini_estimate = estimate_nutrition_with_gemini(meal_query)
+    if gemini_estimate and len(gemini_estimate) > 0:
+        return jsonify({
+            "success": True,
+            "meals": gemini_estimate,
+            "source": "ai_estimate",
+            "is_estimate": True
+        }), 200
+    
+    return jsonify({
+        "success": False,
+        "error": "AI estimation failed. Please try again."
+    }), 200
+
+
 @fatsecret_bp.route("/scan-image", methods=["POST"])
 @jwt_required()
 def scan_image_nutrition():

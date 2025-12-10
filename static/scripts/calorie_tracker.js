@@ -378,7 +378,18 @@ if (foodSearchBtn && foodSearchInput) {
                             </div>
                         </div>
                     `).join("")}
+                    ${!isAiEstimate ? `
+                        <button id="getAiEstimateBtn" class="mt-3 w-full py-2 px-4 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 rounded-lg text-purple-400 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                            <span>🤖</span> Not what you're looking for? Get AI Estimate
+                        </button>
+                    ` : ''}
                 `;
+
+                // Add click handler for AI estimate button
+                const aiBtn = document.getElementById("getAiEstimateBtn");
+                if (aiBtn) {
+                    aiBtn.addEventListener("click", () => getAiEstimate(query));
+                }
             } else {
                 searchResults.innerHTML = `<p class="text-red-400 text-sm text-center py-4">${data.error || "No foods found"}</p>`;
             }
@@ -388,6 +399,60 @@ if (foodSearchBtn && foodSearchInput) {
         } finally {
             foodSearchBtn.disabled = false;
             foodSearchBtn.innerHTML = original;
+        }
+    };
+
+    // Function to get AI estimate directly
+    const getAiEstimate = async (query) => {
+        const token = localStorage.getItem("access_token");
+        searchResults.innerHTML = `<div class="flex items-center justify-center py-4 gap-2 text-purple-400">
+            <span class="material-symbols-outlined animate-spin">sync</span>
+            <span>Getting AI estimate for "${query}"...</span>
+        </div>`;
+
+        try {
+            const res = await fetch("/api/food/ai-estimate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ meal_name: query })
+            });
+
+            const data = await res.json();
+
+            if (data.success && data.meals && data.meals.length > 0) {
+                searchResults.innerHTML = `
+                    <p class="text-xs text-purple-400 mb-2">🤖 AI Estimate for "${query}"</p>
+                    <p class="text-xs text-slate-400 mb-3 bg-purple-500/10 px-3 py-2 rounded-lg border border-purple-500/20">
+                        <span class="text-purple-400 font-medium">⚠️ Note:</span> These are AI-estimated values based on typical recipes. Actual nutrition may vary.
+                    </p>
+                    ${data.meals.map(meal => `
+                        <div class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors border border-transparent hover:border-purple-500/50"
+                             onclick='openServingModal(${JSON.stringify(meal).replace(/'/g, "\\'")})'>
+                            <div class="text-2xl">${getFoodEmoji(meal.food_name)}</div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-medium text-white">${meal.food_name}</p>
+                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">🤖 AI</span>
+                                </div>
+                                <p class="text-xs text-slate-400">${meal.protein || 0}g P / ${meal.carbs || 0}g C / ${meal.fat || 0}g F</p>
+                                ${meal.notes ? `<p class="text-xs text-slate-500 mt-1">${meal.notes}</p>` : ''}
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold text-purple-400">${meal.calories || 0}</p>
+                                <p class="text-xs text-slate-400">cal</p>
+                            </div>
+                        </div>
+                    `).join("")}
+                `;
+            } else {
+                searchResults.innerHTML = `<p class="text-red-400 text-sm text-center py-4">${data.error || "AI estimation failed"}</p>`;
+            }
+        } catch (e) {
+            console.error("AI estimate error:", e);
+            searchResults.innerHTML = `<p class="text-red-400 text-sm text-center py-4">AI estimation failed. Try again.</p>`;
         }
     };
 
