@@ -859,32 +859,67 @@ def set_goal():
 @fatsecret_bp.route("/ai-meal", methods=["POST"])
 @jwt_required()
 def search_ai_meal():
-    """Search for meal options using CalorieNinjas API."""
+    """Search for meal options using multiple databases for comprehensive results.
+    
+    Searches: CalorieNinjas → USDA → FatSecret → Fallback → AI
+    Combines results from all available sources for better coverage.
+    """
     data = request.get_json() or {}
     meal_query = data.get("meal_name", "").strip()
     
     if not meal_query:
         return jsonify({"success": False, "error": "Please provide a meal name"}), 400
     
-    # Primary: CalorieNinjas API
+    all_meals = []
+    sources = []
+    
+    # Source 1: CalorieNinjas API (fast, accurate for common foods)
     ninja_results = search_calorieninjas(meal_query, max_results=5)
-    if ninja_results and len(ninja_results) > 0:
-        return jsonify({
-            "success": True,
-            "meals": ninja_results,
-            "source": "calorieninjas"
-        }), 200
+    if ninja_results:
+        all_meals.extend(ninja_results)
+        sources.append("calorieninjas")
     
-    # Fallback 1: USDA database
+    # Source 2: USDA Database (extensive, official data)
     usda_results = search_usda_foods(meal_query, max_results=5)
-    if usda_results and len(usda_results) > 0:
+    if usda_results:
+        # Add source field if not present
+        for r in usda_results:
+            r["source"] = "usda"
+        all_meals.extend(usda_results)
+        sources.append("usda")
+    
+    # Source 3: FatSecret API (branded products, international foods)
+    fatsecret_results = search_fatsecret_foods(meal_query, max_results=5)
+    if fatsecret_results:
+        for food in fatsecret_results:
+            # Format FatSecret results to match expected structure
+            servings = food.get("servings", {}).get("serving", [])
+            if isinstance(servings, dict):
+                servings = [servings]
+            serving = servings[0] if servings else {}
+            
+            all_meals.append({
+                "food_name": food.get("food_name", "Unknown"),
+                "brand_name": food.get("brand_name", ""),
+                "calories": round(float(serving.get("calories", 0))),
+                "protein": round(float(serving.get("protein", 0)), 1),
+                "carbs": round(float(serving.get("carbohydrate", 0)), 1),
+                "fat": round(float(serving.get("fat", 0)), 1),
+                "serving": serving.get("serving_description", "1 serving"),
+                "source": "fatsecret"
+            })
+        sources.append("fatsecret")
+    
+    # If we have results from any source, return them
+    if all_meals:
         return jsonify({
             "success": True,
-            "meals": usda_results,
-            "source": "usda"
+            "meals": all_meals[:15],  # Limit total results
+            "sources": sources,
+            "source": sources[0] if sources else "combined"
         }), 200
     
-    # Fallback 2: Local database
+    # Fallback: Local database
     fallback = search_fallback_foods(meal_query)
     if fallback and len(fallback) > 0:
         return jsonify({
@@ -893,7 +928,7 @@ def search_ai_meal():
             "source": "fallback"
         }), 200
     
-    # Fallback 3: AI estimation (for restaurant meals, custom foods, etc.)
+    # Last resort: AI estimation (for restaurant meals, custom foods, etc.)
     ai_estimate = estimate_nutrition_with_ai(meal_query)
     if ai_estimate and len(ai_estimate) > 0:
         return jsonify({
