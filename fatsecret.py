@@ -30,16 +30,19 @@ _token_cache = {
     "expires_at": 0
 }
 
-# Gemini API for AI estimation (when no database match found)
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent"
+# OpenAI API for AI estimation (when no database match found)
+OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
+
+# TheMealDB API for recipe browsing
+MEALDB_API_URL = "https://www.themealdb.com/api/json/v1/1"
 
 
-def estimate_nutrition_with_gemini(food_query):
-    """Use Gemini AI to estimate nutrition for foods not found in database."""
-    api_key = os.getenv("GEMINI_API_KEY")
+def estimate_nutrition_with_ai(food_query):
+    """Use OpenAI to estimate nutrition for foods not found in database."""
+    api_key = os.getenv("OPENAI_API_KEY")
     
     if not api_key:
-        print("Gemini API key not configured")
+        print("OpenAI API key not configured")
         return None
     
     prompt = f"""You are a nutrition expert. Estimate the nutritional information for: "{food_query}"
@@ -63,21 +66,26 @@ Be realistic with calorie estimates. A typical fast food meal is 800-1200 calori
 
     try:
         response = requests.post(
-            f"{GEMINI_API_URL}?key={api_key}",
-            headers={"Content-Type": "application/json"},
+            OPENAI_API_URL,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}"
+            },
             json={
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.3,
-                    "maxOutputTokens": 500
-                }
+                "model": "gpt-3.5-turbo",
+                "messages": [
+                    {"role": "system", "content": "You are a nutrition expert that returns only valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.3,
+                "max_tokens": 500
             },
             timeout=15
         )
         
         if response.status_code == 200:
             result = response.json()
-            text = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
             
             # Clean up the response (remove markdown code blocks if present)
             text = text.strip()
@@ -102,12 +110,12 @@ Be realistic with calorie estimates. A typical fast food meal is 800-1200 calori
                 "notes": nutrition_data.get("notes", "AI-estimated values")
             }]
         else:
-            print(f"Gemini API error: {response.status_code} - {response.text}")
+            print(f"OpenAI API error: {response.status_code} - {response.text}")
             
     except json.JSONDecodeError as e:
-        print(f"Gemini JSON parse error: {e}")
+        print(f"OpenAI JSON parse error: {e}")
     except Exception as e:
-        print(f"Gemini estimation error: {e}")
+        print(f"OpenAI estimation error: {e}")
     
     return None
 
@@ -408,12 +416,12 @@ def search_ai_meal():
             "source": "fallback"
         }), 200
     
-    # Fallback 3: Gemini AI estimation (for restaurant meals, custom foods, etc.)
-    gemini_estimate = estimate_nutrition_with_gemini(meal_query)
-    if gemini_estimate and len(gemini_estimate) > 0:
+    # Fallback 3: AI estimation (for restaurant meals, custom foods, etc.)
+    ai_estimate = estimate_nutrition_with_ai(meal_query)
+    if ai_estimate and len(ai_estimate) > 0:
         return jsonify({
             "success": True,
-            "meals": gemini_estimate,
+            "meals": ai_estimate,
             "source": "ai_estimate",
             "is_estimate": True
         }), 200
@@ -434,12 +442,12 @@ def get_ai_estimate():
     if not meal_query:
         return jsonify({"success": False, "error": "Please provide a meal name"}), 400
     
-    # Directly use Gemini AI estimation
-    gemini_estimate = estimate_nutrition_with_gemini(meal_query)
-    if gemini_estimate and len(gemini_estimate) > 0:
+    # Directly use OpenAI estimation
+    ai_estimate = estimate_nutrition_with_ai(meal_query)
+    if ai_estimate and len(ai_estimate) > 0:
         return jsonify({
             "success": True,
-            "meals": gemini_estimate,
+            "meals": ai_estimate,
             "source": "ai_estimate",
             "is_estimate": True
         }), 200
@@ -539,3 +547,262 @@ def scan_image_nutrition():
             "success": False,
             "error": "Image scanning failed. Please try again."
         }), 200
+
+
+# ============================================
+# TheMealDB Recipe Browser Integration
+# ============================================
+
+@fatsecret_bp.route("/recipes/search", methods=["GET"])
+@jwt_required()
+def search_recipes():
+    """Search recipes from TheMealDB."""
+    query = request.args.get("q", "").strip()
+    
+    if not query:
+        return jsonify({"success": False, "error": "Please provide a search term"}), 400
+    
+    try:
+        response = requests.get(
+            f"{MEALDB_API_URL}/search.php",
+            params={"s": query},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            meals = data.get("meals") or []
+            
+            recipes = []
+            for meal in meals[:10]:  # Limit to 10 results
+                recipes.append({
+                    "id": meal.get("idMeal"),
+                    "name": meal.get("strMeal"),
+                    "category": meal.get("strCategory"),
+                    "area": meal.get("strArea"),
+                    "thumbnail": meal.get("strMealThumb"),
+                    "tags": meal.get("strTags", "").split(",") if meal.get("strTags") else []
+                })
+            
+            return jsonify({
+                "success": True,
+                "recipes": recipes,
+                "count": len(recipes)
+            }), 200
+        else:
+            return jsonify({"success": False, "error": "Failed to search recipes"}), 200
+            
+    except Exception as e:
+        print(f"Recipe search error: {e}")
+        return jsonify({"success": False, "error": "Recipe search failed"}), 200
+
+
+@fatsecret_bp.route("/recipes/categories", methods=["GET"])
+@jwt_required()
+def get_recipe_categories():
+    """Get all meal categories from TheMealDB."""
+    try:
+        response = requests.get(
+            f"{MEALDB_API_URL}/categories.php",
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            categories = []
+            
+            for cat in data.get("categories", []):
+                categories.append({
+                    "id": cat.get("idCategory"),
+                    "name": cat.get("strCategory"),
+                    "thumbnail": cat.get("strCategoryThumb"),
+                    "description": cat.get("strCategoryDescription", "")[:100] + "..."
+                })
+            
+            return jsonify({
+                "success": True,
+                "categories": categories
+            }), 200
+        else:
+            return jsonify({"success": False, "error": "Failed to get categories"}), 200
+            
+    except Exception as e:
+        print(f"Categories error: {e}")
+        return jsonify({"success": False, "error": "Failed to get categories"}), 200
+
+
+@fatsecret_bp.route("/recipes/by-category", methods=["GET"])
+@jwt_required()
+def get_recipes_by_category():
+    """Get recipes by category from TheMealDB."""
+    category = request.args.get("category", "").strip()
+    
+    if not category:
+        return jsonify({"success": False, "error": "Please provide a category"}), 400
+    
+    try:
+        response = requests.get(
+            f"{MEALDB_API_URL}/filter.php",
+            params={"c": category},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            meals = data.get("meals") or []
+            
+            recipes = []
+            for meal in meals[:12]:  # Limit to 12 results
+                recipes.append({
+                    "id": meal.get("idMeal"),
+                    "name": meal.get("strMeal"),
+                    "thumbnail": meal.get("strMealThumb")
+                })
+            
+            return jsonify({
+                "success": True,
+                "recipes": recipes,
+                "category": category
+            }), 200
+        else:
+            return jsonify({"success": False, "error": "Failed to get recipes"}), 200
+            
+    except Exception as e:
+        print(f"Recipes by category error: {e}")
+        return jsonify({"success": False, "error": "Failed to get recipes"}), 200
+
+
+@fatsecret_bp.route("/recipes/details/<meal_id>", methods=["GET"])
+@jwt_required()
+def get_recipe_details(meal_id):
+    """Get full recipe details with calculated nutrition."""
+    try:
+        # Get recipe details from TheMealDB
+        response = requests.get(
+            f"{MEALDB_API_URL}/lookup.php",
+            params={"i": meal_id},
+            timeout=10
+        )
+        
+        if response.status_code != 200 or not response.json().get("meals"):
+            return jsonify({"success": False, "error": "Recipe not found"}), 404
+        
+        meal = response.json()["meals"][0]
+        
+        # Extract ingredients and measurements
+        ingredients = []
+        for i in range(1, 21):
+            ingredient = meal.get(f"strIngredient{i}", "").strip()
+            measure = meal.get(f"strMeasure{i}", "").strip()
+            
+            if ingredient:
+                ingredients.append({
+                    "ingredient": ingredient,
+                    "measure": measure,
+                    "nutrition": None  # Will be filled by calculate endpoint
+                })
+        
+        recipe = {
+            "id": meal.get("idMeal"),
+            "name": meal.get("strMeal"),
+            "category": meal.get("strCategory"),
+            "area": meal.get("strArea"),
+            "instructions": meal.get("strInstructions"),
+            "thumbnail": meal.get("strMealThumb"),
+            "youtube": meal.get("strYoutube"),
+            "source": meal.get("strSource"),
+            "tags": meal.get("strTags", "").split(",") if meal.get("strTags") else [],
+            "ingredients": ingredients
+        }
+        
+        return jsonify({
+            "success": True,
+            "recipe": recipe
+        }), 200
+        
+    except Exception as e:
+        print(f"Recipe details error: {e}")
+        return jsonify({"success": False, "error": "Failed to get recipe details"}), 200
+
+
+@fatsecret_bp.route("/recipes/calculate-nutrition", methods=["POST"])
+@jwt_required()
+def calculate_recipe_nutrition():
+    """Calculate total nutrition for a recipe using CalorieNinjas."""
+    data = request.get_json() or {}
+    ingredients = data.get("ingredients", [])
+    
+    if not ingredients:
+        return jsonify({"success": False, "error": "No ingredients provided"}), 400
+    
+    # Build query string for CalorieNinjas (all ingredients at once)
+    query_parts = []
+    for ing in ingredients:
+        measure = ing.get("measure", "")
+        ingredient = ing.get("ingredient", "")
+        if ingredient:
+            query_parts.append(f"{measure} {ingredient}".strip())
+    
+    query = ", ".join(query_parts)
+    
+    # Get nutrition from CalorieNinjas
+    api_key = os.getenv("CALORIENINJAS_API_KEY")
+    if not api_key:
+        return jsonify({"success": False, "error": "CalorieNinjas API not configured"}), 500
+    
+    try:
+        response = requests.get(
+            CALORIENINJAS_API_URL,
+            params={"query": query},
+            headers={"X-Api-Key": api_key},
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            items = data.get("items", [])
+            
+            # Calculate totals
+            total_calories = 0
+            total_protein = 0
+            total_carbs = 0
+            total_fat = 0
+            
+            ingredient_nutrition = []
+            for item in items:
+                calories = item.get("calories", 0)
+                protein = item.get("protein_g", 0)
+                carbs = item.get("carbohydrates_total_g", 0)
+                fat = item.get("fat_total_g", 0)
+                
+                total_calories += calories
+                total_protein += protein
+                total_carbs += carbs
+                total_fat += fat
+                
+                ingredient_nutrition.append({
+                    "name": item.get("name", "Unknown").title(),
+                    "calories": round(calories),
+                    "protein": round(protein, 1),
+                    "carbs": round(carbs, 1),
+                    "fat": round(fat, 1),
+                    "serving": item.get("serving_size_g", 100)
+                })
+            
+            return jsonify({
+                "success": True,
+                "total": {
+                    "calories": round(total_calories),
+                    "protein": round(total_protein, 1),
+                    "carbs": round(total_carbs, 1),
+                    "fat": round(total_fat, 1)
+                },
+                "ingredients": ingredient_nutrition,
+                "servings": 4  # Estimate 4 servings per recipe
+            }), 200
+        else:
+            return jsonify({"success": False, "error": "Failed to calculate nutrition"}), 200
+            
+    except Exception as e:
+        print(f"Nutrition calculation error: {e}")
+        return jsonify({"success": False, "error": "Nutrition calculation failed"}), 200

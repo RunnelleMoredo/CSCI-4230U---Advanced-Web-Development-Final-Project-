@@ -661,6 +661,227 @@ window.addRecipeToLog = function (cal, protein, carbs, fat) {
 };
 
 // =======================================
+// RECIPE BROWSER (TheMealDB + CalorieNinjas)
+// =======================================
+const recipeSearchInput = document.getElementById("recipe_search_input");
+const recipeSearchBtn = document.getElementById("btn_recipe_search");
+const recipeGrid = document.getElementById("recipe_grid");
+const recipeModal = document.getElementById("recipeModal");
+
+let currentRecipe = null;
+
+// Search recipes
+if (recipeSearchBtn && recipeSearchInput) {
+    const searchRecipes = async () => {
+        const query = recipeSearchInput.value.trim();
+        if (!query) {
+            alert("Please enter a recipe to search");
+            return;
+        }
+
+        const token = localStorage.getItem("access_token");
+        recipeGrid.innerHTML = `<p class="col-span-2 text-center text-amber-400 py-8">🔍 Searching recipes...</p>`;
+
+        try {
+            const res = await fetch(`/api/food/recipes/search?q=${encodeURIComponent(query)}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const data = await res.json();
+
+            if (data.success && data.recipes && data.recipes.length > 0) {
+                displayRecipes(data.recipes);
+            } else {
+                recipeGrid.innerHTML = `<p class="col-span-2 text-center text-slate-500 py-8">No recipes found for "${query}"</p>`;
+            }
+        } catch (e) {
+            console.error("Recipe search error:", e);
+            recipeGrid.innerHTML = `<p class="col-span-2 text-center text-red-400 py-8">Search failed. Try again.</p>`;
+        }
+    };
+
+    recipeSearchBtn.addEventListener("click", searchRecipes);
+    recipeSearchInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") searchRecipes();
+    });
+}
+
+// Category filter
+document.querySelectorAll(".category-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+        // Update active state
+        document.querySelectorAll(".category-btn").forEach(b => {
+            b.classList.remove("bg-amber-600", "text-white");
+            b.classList.add("bg-slate-700", "text-slate-300");
+        });
+        btn.classList.remove("bg-slate-700", "text-slate-300");
+        btn.classList.add("bg-amber-600", "text-white");
+
+        const category = btn.dataset.category;
+        if (!category) {
+            recipeGrid.innerHTML = `<p class="col-span-2 text-center text-slate-500 py-8">Search for recipes or select a category</p>`;
+            return;
+        }
+
+        const token = localStorage.getItem("access_token");
+        recipeGrid.innerHTML = `<p class="col-span-2 text-center text-amber-400 py-8">Loading ${category} recipes...</p>`;
+
+        try {
+            const res = await fetch(`/api/food/recipes/by-category?category=${encodeURIComponent(category)}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const data = await res.json();
+
+            if (data.success && data.recipes && data.recipes.length > 0) {
+                displayRecipes(data.recipes);
+            } else {
+                recipeGrid.innerHTML = `<p class="col-span-2 text-center text-slate-500 py-8">No recipes found</p>`;
+            }
+        } catch (e) {
+            console.error("Category fetch error:", e);
+            recipeGrid.innerHTML = `<p class="col-span-2 text-center text-red-400 py-8">Failed to load recipes</p>`;
+        }
+    });
+});
+
+// Display recipes in grid
+function displayRecipes(recipes) {
+    recipeGrid.innerHTML = recipes.map(r => `
+        <div class="recipe-card bg-slate-800 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-500 transition-all"
+             onclick="openRecipeModal('${r.id}')">
+            <img src="${r.thumbnail}/preview" alt="${r.name}" class="w-full h-24 object-cover">
+            <div class="p-2">
+                <p class="text-sm font-medium text-white truncate">${r.name}</p>
+                <p class="text-xs text-slate-400">${r.category || r.area || ''}</p>
+            </div>
+        </div>
+    `).join("");
+}
+
+// Open recipe modal
+window.openRecipeModal = async function (mealId) {
+    const token = localStorage.getItem("access_token");
+
+    // Show modal with loading state
+    recipeModal.classList.remove("hidden");
+    recipeModal.classList.add("flex");
+    document.getElementById("recipeNutritionGrid").innerHTML = `<p class="col-span-4 text-slate-500">Loading nutrition...</p>`;
+
+    try {
+        // Get recipe details
+        const detailRes = await fetch(`/api/food/recipes/details/${mealId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const detailData = await detailRes.json();
+
+        if (!detailData.success) {
+            alert("Failed to load recipe details");
+            closeRecipeModalFn();
+            return;
+        }
+
+        const recipe = detailData.recipe;
+        currentRecipe = recipe;
+
+        // Update modal UI
+        document.getElementById("recipeModalImage").src = recipe.thumbnail;
+        document.getElementById("recipeModalName").textContent = recipe.name;
+        document.getElementById("recipeModalCategory").textContent = recipe.category;
+        document.getElementById("recipeModalArea").textContent = `${recipe.area} Cuisine`;
+        document.getElementById("recipeInstructions").textContent = recipe.instructions;
+
+        // Display ingredients
+        const ingredientsList = document.getElementById("recipeIngredients");
+        ingredientsList.innerHTML = recipe.ingredients.map(ing =>
+            `<li>• ${ing.measure} ${ing.ingredient}</li>`
+        ).join("");
+
+        // Calculate nutrition
+        const nutritionRes = await fetch("/api/food/recipes/calculate-nutrition", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ ingredients: recipe.ingredients })
+        });
+
+        const nutritionData = await nutritionRes.json();
+
+        if (nutritionData.success) {
+            const total = nutritionData.total;
+            const servings = nutritionData.servings || 4;
+
+            document.getElementById("recipeNutritionGrid").innerHTML = `
+                <div>
+                    <p class="text-lg font-bold text-amber-500">${total.calories}</p>
+                    <p class="text-xs text-slate-500">cal</p>
+                </div>
+                <div>
+                    <p class="text-lg font-bold text-green-500">${total.protein}g</p>
+                    <p class="text-xs text-slate-500">protein</p>
+                </div>
+                <div>
+                    <p class="text-lg font-bold text-blue-500">${total.carbs}g</p>
+                    <p class="text-xs text-slate-500">carbs</p>
+                </div>
+                <div>
+                    <p class="text-lg font-bold text-purple-500">${total.fat}g</p>
+                    <p class="text-xs text-slate-500">fat</p>
+                </div>
+            `;
+            document.getElementById("recipeServings").textContent = `Serves ~${servings} | Per serving: ~${Math.round(total.calories / servings)} cal`;
+
+            // Store for adding to log
+            currentRecipe.nutrition = total;
+            currentRecipe.servings = servings;
+        } else {
+            document.getElementById("recipeNutritionGrid").innerHTML = `<p class="col-span-4 text-red-400 text-sm">Could not calculate nutrition</p>`;
+        }
+
+    } catch (e) {
+        console.error("Recipe modal error:", e);
+        closeRecipeModalFn();
+    }
+};
+
+// Close recipe modal
+function closeRecipeModalFn() {
+    recipeModal.classList.add("hidden");
+    recipeModal.classList.remove("flex");
+    currentRecipe = null;
+}
+
+document.getElementById("closeRecipeModal")?.addEventListener("click", closeRecipeModalFn);
+recipeModal?.addEventListener("click", (e) => {
+    if (e.target === recipeModal) closeRecipeModalFn();
+});
+
+// Add recipe to log
+document.getElementById("addRecipeToLog")?.addEventListener("click", () => {
+    if (!currentRecipe || !currentRecipe.nutrition) {
+        alert("Recipe nutrition not available");
+        return;
+    }
+
+    const total = currentRecipe.nutrition;
+    const servings = currentRecipe.servings || 4;
+
+    addFoodToLog({
+        name: currentRecipe.name,
+        calories: Math.round(total.calories / servings),
+        serving: `1 serving (1/${servings} recipe)`,
+        protein: Math.round(total.protein / servings * 10) / 10,
+        carbs: Math.round(total.carbs / servings * 10) / 10,
+        fat: Math.round(total.fat / servings * 10) / 10
+    });
+
+    closeRecipeModalFn();
+});
+
+// =======================================
 // INITIALIZE
 // =======================================
 document.addEventListener("DOMContentLoaded", initCalorieTracker);

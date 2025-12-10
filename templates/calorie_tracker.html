@@ -197,6 +197,12 @@
                                 <span class="material-symbols-outlined text-lg">restaurant_menu</span>
                                 Recipe
                             </button>
+                            <button
+                                class="tab-btn flex-1 py-3 px-4 text-sm font-medium text-slate-400 hover:text-white flex items-center justify-center gap-2"
+                                data-tab="browse">
+                                <span class="material-symbols-outlined text-lg">menu_book</span>
+                                Browse Recipes
+                            </button>
                         </div>
 
                         <!-- Tab Contents -->
@@ -262,58 +268,160 @@
                                 </button>
                                 <div id="recipe_results" class="mt-4"></div>
                             </div>
+
+                            <!-- Browse Recipes Tab -->
+                            <div id="tab_browse" class="tab-content hidden">
+                                <p class="text-sm text-slate-400 mb-3">🍳 Browse curated recipes with calculated
+                                    nutrition</p>
+
+                                <!-- Search and Filter -->
+                                <div class="flex gap-2 mb-4">
+                                    <input type="text" id="recipe_search_input"
+                                        class="flex-1 bg-slate-800 border-slate-700 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 px-4 py-3"
+                                        placeholder="Search recipes (e.g., pasta, chicken, curry)">
+                                    <button id="btn_recipe_search"
+                                        class="flex items-center gap-2 rounded-lg px-6 bg-amber-600 text-white font-bold hover:bg-amber-700 transition-colors">
+                                        <span class="material-symbols-outlined">search</span>
+                                        Search
+                                    </button>
+                                </div>
+
+                                <!-- Categories -->
+                                <div id="recipe_categories" class="flex flex-wrap gap-2 mb-4">
+                                    <button
+                                        class="category-btn px-3 py-1.5 rounded-full text-xs font-medium bg-amber-600 text-white"
+                                        data-category="">All</button>
+                                    <button
+                                        class="category-btn px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                        data-category="Chicken">🍗 Chicken</button>
+                                    <button
+                                        class="category-btn px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                        data-category="Beef">🥩 Beef</button>
+                                    <button
+                                        class="category-btn px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                        data-category="Seafood">🦐 Seafood</button>
+                                    <button
+                                        class="category-btn px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                        data-category="Vegetarian">🥗 Vegetarian</button>
+                                    <button
+                                        class="category-btn px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                        data-category="Pasta">🍝 Pasta</button>
+                                    <button
+                                        class="category-btn px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                        data-category="Dessert">🍰 Dessert</button>
+                                </div>
+
+                                <!-- Recipe Grid -->
+                                <div id="recipe_grid" class="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                                    <p class="col-span-2 text-center text-slate-500 py-8">Search for recipes or select a
+                                        category</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- Serving Size Modal -->
-        <div id="servingModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl w-full max-w-sm mx-4">
-                <div class="flex items-center gap-3 mb-4">
-                    <div id="modalFoodEmoji" class="text-4xl">🍽️</div>
-                    <div>
-                        <h3 id="modalFoodName" class="font-bold text-slate-900 dark:text-white">Food Name</h3>
-                        <p id="modalFoodServing" class="text-sm text-slate-500">Per 100g</p>
+        <!-- Recipe Detail Modal -->
+        <div id="recipeModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+            <div class="bg-slate-900 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="relative">
+                    <img id="recipeModalImage" src="" alt="" class="w-full h-48 object-cover rounded-t-xl">
+                    <button id="closeRecipeModal"
+                        class="absolute top-3 right-3 bg-black/50 hover:bg-black/70 rounded-full p-2">
+                        <span class="material-symbols-outlined text-white">close</span>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 id="recipeModalName" class="text-xl font-bold text-white"></h3>
+                        <span id="recipeModalCategory"
+                            class="text-xs bg-amber-600 text-white px-2 py-1 rounded-full"></span>
                     </div>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Serving Size
-                        (grams)</label>
-                    <input type="number" id="servingAmount" value="100" min="1"
-                        class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white">
-                </div>
-                <div class="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-2">Nutrition for <span
-                            id="servingPreview">100g</span>:</p>
-                    <div class="grid grid-cols-4 gap-2 text-center">
-                        <div>
-                            <p id="previewCal" class="text-lg font-bold text-amber-500">0</p>
-                            <p class="text-xs text-slate-500">cal</p>
+                    <p id="recipeModalArea" class="text-sm text-slate-400 mb-4"></p>
+
+                    <!-- Nutrition Summary -->
+                    <div id="recipeNutritionBox" class="bg-slate-800 rounded-lg p-4 mb-4">
+                        <p class="text-xs text-slate-400 mb-2">Estimated Nutrition (full recipe)</p>
+                        <div class="grid grid-cols-4 gap-2 text-center" id="recipeNutritionGrid">
+                            <p class="text-slate-500">Loading nutrition...</p>
                         </div>
-                        <div>
-                            <p id="previewProtein" class="text-lg font-bold text-green-500">0</p>
-                            <p class="text-xs text-slate-500">protein</p>
-                        </div>
-                        <div>
-                            <p id="previewCarbs" class="text-lg font-bold text-blue-500">0</p>
-                            <p class="text-xs text-slate-500">carbs</p>
-                        </div>
-                        <div>
-                            <p id="previewFat" class="text-lg font-bold text-red-500">0</p>
-                            <p class="text-xs text-slate-500">fat</p>
-                        </div>
+                        <p id="recipeServings" class="text-xs text-slate-500 mt-2 text-center"></p>
                     </div>
-                </div>
-                <div class="flex gap-2">
-                    <button id="cancelServing"
-                        class="flex-1 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium">Cancel</button>
-                    <button id="confirmServing"
-                        class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium">Add to Log</button>
+
+                    <!-- Ingredients -->
+                    <div class="mb-4">
+                        <h4 class="text-sm font-medium text-amber-400 mb-2">Ingredients</h4>
+                        <ul id="recipeIngredients" class="space-y-1 text-sm text-slate-300"></ul>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="mb-4">
+                        <h4 class="text-sm font-medium text-amber-400 mb-2">Instructions</h4>
+                        <p id="recipeInstructions" class="text-sm text-slate-400 whitespace-pre-line"></p>
+                    </div>
+
+                    <!-- Add to Log Button -->
+                    <button id="addRecipeToLog"
+                        class="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">add_circle</span>
+                        Add Recipe to Today's Log
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
+    </div>
+    </div>
+    </main>
+
+    <!-- Serving Size Modal -->
+    <div id="servingModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl w-full max-w-sm mx-4">
+            <div class="flex items-center gap-3 mb-4">
+                <div id="modalFoodEmoji" class="text-4xl">🍽️</div>
+                <div>
+                    <h3 id="modalFoodName" class="font-bold text-slate-900 dark:text-white">Food Name</h3>
+                    <p id="modalFoodServing" class="text-sm text-slate-500">Per 100g</p>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Serving Size
+                    (grams)</label>
+                <input type="number" id="servingAmount" value="100" min="1"
+                    class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white">
+            </div>
+            <div class="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                <p class="text-sm text-slate-600 dark:text-slate-400 mb-2">Nutrition for <span
+                        id="servingPreview">100g</span>:</p>
+                <div class="grid grid-cols-4 gap-2 text-center">
+                    <div>
+                        <p id="previewCal" class="text-lg font-bold text-amber-500">0</p>
+                        <p class="text-xs text-slate-500">cal</p>
+                    </div>
+                    <div>
+                        <p id="previewProtein" class="text-lg font-bold text-green-500">0</p>
+                        <p class="text-xs text-slate-500">protein</p>
+                    </div>
+                    <div>
+                        <p id="previewCarbs" class="text-lg font-bold text-blue-500">0</p>
+                        <p class="text-xs text-slate-500">carbs</p>
+                    </div>
+                    <div>
+                        <p id="previewFat" class="text-lg font-bold text-red-500">0</p>
+                        <p class="text-xs text-slate-500">fat</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="cancelServing"
+                    class="flex-1 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium">Cancel</button>
+                <button id="confirmServing" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium">Add
+                    to Log</button>
+            </div>
+        </div>
+    </div>
     </div>
 
     <script src="{{ url_for('static', filename='scripts/calorie_tracker.js') }}"></script>
