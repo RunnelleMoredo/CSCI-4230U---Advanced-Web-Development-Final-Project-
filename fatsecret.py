@@ -215,8 +215,64 @@ def search_usda_foods(query, max_results=10):
         return None
 
 
+# ============================================
+# FatSecret OAuth 1.0 Authentication (No IP Restriction)
+# ============================================
+
+def make_fatsecret_request(method, params=None):
+    """Make a signed OAuth 1.0 request to FatSecret API.
+    
+    OAuth 1.0 doesn't require IP whitelisting like OAuth 2.0 does.
+    Uses HMAC-SHA1 signature method.
+    """
+    from requests_oauthlib import OAuth1
+    
+    consumer_key = os.getenv("FATSECRET_CONSUMER_KEY") or os.getenv("FATSECRET_CLIENT_ID")
+    consumer_secret = os.getenv("FATSECRET_CONSUMER_SECRET") or os.getenv("FATSECRET_CLIENT_SECRET")
+    
+    if not consumer_key or not consumer_secret:
+        print("FatSecret OAuth 1.0: Missing credentials")
+        return None
+    
+    # Create OAuth 1.0 auth object
+    auth = OAuth1(
+        consumer_key,
+        client_secret=consumer_secret,
+        signature_method='HMAC-SHA1'
+    )
+    
+    # Build request params
+    request_params = {
+        "method": method,
+        "format": "json"
+    }
+    if params:
+        request_params.update(params)
+    
+    try:
+        response = requests.post(
+            FATSECRET_API_URL,
+            data=request_params,
+            auth=auth
+        )
+        
+        print(f"FatSecret {method} response status: {response.status_code}")
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"FatSecret {method} error: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        print(f"FatSecret {method} exception: {e}")
+        return None
+
+
+# Keep OAuth 2.0 as fallback (but requires IP whitelisting)
 def get_fatsecret_token():
-    """Get OAuth 2.0 access token from FatSecret API with caching."""
+    """Get OAuth 2.0 access token from FatSecret API with caching.
+    NOTE: OAuth 2.0 requires IP whitelisting. Use OAuth 1.0 instead.
+    """
     
     # Check if cached token is still valid
     if _token_cache["access_token"] and time.time() < _token_cache["expires_at"] - 60:
@@ -231,7 +287,7 @@ def get_fatsecret_token():
     try:
         response = requests.post(
             FATSECRET_TOKEN_URL,
-            data={"grant_type": "client_credentials", "scope": "premier barcode nlp"},
+            data={"grant_type": "client_credentials", "scope": "basic"},
             auth=(client_id, client_secret),
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
@@ -250,236 +306,114 @@ def get_fatsecret_token():
 
 
 # ============================================
-# FatSecret Premier API Functions
+# FatSecret Premier API Functions (Using OAuth 1.0)
 # ============================================
 
 def search_fatsecret_foods(query, max_results=20):
-    """Search foods using FatSecret foods.search.v4 API."""
-    token = get_fatsecret_token()
-    if not token:
-        return None
+    """Search foods using FatSecret foods.search.v4 API with OAuth 1.0."""
+    result = make_fatsecret_request("foods.search.v4", {
+        "search_expression": query,
+        "max_results": max_results
+    })
     
-    try:
-        response = requests.post(
-            FATSECRET_API_URL,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            data={
-                "method": "foods.search.v4",
-                "search_expression": query,
-                "max_results": max_results,
-                "format": "json"
-            }
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            foods = data.get("foods_search", {}).get("results", {}).get("food", [])
-            if isinstance(foods, dict):
-                foods = [foods]
-            return foods
-        else:
-            print(f"FatSecret search error: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        print(f"FatSecret search exception: {e}")
-        return None
+    if result:
+        foods = result.get("foods_search", {}).get("results", {}).get("food", [])
+        if isinstance(foods, dict):
+            foods = [foods]
+        return foods
+    return None
 
 
 def get_food_by_barcode(barcode):
-    """Get food by barcode using FatSecret food.find_id_for_barcode.v2 API."""
-    token = get_fatsecret_token()
-    if not token:
-        print("FatSecret barcode: No token available")
+    """Get food by barcode using FatSecret food.find_id_for_barcode.v2 API with OAuth 1.0."""
+    print(f"FatSecret barcode lookup: {barcode}")
+    
+    result = make_fatsecret_request("food.find_id_for_barcode.v2", {
+        "barcode": barcode
+    })
+    
+    print(f"FatSecret barcode response: {result}")
+    
+    if not result:
         return None
     
-    try:
-        response = requests.post(
-            FATSECRET_API_URL,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            data={
-                "method": "food.find_id_for_barcode.v2",
-                "barcode": barcode,
-                "format": "json"
-            }
-        )
-        
-        print(f"FatSecret barcode response status: {response.status_code}")
-        print(f"FatSecret barcode response: {response.text[:500]}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            # Check multiple possible response formats
-            food_id = None
-            if "food_id" in data:
-                food_id_obj = data.get("food_id")
-                if isinstance(food_id_obj, dict):
-                    food_id = food_id_obj.get("value")
-                else:
-                    food_id = food_id_obj
-            
-            print(f"FatSecret barcode food_id: {food_id}")
-            
-            if food_id:
-                # Now get the full food details
-                return get_food_by_id(food_id)
-            
-            # Check for error in response
-            if "error" in data:
-                print(f"FatSecret barcode API error: {data.get('error')}")
-            
-            return None
-        else:
-            print(f"FatSecret barcode error: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        print(f"FatSecret barcode exception: {e}")
+    if "error" in result:
+        print(f"FatSecret barcode error: {result['error']}")
         return None
+    
+    food_id_data = result.get("food_id")
+    if not food_id_data:
+        print("FatSecret barcode: No food_id in response")
+        return None
+    
+    if isinstance(food_id_data, dict):
+        food_id = food_id_data.get("value")
+    else:
+        food_id = food_id_data
+    
+    print(f"FatSecret barcode found food_id: {food_id}")
+    return get_food_by_id(food_id)
 
 
 def get_food_by_id(food_id):
-    """Get food details by ID using FatSecret food.get.v4 API."""
-    token = get_fatsecret_token()
-    if not token:
-        return None
+    """Get detailed food info using FatSecret food.get.v4 API with OAuth 1.0."""
+    result = make_fatsecret_request("food.get.v4", {
+        "food_id": food_id
+    })
     
-    try:
-        response = requests.post(
-            FATSECRET_API_URL,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            data={
-                "method": "food.get.v4",
-                "food_id": food_id,
-                "format": "json"
-            }
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("food")
-        else:
-            print(f"FatSecret food.get error: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        print(f"FatSecret food.get exception: {e}")
-        return None
+    if result:
+        return result.get("food", result)
+    return None
 
 
 def get_fatsecret_autocomplete(query, max_results=10):
-    """Get autocomplete suggestions using FatSecret foods.autocomplete.v2 API."""
-    token = get_fatsecret_token()
-    if not token:
-        return None
+    """Get autocomplete suggestions using FatSecret foods.autocomplete.v2 API with OAuth 1.0."""
+    result = make_fatsecret_request("foods.autocomplete.v2", {
+        "expression": query,
+        "max_results": max_results
+    })
     
-    try:
-        response = requests.post(
-            FATSECRET_API_URL,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            data={
-                "method": "foods.autocomplete.v2",
-                "expression": query,
-                "max_results": max_results,
-                "format": "json"
-            }
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            suggestions = data.get("suggestions", {}).get("suggestion", [])
-            if isinstance(suggestions, str):
-                suggestions = [suggestions]
-            return suggestions
-        else:
-            print(f"FatSecret autocomplete error: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        print(f"FatSecret autocomplete exception: {e}")
-        return None
+    if result:
+        suggestions = result.get("suggestions", {}).get("suggestion", [])
+        if isinstance(suggestions, str):
+            suggestions = [suggestions]
+        return suggestions
+    return None
 
 
 def search_fatsecret_nlp(text_input):
-    """Search foods using FatSecret NLP (Natural Language Processing) API.
+    """Search foods using FatSecret NLP (Natural Language Processing) API with OAuth 1.0.
     
-    This API can understand natural language like:
+    Can understand natural language like:
     - "2 eggs and a glass of milk"
     - "large coffee with cream"
     - "chicken breast 200g with rice"
     """
-    token = get_fatsecret_token()
-    if not token:
-        print("FatSecret NLP: No token available")
-        return None
+    result = make_fatsecret_request("natural_language.get", {
+        "user_input": text_input
+    })
     
-    try:
-        response = requests.post(
-            FATSECRET_API_URL,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            data={
-                "method": "natural_language.get",
-                "text": text_input,
-                "format": "json"
-            }
-        )
-        
-        print(f"FatSecret NLP response status: {response.status_code}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            foods = data.get("natural_language", {}).get("foods", {}).get("food", [])
-            if isinstance(foods, dict):
-                foods = [foods]
-            return foods
-        else:
-            print(f"FatSecret NLP error: {response.status_code} - {response.text}")
+    if result:
+        if "error" in result:
+            print(f"FatSecret NLP error: {result['error']}")
             return None
-    except Exception as e:
-        print(f"FatSecret NLP exception: {e}")
-        return None
+        foods = result.get("food_entries", {}).get("food_entry", [])
+        if isinstance(foods, dict):
+            foods = [foods]
+        return foods
+    return None
 
 
 def get_fatsecret_categories():
-    """Get food categories using FatSecret food_categories.get.v2 API."""
-    token = get_fatsecret_token()
-    if not token:
-        return None
+    """Get food categories using FatSecret food_categories.get.v2 API with OAuth 1.0."""
+    result = make_fatsecret_request("food_categories.get.v2")
     
-    try:
-        response = requests.post(
-            FATSECRET_API_URL,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            data={
-                "method": "food_categories.get.v2",
-                "format": "json"
-            }
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            categories = data.get("food_categories", {}).get("food_category", [])
-            return categories
-        else:
-            print(f"FatSecret categories error: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        print(f"FatSecret categories exception: {e}")
-        return None
+    if result:
+        categories = result.get("food_categories", {}).get("food_category", [])
+        if isinstance(categories, dict):
+            categories = [categories]
+        return categories
+    return None
 
 
 # Built-in food database for fallback when API is unavailable
