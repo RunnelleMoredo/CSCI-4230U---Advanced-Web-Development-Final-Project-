@@ -34,6 +34,110 @@
             border-bottom: 2px solid #10b981;
             color: #10b981;
         }
+
+        /* Light theme improvements */
+        html:not(.dark) .rounded-xl {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        html:not(.dark) .bg-slate-100 {
+            background: white !important;
+        }
+
+        html:not(.dark) .bg-slate-800 {
+            background: #f1f5f9 !important;
+        }
+
+        html:not(.dark) .bg-slate-900 {
+            background: #f8fafc !important;
+        }
+
+        html:not(.dark) .border-slate-700 {
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .border-slate-800 {
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) .text-slate-400 {
+            color: #64748b !important;
+        }
+
+        html:not(.dark) .text-white {
+            color: #1e293b !important;
+        }
+
+        html:not(.dark) .hover\:text-white:hover {
+            color: #1e293b !important;
+        }
+
+        html:not(.dark) .hover\:bg-slate-700:hover {
+            background: #e2e8f0 !important;
+        }
+
+        /* Summary card gradient for light mode */
+        html:not(.dark) .from-green-900\/70,
+        html:not(.dark) .to-emerald-900\/70 {
+            --tw-gradient-from: #dcfce7 !important;
+            --tw-gradient-to: #d1fae5 !important;
+        }
+
+        html:not(.dark) .bg-gradient-to-br.from-green-900\/70 {
+            background: linear-gradient(to bottom right, #dcfce7, #d1fae5) !important;
+            border: 1px solid #86efac !important;
+        }
+
+        /* Nutrition stat boxes in light mode */
+        html:not(.dark) .bg-green-500\/10 {
+            background: #dcfce7 !important;
+        }
+
+        html:not(.dark) .bg-red-500\/10 {
+            background: #fee2e2 !important;
+        }
+
+        html:not(.dark) .bg-blue-500\/10,
+        html:not(.dark) .bg-slate-800\/50 {
+            background: #f1f5f9 !important;
+        }
+
+        html:not(.dark) .text-green-400 {
+            color: #16a34a !important;
+        }
+
+        html:not(.dark) .text-amber-400,
+        html:not(.dark) .text-amber-500 {
+            color: #d97706 !important;
+        }
+
+        html:not(.dark) .text-red-400 {
+            color: #dc2626 !important;
+        }
+
+        html:not(.dark) .text-blue-400 {
+            color: #2563eb !important;
+        }
+
+        /* Food result cards */
+        html:not(.dark) .bg-slate-800\/50 {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Input fields in light mode */
+        html:not(.dark) input.bg-slate-800,
+        html:not(.dark) textarea.bg-slate-800 {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+
+        html:not(.dark) input.bg-slate-800::placeholder,
+        html:not(.dark) textarea.bg-slate-800::placeholder {
+            color: #94a3b8 !important;
+        }
     </style>
 </head>
 
