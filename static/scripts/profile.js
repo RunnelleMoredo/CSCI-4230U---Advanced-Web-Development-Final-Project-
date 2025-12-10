@@ -24,7 +24,7 @@ document.getElementById("themeToggle")?.addEventListener("click", () => {
 // Logout
 // ---------------------------------------------------------
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    localStorage.removeItem("access_token");
+    localStorage.clear();
     window.location.href = "/";
 });
 

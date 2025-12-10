@@ -33,7 +33,7 @@ applySavedTheme();
 const logoutBtn = document.getElementById("btn_logout");
 if (logoutBtn)
   logoutBtn.onclick = () => {
-    localStorage.removeItem("access_token");
+    localStorage.clear();
     window.location.href = "/";
   };
 
