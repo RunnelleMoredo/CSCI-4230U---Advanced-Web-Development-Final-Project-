@@ -121,12 +121,21 @@ def get_saved_history():
 @jwt_required()
 def save_to_history():
     """Save a workout session to the user's profile history."""
+    import json
     user_id = get_jwt_identity()
     data = request.get_json() or {}
     
     workout_name = data.get("workout_name", "Workout")
     duration_seconds = data.get("duration_seconds", 0)
     exercises = data.get("exercises", [])
+    
+    # Ensure exercises is a proper Python list/dict for PostgreSQL JSON column
+    if isinstance(exercises, str):
+        try:
+            exercises = json.loads(exercises)
+        except json.JSONDecodeError:
+            exercises = []
+    
     progress_photo = data.get("progress_photo")
     completed_at_str = data.get("completed_at")
     total_volume = data.get("total_volume", 0)
