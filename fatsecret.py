@@ -368,7 +368,21 @@ def scan_image_nutrition():
             
             if items:
                 foods = []
+                # Filter out nutrition label field names that aren't actual foods
+                invalid_names = ["total", "sugars", "sugar", "protein", "carbohydrate", 
+                                "carbohydrates", "fat", "fats", "calories", "sodium", 
+                                "fiber", "cholesterol", "saturated", "trans", "iron",
+                                "calcium", "vitamin", "potassium", "daily", "value"]
+                
                 for item in items:
+                    name = item.get("name", "").lower().strip()
+                    # Skip items that are just nutrition label fields
+                    if name in invalid_names or len(name) < 3:
+                        continue
+                    # Skip items with unreasonably high values (likely parsing errors)
+                    if item.get("calories", 0) > 5000:
+                        continue
+                        
                     foods.append({
                         "food_name": item.get("name", "Unknown").title(),
                         "calories": round(item.get("calories", 0)),
@@ -379,11 +393,17 @@ def scan_image_nutrition():
                         "source": "image_scan"
                     })
                 
-                return jsonify({
-                    "success": True,
-                    "foods": foods,
-                    "message": f"Found {len(foods)} item(s) in image"
-                }), 200
+                if foods:
+                    return jsonify({
+                        "success": True,
+                        "foods": foods,
+                        "message": f"Found {len(foods)} food item(s) in image"
+                    }), 200
+                else:
+                    return jsonify({
+                        "success": False,
+                        "error": "Could not identify foods. This works best with menus and ingredient lists, not nutrition facts labels. Try searching for the food name instead."
+                    }), 200
             else:
                 return jsonify({
                     "success": False,
