@@ -928,16 +928,7 @@ def search_ai_meal():
             "source": "fallback"
         }), 200
     
-    # Last resort: AI estimation (for restaurant meals, custom foods, etc.)
-    ai_estimate = estimate_nutrition_with_ai(meal_query)
-    if ai_estimate and len(ai_estimate) > 0:
-        return jsonify({
-            "success": True,
-            "meals": ai_estimate,
-            "source": "ai_estimate",
-            "is_estimate": True
-        }), 200
-    
+    # No results found in any database
     return jsonify({
         "success": False,
         "error": "No meals found. Try a different search term."
