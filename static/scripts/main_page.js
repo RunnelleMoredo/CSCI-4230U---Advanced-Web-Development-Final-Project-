@@ -47,14 +47,7 @@ function userHasGoal() {
   return localStorage.getItem("hasGoal") === "true";
 }
 
-// Prevent accessing workouts if no goal exists
-function blockWorkoutAccessIfNoGoal() {
-  const disabledSection = document.querySelector(".workout-search-row");
-  if (!userHasGoal() && disabledSection) {
-    disabledSection.style.opacity = "0.5";
-    disabledSection.querySelectorAll("input, button").forEach((el) => (el.disabled = true));
-  }
-}
+// Goal check removed - workouts available for all users
 
 
 // =======================================
@@ -502,7 +495,6 @@ function saveSelectedToStorage() {
 }
 
 function addWorkout(exercise) {
-  if (!userHasGoal()) return alert("Create a goal first!");
 
   const alreadyExists = selectedExercises.some(
     (ex) => ex.name.toLowerCase() === exercise.name.toLowerCase() && !ex.isAI
@@ -655,7 +647,6 @@ async function setupWorkoutSearch() {
   });
 
   searchBtn.onclick = async () => {
-    if (!userHasGoal()) return alert("Create a goal first.");
     const query = searchInput.value.trim();
     if (!query) return alert("Enter a search term.");
     searchResults.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">
