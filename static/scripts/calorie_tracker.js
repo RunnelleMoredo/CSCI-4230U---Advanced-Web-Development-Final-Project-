@@ -920,6 +920,137 @@ document.getElementById("addRecipeToLog")?.addEventListener("click", () => {
 });
 
 // =======================================
+// BARCODE LOOKUP (FatSecret Premier)
+// =======================================
+const barcodeInput = document.getElementById("barcode_input");
+const barcodeLookupBtn = document.getElementById("btn_barcode_lookup");
+const barcodeResult = document.getElementById("barcode_result");
+
+async function lookupBarcode(barcode) {
+    if (!barcode || barcode.length < 8) {
+        alert("Please enter a valid barcode (8-14 digits)");
+        return;
+    }
+
+    const token = localStorage.getItem("access_token");
+
+    // Show loading state
+    barcodeResult.classList.remove("hidden");
+    barcodeResult.innerHTML = `
+        <div class="text-center py-8">
+            <span class="material-symbols-outlined text-4xl text-primary animate-pulse">qr_code_scanner</span>
+            <p class="text-slate-400 mt-2">Looking up barcode ${barcode}...</p>
+        </div>
+    `;
+
+    try {
+        const res = await fetch(`/api/food/barcode/${barcode}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (data.success && data.food) {
+            const food = data.food;
+            barcodeResult.innerHTML = `
+                <div class="bg-slate-800 rounded-xl p-4 border border-green-500/30">
+                    <div class="flex items-start gap-4">
+                        <div class="w-16 h-16 rounded-lg bg-green-500/20 flex items-center justify-center text-3xl">
+                            🏷️
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-white text-lg">${food.food_name}</h4>
+                            ${food.brand_name ? `<p class="text-sm text-slate-400">${food.brand_name}</p>` : ''}
+                            <p class="text-xs text-green-400 mt-1">Barcode: ${barcode}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-4 mt-4 text-center">
+                        <div class="bg-slate-900 rounded-lg p-2">
+                            <p class="text-2xl font-bold text-amber-500">${Math.round(food.calories)}</p>
+                            <p class="text-xs text-slate-400">Calories</p>
+                        </div>
+                        <div class="bg-slate-900 rounded-lg p-2">
+                            <p class="text-lg font-bold text-green-400">${food.protein}g</p>
+                            <p class="text-xs text-slate-400">Protein</p>
+                        </div>
+                        <div class="bg-slate-900 rounded-lg p-2">
+                            <p class="text-lg font-bold text-blue-400">${food.carbs}g</p>
+                            <p class="text-xs text-slate-400">Carbs</p>
+                        </div>
+                        <div class="bg-slate-900 rounded-lg p-2">
+                            <p class="text-lg font-bold text-red-400">${food.fat}g</p>
+                            <p class="text-xs text-slate-400">Fat</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 text-center">Per ${food.serving}</p>
+                    <button id="btn_add_barcode_food" 
+                        class="w-full mt-4 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                        data-food='${JSON.stringify(food)}'>
+                        <span class="material-symbols-outlined">add</span>
+                        Add to Food Log
+                    </button>
+                </div>
+            `;
+
+            // Add event listener for the add button
+            document.getElementById("btn_add_barcode_food")?.addEventListener("click", (e) => {
+                const foodData = JSON.parse(e.currentTarget.dataset.food);
+                addFoodToLog({
+                    name: foodData.food_name,
+                    calories: Math.round(foodData.calories),
+                    serving: foodData.serving,
+                    protein: foodData.protein,
+                    carbs: foodData.carbs,
+                    fat: foodData.fat
+                });
+                barcodeResult.classList.add("hidden");
+                barcodeInput.value = "";
+            });
+        } else {
+            barcodeResult.innerHTML = `
+                <div class="text-center py-8 bg-slate-800/50 rounded-xl border border-red-500/30">
+                    <span class="material-symbols-outlined text-4xl text-red-400">search_off</span>
+                    <p class="text-red-400 mt-2 font-medium">Product not found</p>
+                    <p class="text-slate-500 text-sm mt-1">Barcode ${barcode} not in database</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error("Barcode lookup error:", error);
+        barcodeResult.innerHTML = `
+            <div class="text-center py-8 bg-slate-800/50 rounded-xl border border-red-500/30">
+                <span class="material-symbols-outlined text-4xl text-red-400">error</span>
+                <p class="text-red-400 mt-2">Failed to look up barcode</p>
+            </div>
+        `;
+    }
+}
+
+// Event listeners for barcode lookup
+if (barcodeLookupBtn) {
+    barcodeLookupBtn.addEventListener("click", () => {
+        lookupBarcode(barcodeInput?.value?.trim());
+    });
+}
+
+if (barcodeInput) {
+    barcodeInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            lookupBarcode(barcodeInput.value.trim());
+        }
+    });
+}
+
+// Sample barcode buttons
+document.querySelectorAll(".sample-barcode").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const barcode = btn.dataset.barcode;
+        if (barcodeInput) barcodeInput.value = barcode;
+        lookupBarcode(barcode);
+    });
+});
+
+
+// =======================================
 // INITIALIZE
 // =======================================
 document.addEventListener("DOMContentLoaded", initCalorieTracker);

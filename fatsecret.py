@@ -231,7 +231,7 @@ def get_fatsecret_token():
     try:
         response = requests.post(
             FATSECRET_TOKEN_URL,
-            data={"grant_type": "client_credentials", "scope": "basic"},
+            data={"grant_type": "client_credentials", "scope": "premier barcode"},
             auth=(client_id, client_secret),
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
@@ -246,6 +246,177 @@ def get_fatsecret_token():
             return None
     except Exception as e:
         print(f"FatSecret token exception: {e}")
+        return None
+
+
+# ============================================
+# FatSecret Premier API Functions
+# ============================================
+
+def search_fatsecret_foods(query, max_results=20):
+    """Search foods using FatSecret foods.search.v4 API."""
+    token = get_fatsecret_token()
+    if not token:
+        return None
+    
+    try:
+        response = requests.post(
+            FATSECRET_API_URL,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "method": "foods.search.v4",
+                "search_expression": query,
+                "max_results": max_results,
+                "format": "json"
+            }
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            foods = data.get("foods_search", {}).get("results", {}).get("food", [])
+            if isinstance(foods, dict):
+                foods = [foods]
+            return foods
+        else:
+            print(f"FatSecret search error: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        print(f"FatSecret search exception: {e}")
+        return None
+
+
+def get_food_by_barcode(barcode):
+    """Get food by barcode using FatSecret food.find_id_for_barcode.v2 API."""
+    token = get_fatsecret_token()
+    if not token:
+        return None
+    
+    try:
+        response = requests.post(
+            FATSECRET_API_URL,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "method": "food.find_id_for_barcode.v2",
+                "barcode": barcode,
+                "format": "json"
+            }
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            food_id = data.get("food_id", {}).get("value")
+            if food_id:
+                # Now get the full food details
+                return get_food_by_id(food_id)
+            return None
+        else:
+            print(f"FatSecret barcode error: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        print(f"FatSecret barcode exception: {e}")
+        return None
+
+
+def get_food_by_id(food_id):
+    """Get food details by ID using FatSecret food.get.v4 API."""
+    token = get_fatsecret_token()
+    if not token:
+        return None
+    
+    try:
+        response = requests.post(
+            FATSECRET_API_URL,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "method": "food.get.v4",
+                "food_id": food_id,
+                "format": "json"
+            }
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("food")
+        else:
+            print(f"FatSecret food.get error: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        print(f"FatSecret food.get exception: {e}")
+        return None
+
+
+def get_fatsecret_autocomplete(query, max_results=10):
+    """Get autocomplete suggestions using FatSecret foods.autocomplete.v2 API."""
+    token = get_fatsecret_token()
+    if not token:
+        return None
+    
+    try:
+        response = requests.post(
+            FATSECRET_API_URL,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "method": "foods.autocomplete.v2",
+                "expression": query,
+                "max_results": max_results,
+                "format": "json"
+            }
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            suggestions = data.get("suggestions", {}).get("suggestion", [])
+            if isinstance(suggestions, str):
+                suggestions = [suggestions]
+            return suggestions
+        else:
+            print(f"FatSecret autocomplete error: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        print(f"FatSecret autocomplete exception: {e}")
+        return None
+
+
+def get_fatsecret_categories():
+    """Get food categories using FatSecret food_categories.get.v2 API."""
+    token = get_fatsecret_token()
+    if not token:
+        return None
+    
+    try:
+        response = requests.post(
+            FATSECRET_API_URL,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "method": "food_categories.get.v2",
+                "format": "json"
+            }
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            categories = data.get("food_categories", {}).get("food_category", [])
+            return categories
+        else:
+            print(f"FatSecret categories error: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        print(f"FatSecret categories exception: {e}")
         return None
 
 
@@ -325,6 +496,155 @@ def search_foods():
     
     # If no results at all
     return jsonify({"foods": [], "message": f"No foods found for '{query}'", "is_fallback": True}), 200
+
+
+# ============================================
+# FatSecret Premier API Endpoints
+# ============================================
+
+@fatsecret_bp.route("/fatsecret-search", methods=["GET"])
+@jwt_required()
+def fatsecret_search():
+    """Search foods using FatSecret Premier foods.search.v4 API."""
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify({"error": "Missing search query ?q="}), 400
+    
+    foods = search_fatsecret_foods(query)
+    
+    if foods:
+        # Format the results for frontend consumption
+        formatted_foods = []
+        for food in foods:
+            # Get the first serving info
+            servings = food.get("servings", {}).get("serving", [])
+            if isinstance(servings, dict):
+                servings = [servings]
+            
+            serving = servings[0] if servings else {}
+            
+            formatted_foods.append({
+                "food_id": food.get("food_id"),
+                "food_name": food.get("food_name"),
+                "brand_name": food.get("brand_name", ""),
+                "food_type": food.get("food_type", ""),
+                "calories": float(serving.get("calories", 0)) if serving else 0,
+                "protein": float(serving.get("protein", 0)) if serving else 0,
+                "carbs": float(serving.get("carbohydrate", 0)) if serving else 0,
+                "fat": float(serving.get("fat", 0)) if serving else 0,
+                "serving": serving.get("serving_description", "1 serving") if serving else "1 serving",
+                "serving_id": serving.get("serving_id") if serving else None,
+            })
+        
+        return jsonify({
+            "success": True,
+            "foods": formatted_foods,
+            "source": "fatsecret",
+            "count": len(formatted_foods)
+        }), 200
+    
+    return jsonify({
+        "success": False,
+        "error": "No results found or FatSecret API unavailable",
+        "foods": []
+    }), 200
+
+
+@fatsecret_bp.route("/barcode/<barcode>", methods=["GET"])
+@jwt_required()
+def barcode_lookup(barcode):
+    """Look up food by barcode using FatSecret Premier API."""
+    if not barcode or len(barcode) < 8:
+        return jsonify({"error": "Invalid barcode"}), 400
+    
+    food = get_food_by_barcode(barcode)
+    
+    if food:
+        # Get the first serving info
+        servings = food.get("servings", {}).get("serving", [])
+        if isinstance(servings, dict):
+            servings = [servings]
+        
+        serving = servings[0] if servings else {}
+        
+        formatted_food = {
+            "food_id": food.get("food_id"),
+            "food_name": food.get("food_name"),
+            "brand_name": food.get("brand_name", ""),
+            "food_type": food.get("food_type", ""),
+            "calories": float(serving.get("calories", 0)) if serving else 0,
+            "protein": float(serving.get("protein", 0)) if serving else 0,
+            "carbs": float(serving.get("carbohydrate", 0)) if serving else 0,
+            "fat": float(serving.get("fat", 0)) if serving else 0,
+            "serving": serving.get("serving_description", "1 serving") if serving else "1 serving",
+            "serving_id": serving.get("serving_id") if serving else None,
+            "all_servings": [
+                {
+                    "serving_id": s.get("serving_id"),
+                    "serving_description": s.get("serving_description"),
+                    "calories": float(s.get("calories", 0)),
+                    "protein": float(s.get("protein", 0)),
+                    "carbs": float(s.get("carbohydrate", 0)),
+                    "fat": float(s.get("fat", 0)),
+                }
+                for s in servings
+            ]
+        }
+        
+        return jsonify({
+            "success": True,
+            "food": formatted_food,
+            "barcode": barcode
+        }), 200
+    
+    return jsonify({
+        "success": False,
+        "error": f"No food found for barcode {barcode}",
+        "barcode": barcode
+    }), 404
+
+
+@fatsecret_bp.route("/autocomplete", methods=["GET"])
+@jwt_required()
+def autocomplete():
+    """Get autocomplete suggestions using FatSecret Premier API."""
+    query = request.args.get("q", "").strip()
+    if not query or len(query) < 2:
+        return jsonify({"suggestions": []}), 200
+    
+    suggestions = get_fatsecret_autocomplete(query)
+    
+    if suggestions:
+        return jsonify({
+            "success": True,
+            "suggestions": suggestions,
+            "query": query
+        }), 200
+    
+    return jsonify({
+        "success": False,
+        "suggestions": [],
+        "query": query
+    }), 200
+
+
+@fatsecret_bp.route("/categories", methods=["GET"])
+@jwt_required()
+def get_categories():
+    """Get food categories using FatSecret Premier API."""
+    categories = get_fatsecret_categories()
+    
+    if categories:
+        return jsonify({
+            "success": True,
+            "categories": categories
+        }), 200
+    
+    return jsonify({
+        "success": False,
+        "error": "Failed to fetch categories",
+        "categories": []
+    }), 200
 
 
 @fatsecret_bp.route("/bmr", methods=["GET"])

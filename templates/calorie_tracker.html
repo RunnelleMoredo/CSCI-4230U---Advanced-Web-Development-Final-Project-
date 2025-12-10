@@ -201,7 +201,13 @@
                                 class="tab-btn tab-active flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2"
                                 data-tab="search">
                                 <span class="material-symbols-outlined text-lg">search</span>
-                                Search Food
+                                Search
+                            </button>
+                            <button
+                                class="tab-btn flex-1 py-3 px-4 text-sm font-medium text-slate-400 hover:text-white flex items-center justify-center gap-2"
+                                data-tab="barcode">
+                                <span class="material-symbols-outlined text-lg">qr_code_scanner</span>
+                                Barcode
                             </button>
                             <button
                                 class="tab-btn flex-1 py-3 px-4 text-sm font-medium text-slate-400 hover:text-white flex items-center justify-center gap-2"
@@ -213,7 +219,7 @@
                                 class="tab-btn flex-1 py-3 px-4 text-sm font-medium text-slate-400 hover:text-white flex items-center justify-center gap-2"
                                 data-tab="browse">
                                 <span class="material-symbols-outlined text-lg">menu_book</span>
-                                Browse Recipes
+                                Browse
                             </button>
                         </div>
 
@@ -264,6 +270,53 @@
                                 </div>
                             </div>
 
+
+                            <!-- Barcode Tab -->
+                            <div id="tab_barcode" class="tab-content hidden">
+                                <div class="text-center mb-6">
+                                    <div
+                                        class="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                                        <span
+                                            class="material-symbols-outlined text-4xl text-primary">qr_code_scanner</span>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-white mb-2">Scan or Enter Barcode</h3>
+                                    <p class="text-slate-400 text-sm">Look up nutrition info by product barcode</p>
+                                </div>
+
+                                <!-- Manual Entry -->
+                                <div class="flex gap-2 mb-4">
+                                    <input type="text" id="barcode_input"
+                                        class="flex-1 bg-slate-800 border-slate-700 rounded-lg text-white focus:ring-primary focus:border-primary px-4 py-3 text-center text-lg tracking-widest"
+                                        placeholder="Enter barcode number" maxlength="14" inputmode="numeric"
+                                        pattern="[0-9]*">
+                                    <button id="btn_barcode_lookup"
+                                        class="flex items-center gap-2 rounded-lg px-6 bg-primary text-white font-bold hover:bg-primary/90 transition-colors">
+                                        <span class="material-symbols-outlined">search</span>
+                                        Look Up
+                                    </button>
+                                </div>
+
+                                <!-- Barcode Result -->
+                                <div id="barcode_result" class="hidden">
+                                    <!-- Will be populated with barcode lookup result -->
+                                </div>
+
+                                <!-- Sample Barcodes -->
+                                <div class="mt-6">
+                                    <p class="text-xs text-slate-500 mb-2">Try these sample barcodes:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button
+                                            class="sample-barcode text-xs px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700"
+                                            data-barcode="049000042566">Coca-Cola</button>
+                                        <button
+                                            class="sample-barcode text-xs px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700"
+                                            data-barcode="038000138416">Kellogg's Cereal</button>
+                                        <button
+                                            class="sample-barcode text-xs px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700"
+                                            data-barcode="021130039692">Nature Valley</button>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Recipe Tab -->
                             <div id="tab_recipe" class="tab-content hidden">
