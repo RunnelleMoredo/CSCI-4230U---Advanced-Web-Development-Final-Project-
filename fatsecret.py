@@ -31,7 +31,7 @@ _token_cache = {
 }
 
 # Gemini API for AI estimation (when no database match found)
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent"
 
 
 def estimate_nutrition_with_gemini(food_query):
