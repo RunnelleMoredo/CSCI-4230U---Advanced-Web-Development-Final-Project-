@@ -331,3 +331,74 @@ def search_ai_meal():
         "success": False,
         "error": "No meals found. Try a different search term."
     }), 200
+
+
+@fatsecret_bp.route("/scan-image", methods=["POST"])
+@jwt_required()
+def scan_image_nutrition():
+    """Scan an image to extract nutrition information using CalorieNinjas."""
+    api_key = os.getenv("CALORIENINJAS_API_KEY")
+    
+    if not api_key:
+        return jsonify({"success": False, "error": "CalorieNinjas API not configured"}), 500
+    
+    # Get the image data from the request
+    data = request.get_json() or {}
+    image_data = data.get("image", "")
+    
+    if not image_data:
+        return jsonify({"success": False, "error": "No image provided"}), 400
+    
+    # Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
+    if "," in image_data:
+        image_data = image_data.split(",")[1]
+    
+    try:
+        # Call CalorieNinjas Image Text Nutrition API
+        response = requests.post(
+            "https://api.calorieninjas.com/v1/imagetextnutrition",
+            headers={"X-Api-Key": api_key},
+            files={"image": ("image.jpg", __import__("base64").b64decode(image_data), "image/jpeg")},
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            items = result.get("items", [])
+            
+            if items:
+                foods = []
+                for item in items:
+                    foods.append({
+                        "food_name": item.get("name", "Unknown").title(),
+                        "calories": round(item.get("calories", 0)),
+                        "protein": round(item.get("protein_g", 0), 1),
+                        "carbs": round(item.get("carbohydrates_total_g", 0), 1),
+                        "fat": round(item.get("fat_total_g", 0), 1),
+                        "serving": item.get("serving_size_g", 100),
+                        "source": "image_scan"
+                    })
+                
+                return jsonify({
+                    "success": True,
+                    "foods": foods,
+                    "message": f"Found {len(foods)} item(s) in image"
+                }), 200
+            else:
+                return jsonify({
+                    "success": False,
+                    "error": "No nutrition information found in image. Try a clearer photo of a nutrition label."
+                }), 200
+        else:
+            print(f"CalorieNinjas image scan error: {response.status_code} - {response.text}")
+            return jsonify({
+                "success": False,
+                "error": "Could not scan image. Try a clearer photo."
+            }), 200
+            
+    except Exception as e:
+        print(f"Image scan error: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Image scanning failed. Please try again."
+        }), 200

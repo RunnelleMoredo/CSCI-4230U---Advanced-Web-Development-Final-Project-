@@ -418,16 +418,71 @@ if (imageUpload) {
 }
 
 if (scanBtn) {
-    scanBtn.addEventListener("click", () => {
-        // For now, show a message that this feature requires API setup
+    scanBtn.addEventListener("click", async () => {
+        const imageData = scanImage?.src;
+        if (!imageData) {
+            alert("Please upload an image first");
+            return;
+        }
+
+        const token = localStorage.getItem("access_token");
+        scanBtn.disabled = true;
+        const original = scanBtn.innerHTML;
+        scanBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Scanning...`;
+
         if (scanResults) {
+            scanResults.innerHTML = `<p class="text-purple-400 text-sm text-center py-4">Analyzing image...</p>`;
+        }
+
+        try {
+            const res = await fetch("/api/food/scan-image", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ image: imageData })
+            });
+
+            const data = await res.json();
+
+            if (data.success && data.foods && data.foods.length > 0) {
+                scanResults.innerHTML = `
+                    <div class="p-4 bg-green-900/30 rounded-lg border border-green-500/30">
+                        <p class="text-green-400 font-bold mb-3">✓ ${data.message}</p>
+                        ${data.foods.map(food => `
+                            <div class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg mb-2 cursor-pointer hover:bg-slate-700"
+                                 onclick='openServingModal(${JSON.stringify(food).replace(/'/g, "\\'")})'>
+                                <div class="text-2xl">${getFoodEmoji(food.food_name)}</div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-white">${food.food_name}</p>
+                                    <p class="text-xs text-slate-400">${food.protein || 0}g P / ${food.carbs || 0}g C / ${food.fat || 0}g F</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-lg font-bold text-amber-500">${food.calories || 0}</p>
+                                    <p class="text-xs text-slate-400">cal</p>
+                                </div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+            } else {
+                scanResults.innerHTML = `
+                    <div class="p-4 bg-red-900/30 rounded-lg border border-red-500/30">
+                        <p class="text-red-400 text-sm">${data.error || "No nutrition found. Try a clearer image of a nutrition label."}</p>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            console.error("Image scan error:", e);
             scanResults.innerHTML = `
-                <div class="p-4 bg-purple-900/30 rounded-lg border border-purple-500/30">
-                    <p class="text-purple-300 text-sm mb-2">📸 Image scanning feature</p>
-                    <p class="text-slate-400 text-xs">This feature uses CalorieNinjas Image Text Nutrition API to extract calories from nutrition labels and menus.</p>
-                    <p class="text-green-400 text-xs mt-2">Coming soon! For now, use the Search tab to find foods manually.</p>
+                <div class="p-4 bg-red-900/30 rounded-lg border border-red-500/30">
+                    <p class="text-red-400 text-sm">Scan failed. Please try again.</p>
                 </div>
             `;
+        } finally {
+            scanBtn.disabled = false;
+            scanBtn.innerHTML = original;
         }
     });
 }
