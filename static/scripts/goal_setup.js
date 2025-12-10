@@ -94,6 +94,6 @@ continueBtn.addEventListener("click", async () => {
     // Store goal in localStorage as backup
     localStorage.setItem("primaryGoal", selectedGoal);
 
-    // Redirect to fitness level page
-    window.location.href = "/fitness_level";
+    // Redirect to calorie goal page
+    window.location.href = "/calorie_goal";
 });

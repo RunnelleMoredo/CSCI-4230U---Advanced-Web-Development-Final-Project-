@@ -356,7 +356,7 @@
                     body: JSON.stringify({ goal_type: g.goal_type, target_weight_kg: g.target_weight, goal_timeline_weeks: g.timeline_weeks, activity_level: g.activity_level, gender: g.gender, daily_calorie_target: g.daily_calories })
                 });
                 const data = await res.json();
-                if (data.success) { btn.innerHTML = `<span class="material-symbols-outlined">check</span> Saved!`; setTimeout(() => window.location.href = '/main_dashboard', 800); }
+                if (data.success) { btn.innerHTML = `<span class="material-symbols-outlined">check</span> Saved!`; setTimeout(() => window.location.href = '/fitness_level', 800); }
                 else { alert('Error: ' + (data.error || 'Unknown')); btn.disabled = false; btn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Save & Continue`; }
             } catch (e) { alert('Failed to save'); btn.disabled = false; btn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Save & Continue`; }
         });
