@@ -1,6 +1,6 @@
 /**
  * Calorie Tracker Page JavaScript
- * Handles food search, AI meal lookup, food logging, and calorie calculations
+ * Handles food search, image scanning, recipe calculation, and calorie logging
  */
 
 // =======================================
@@ -26,6 +26,29 @@ if (toggle) {
 document.getElementById("btn_logout")?.addEventListener("click", () => {
     localStorage.clear();
     window.location.href = "/";
+});
+
+// =======================================
+// TAB SWITCHING
+// =======================================
+document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        // Remove active from all tabs
+        document.querySelectorAll(".tab-btn").forEach(t => {
+            t.classList.remove("tab-active");
+            t.classList.add("text-slate-400");
+        });
+        // Hide all content
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+
+        // Activate clicked tab
+        btn.classList.add("tab-active");
+        btn.classList.remove("text-slate-400");
+
+        // Show corresponding content
+        const tabId = `tab_${btn.dataset.tab}`;
+        document.getElementById(tabId)?.classList.remove("hidden");
+    });
 });
 
 // =======================================
@@ -94,7 +117,7 @@ function updateCalorieDisplay() {
     const netRemaining = dailyCalorieTarget - caloriesConsumed + caloriesBurned;
     if (remainingEl) {
         remainingEl.textContent = netRemaining.toLocaleString();
-        remainingEl.className = `text-3xl font-bold ${netRemaining >= 0 ? 'text-green-500' : 'text-red-500'}`;
+        remainingEl.className = `text-xl font-bold ${netRemaining >= 0 ? 'text-white' : 'text-red-500'}`;
     }
 
     updateMacroChart();
@@ -151,22 +174,21 @@ function renderFoodLog() {
     if (!logContainer) return;
 
     if (foodLog.length === 0) {
-        logContainer.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No foods logged yet. Search and add foods above!</p>`;
+        logContainer.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-sm text-center py-4">No foods logged yet</p>`;
         updateMacroChart();
         return;
     }
 
     logContainer.innerHTML = foodLog.map((food, idx) => `
-    <div class="flex items-center gap-2 p-3 bg-slate-200 dark:bg-slate-800 rounded-lg">
-      <span class="text-2xl">${getFoodEmoji(food.name)}</span>
+    <div class="flex items-center gap-2 p-2 bg-slate-800 rounded-lg">
+      <span class="text-xl">${getFoodEmoji(food.name)}</span>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-medium text-slate-900 dark:text-white truncate">${food.name}</p>
-        <p class="text-xs text-slate-500 dark:text-slate-400">${food.serving} • ${food.protein}g P / ${food.carbs}g C / ${food.fat}g F</p>
+        <p class="text-sm font-medium text-white truncate">${food.name}</p>
+        <p class="text-xs text-slate-400">${food.serving}</p>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <span class="text-lg font-bold text-amber-500">${food.calories}</span>
-        <span class="text-xs text-amber-400">cal</span>
-        <button class="text-red-500 hover:bg-red-500/10 rounded p-1 ml-2" onclick="removeFoodFromLog(${idx})">
+      <div class="flex items-center gap-1 shrink-0">
+        <span class="text-sm font-bold text-amber-500">${food.calories}</span>
+        <button class="text-red-500 hover:bg-red-500/10 rounded p-1" onclick="removeFoodFromLog(${idx})">
           <span class="material-symbols-outlined text-sm">close</span>
         </button>
       </div>
@@ -232,17 +254,14 @@ function getFoodEmoji(foodName) {
 let selectedFood = null;
 const servingModal = document.getElementById("servingModal");
 const servingAmount = document.getElementById("servingAmount");
-const servingUnit = document.getElementById("servingUnit");
 
 window.openServingModal = function (food) {
     selectedFood = food;
     document.getElementById("modalFoodName").textContent = food.food_name;
-    document.getElementById("modalFoodServing").textContent = `Per ${food.serving}`;
-    document.getElementById("modalFoodImage").style.display = "none";
+    document.getElementById("modalFoodServing").textContent = `Per ${food.serving || 100}g`;
+    document.getElementById("modalFoodEmoji").textContent = getFoodEmoji(food.food_name);
 
-    if (servingAmount) servingAmount.value = 100;
-    if (servingUnit) servingUnit.value = "g";
-
+    if (servingAmount) servingAmount.value = food.serving || 100;
     updateServingPreview();
 
     if (servingModal) {
@@ -255,17 +274,15 @@ function updateServingPreview() {
     if (!selectedFood) return;
 
     const amount = parseFloat(servingAmount?.value) || 100;
-    const unit = servingUnit?.value || "g";
-
-    let multiplier = amount / 100;
-    if (unit === "serving") multiplier = amount;
+    const baseServing = selectedFood.serving || 100;
+    const multiplier = amount / (typeof baseServing === 'number' ? baseServing : 100);
 
     const calories = Math.round(selectedFood.calories * multiplier);
     const protein = Math.round(selectedFood.protein * multiplier * 10) / 10;
     const carbs = Math.round(selectedFood.carbs * multiplier * 10) / 10;
     const fat = Math.round(selectedFood.fat * multiplier * 10) / 10;
 
-    document.getElementById("servingPreview").textContent = unit === "g" ? `${amount}g` : `${amount} serving(s)`;
+    document.getElementById("servingPreview").textContent = `${amount}g`;
     document.getElementById("previewCal").textContent = calories;
     document.getElementById("previewProtein").textContent = protein;
     document.getElementById("previewCarbs").textContent = carbs;
@@ -273,7 +290,6 @@ function updateServingPreview() {
 }
 
 if (servingAmount) servingAmount.addEventListener("input", updateServingPreview);
-if (servingUnit) servingUnit.addEventListener("change", updateServingPreview);
 
 document.getElementById("cancelServing")?.addEventListener("click", () => {
     servingModal?.classList.add("hidden");
@@ -284,14 +300,13 @@ document.getElementById("confirmServing")?.addEventListener("click", () => {
     if (!selectedFood) return;
 
     const amount = parseFloat(servingAmount?.value) || 100;
-    const unit = servingUnit?.value || "g";
-    let multiplier = amount / 100;
-    if (unit === "serving") multiplier = amount;
+    const baseServing = selectedFood.serving || 100;
+    const multiplier = amount / (typeof baseServing === 'number' ? baseServing : 100);
 
     addFoodToLog({
         name: selectedFood.food_name,
         calories: Math.round(selectedFood.calories * multiplier),
-        serving: unit === "g" ? `${amount}g` : `${amount} serving(s)`,
+        serving: `${amount}g`,
         protein: Math.round(selectedFood.protein * multiplier * 10) / 10,
         carbs: Math.round(selectedFood.carbs * multiplier * 10) / 10,
         fat: Math.round(selectedFood.fat * multiplier * 10) / 10
@@ -302,50 +317,65 @@ document.getElementById("confirmServing")?.addEventListener("click", () => {
 });
 
 // =======================================
-// FOOD DATABASE SEARCH
+// FOOD SEARCH (using CalorieNinjas)
 // =======================================
 const foodSearchBtn = document.getElementById("btn_food_search");
 const foodSearchInput = document.getElementById("food_search_input");
-const foodSearchResults = document.getElementById("food_search_results");
+const searchResults = document.getElementById("search_results");
 
 if (foodSearchBtn && foodSearchInput) {
     const searchFood = async () => {
         const query = foodSearchInput.value.trim();
-        if (!query) return;
+        if (!query) {
+            alert("Please enter a food to search");
+            return;
+        }
 
         const token = localStorage.getItem("access_token");
+        foodSearchBtn.disabled = true;
+        const original = foodSearchBtn.innerHTML;
+        foodSearchBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Searching...`;
+
         try {
-            const res = await fetch(`/api/food/search?q=${encodeURIComponent(query)}`, {
-                headers: { Authorization: `Bearer ${token}` }
+            const res = await fetch("/api/food/ai-meal", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ meal_name: query })
             });
+
             const data = await res.json();
 
-            if (foodSearchResults) {
-                foodSearchResults.classList.remove("hidden");
-                if (data.foods && data.foods.length > 0) {
-                    const fallbackBadge = data.is_fallback
-                        ? `<div class="text-xs text-amber-500 font-medium mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm">info</span> Using offline database</div>`
-                        : '';
-                    foodSearchResults.innerHTML = fallbackBadge + data.foods.map(food => `
-            <div class="flex items-center gap-3 p-3 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors" 
-                 onclick='openServingModal(${JSON.stringify(food).replace(/'/g, "\\'")})'>
-              <div class="text-2xl">${getFoodEmoji(food.food_name)}</div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-slate-900 dark:text-white">${food.food_name}</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">${food.serving} • ${food.protein}g P / ${food.carbs}g C / ${food.fat}g F</p>
-              </div>
-              <div class="text-right">
-                <p class="text-lg font-bold text-green-500">${food.calories}</p>
-                <p class="text-xs text-slate-400">cal</p>
-              </div>
-            </div>
-          `).join("");
-                } else {
-                    foodSearchResults.innerHTML = `<p class="text-slate-500 text-sm p-2">No foods found. Try the AI Meal Lookup above!</p>`;
-                }
+            if (data.success && data.meals && data.meals.length > 0) {
+                const sourceLabel = data.source === "calorieninjas" ? "CalorieNinjas" : (data.source === "usda" ? "USDA" : "Database");
+                searchResults.innerHTML = `
+                    <p class="text-xs text-green-400 mb-2">Found ${data.meals.length} results from ${sourceLabel}</p>
+                    ${data.meals.map(meal => `
+                        <div class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors border border-transparent hover:border-green-500/50"
+                             onclick='openServingModal(${JSON.stringify(meal).replace(/'/g, "\\'")})'>
+                            <div class="text-2xl">${getFoodEmoji(meal.food_name)}</div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-white">${meal.food_name}</p>
+                                <p class="text-xs text-slate-400">${meal.protein || 0}g P / ${meal.carbs || 0}g C / ${meal.fat || 0}g F</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold text-amber-500">${meal.calories || 0}</p>
+                                <p class="text-xs text-slate-400">cal</p>
+                            </div>
+                        </div>
+                    `).join("")}
+                `;
+            } else {
+                searchResults.innerHTML = `<p class="text-red-400 text-sm text-center py-4">${data.error || "No foods found"}</p>`;
             }
         } catch (e) {
             console.error("Food search error:", e);
+            searchResults.innerHTML = `<p class="text-red-400 text-sm text-center py-4">Search failed. Try again.</p>`;
+        } finally {
+            foodSearchBtn.disabled = false;
+            foodSearchBtn.innerHTML = original;
         }
     };
 
@@ -355,83 +385,147 @@ if (foodSearchBtn && foodSearchInput) {
     });
 }
 
-// =======================================
-// AI MEAL SEARCH
-// =======================================
-const aiMealBtn = document.getElementById("btn_ai_meal");
-const aiMealInput = document.getElementById("ai_meal_input");
-const aiResultsContainer = document.getElementById("ai_meal_results");
+// Quick food buttons
+document.querySelectorAll(".quick-food").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const food = btn.dataset.food;
+        if (foodSearchInput) foodSearchInput.value = food;
+        foodSearchBtn?.click();
+    });
+});
 
-if (aiMealBtn && aiMealInput) {
-    const searchAIMeal = async () => {
-        const mealName = aiMealInput.value.trim();
-        if (!mealName) {
-            alert("Please enter a meal name to search");
+// =======================================
+// IMAGE SCANNING
+// =======================================
+const imageUpload = document.getElementById("image_upload");
+const scanPreview = document.getElementById("scan_preview");
+const scanImage = document.getElementById("scan_image");
+const scanBtn = document.getElementById("btn_scan_image");
+const scanResults = document.getElementById("scan_results");
+
+if (imageUpload) {
+    imageUpload.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (scanImage) scanImage.src = event.target.result;
+                if (scanPreview) scanPreview.classList.remove("hidden");
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (scanBtn) {
+    scanBtn.addEventListener("click", () => {
+        // For now, show a message that this feature requires API setup
+        if (scanResults) {
+            scanResults.innerHTML = `
+                <div class="p-4 bg-purple-900/30 rounded-lg border border-purple-500/30">
+                    <p class="text-purple-300 text-sm mb-2">📸 Image scanning feature</p>
+                    <p class="text-slate-400 text-xs">This feature uses CalorieNinjas Image Text Nutrition API to extract calories from nutrition labels and menus.</p>
+                    <p class="text-green-400 text-xs mt-2">Coming soon! For now, use the Search tab to find foods manually.</p>
+                </div>
+            `;
+        }
+    });
+}
+
+// =======================================
+// RECIPE CALCULATION
+// =======================================
+const recipeInput = document.getElementById("recipe_input");
+const recipeBtn = document.getElementById("btn_calculate_recipe");
+const recipeResults = document.getElementById("recipe_results");
+
+if (recipeBtn && recipeInput) {
+    recipeBtn.addEventListener("click", async () => {
+        const recipe = recipeInput.value.trim();
+        if (!recipe) {
+            alert("Please enter recipe ingredients");
             return;
         }
 
         const token = localStorage.getItem("access_token");
-        aiMealBtn.disabled = true;
-        const originalHTML = aiMealBtn.innerHTML;
-        aiMealBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Searching...`;
-
-        if (aiResultsContainer) {
-            aiResultsContainer.innerHTML = `<p class="text-purple-400 text-sm text-center py-4">Searching for meal options...</p>`;
-        }
+        recipeBtn.disabled = true;
+        const original = recipeBtn.innerHTML;
+        recipeBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Calculating...`;
 
         try {
+            // Send the full recipe text to CalorieNinjas
             const res = await fetch("/api/food/ai-meal", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({ meal_name: mealName })
+                body: JSON.stringify({ meal_name: recipe })
             });
 
             const data = await res.json();
 
             if (data.success && data.meals && data.meals.length > 0) {
-                const sourceLabel = data.source === "ai" ? "🤖 AI Suggestions" : (data.source === "usda" ? "📊 USDA Database" : "📁 Local Database");
-                aiResultsContainer.innerHTML = `
-          <p class="text-sm text-purple-300 mb-3">${sourceLabel} for "${mealName}":</p>
-          ${data.meals.map(meal => `
-            <div class="flex items-center gap-3 p-3 bg-purple-900/30 border border-purple-500/30 rounded-lg cursor-pointer hover:bg-purple-800/40 transition-colors"
-                 onclick='selectAIMeal(${JSON.stringify(meal).replace(/'/g, "\\'")})'>
-              <div class="text-2xl">${getFoodEmoji(meal.food_name)}</div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-white truncate">${meal.food_name}</p>
-                <p class="text-xs text-purple-300">${meal.serving || '1 serving'} • ${meal.protein || 0}g P / ${meal.carbs || 0}g C / ${meal.fat || 0}g F</p>
-              </div>
-              <div class="text-right shrink-0">
-                <p class="text-lg font-bold text-purple-300">${meal.calories || 0}</p>
-                <p class="text-xs text-purple-400">cal</p>
-              </div>
-            </div>
-          `).join("")}
-        `;
+                // Calculate totals
+                let totalCal = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
+                data.meals.forEach(m => {
+                    totalCal += m.calories || 0;
+                    totalProtein += m.protein || 0;
+                    totalCarbs += m.carbs || 0;
+                    totalFat += m.fat || 0;
+                });
+
+                recipeResults.innerHTML = `
+                    <div class="p-4 bg-green-900/30 rounded-lg border border-green-500/30">
+                        <h4 class="text-green-400 font-bold mb-3">Recipe Nutrition (per serving)</h4>
+                        <div class="grid grid-cols-4 gap-3 text-center mb-4">
+                            <div class="p-2 bg-slate-800 rounded">
+                                <p class="text-xl font-bold text-amber-500">${totalCal}</p>
+                                <p class="text-xs text-slate-400">Calories</p>
+                            </div>
+                            <div class="p-2 bg-slate-800 rounded">
+                                <p class="text-xl font-bold text-green-500">${Math.round(totalProtein)}g</p>
+                                <p class="text-xs text-slate-400">Protein</p>
+                            </div>
+                            <div class="p-2 bg-slate-800 rounded">
+                                <p class="text-xl font-bold text-blue-500">${Math.round(totalCarbs)}g</p>
+                                <p class="text-xs text-slate-400">Carbs</p>
+                            </div>
+                            <div class="p-2 bg-slate-800 rounded">
+                                <p class="text-xl font-bold text-red-500">${Math.round(totalFat)}g</p>
+                                <p class="text-xs text-slate-400">Fat</p>
+                            </div>
+                        </div>
+                        <button onclick="addRecipeToLog(${totalCal}, ${totalProtein}, ${totalCarbs}, ${totalFat})" 
+                                class="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
+                            Add Recipe to Log
+                        </button>
+                    </div>
+                `;
             } else {
-                aiResultsContainer.innerHTML = `<p class="text-red-400 text-sm text-center py-4">${data.error || "No meals found. Try a different search term."}</p>`;
+                recipeResults.innerHTML = `<p class="text-red-400 text-sm text-center py-4">Could not calculate. Try simpler ingredient names.</p>`;
             }
         } catch (e) {
-            console.error("AI meal error:", e);
-            aiResultsContainer.innerHTML = `<p class="text-red-400 text-sm text-center py-4">Failed to search. Try again.</p>`;
+            console.error("Recipe calc error:", e);
+            recipeResults.innerHTML = `<p class="text-red-400 text-sm text-center py-4">Calculation failed. Try again.</p>`;
         } finally {
-            aiMealBtn.disabled = false;
-            aiMealBtn.innerHTML = originalHTML;
+            recipeBtn.disabled = false;
+            recipeBtn.innerHTML = original;
         }
-    };
-
-    aiMealBtn.addEventListener("click", searchAIMeal);
-    aiMealInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") searchAIMeal();
     });
 }
 
-window.selectAIMeal = function (meal) {
-    openServingModal(meal);
-    if (aiResultsContainer) aiResultsContainer.innerHTML = "";
-    if (aiMealInput) aiMealInput.value = "";
+window.addRecipeToLog = function (cal, protein, carbs, fat) {
+    addFoodToLog({
+        name: "Custom Recipe",
+        calories: cal,
+        serving: "1 serving",
+        protein: Math.round(protein * 10) / 10,
+        carbs: Math.round(carbs * 10) / 10,
+        fat: Math.round(fat * 10) / 10
+    });
+    if (recipeResults) recipeResults.innerHTML = `<p class="text-green-400 text-sm text-center py-4">✓ Recipe added to log!</p>`;
+    if (recipeInput) recipeInput.value = "";
 };
 
 // =======================================
