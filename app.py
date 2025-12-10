@@ -454,6 +454,49 @@ with app.app_context():
     else:
         # Tables exist, just ensure our models' columns exist
         print(f"Database already has {len(existing_tables)} tables, skipping create_all()")
+        
+        # --- AUTO MIGRATION FOR MISSING COLUMNS ---
+        try:
+            from sqlalchemy import text
+            
+            # Check user_profiles columns
+            # This works for both SQLite and PostgreSQL
+            # We try to add columns, catch error if they exist (simplest cross-db approach without Alembic)
+            
+            with db.engine.connect() as conn:
+                transaction = conn.begin()
+                try:
+                    # SQLite syntax is different for ALTER TABLE, but adding columns is standard
+                    # However, SQLite handles ADD COLUMN IF NOT EXISTS differently or not at all depending on version
+                    # So we use a try-except block for each column
+                    
+                    columns_to_ensure = [
+                        ("gender", "VARCHAR(20) DEFAULT 'male'"),
+                        ("goal_type", "VARCHAR(20) DEFAULT 'maintain'"),
+                        ("target_weight_kg", "FLOAT"),
+                        ("goal_timeline_weeks", "INTEGER"),
+                        ("activity_level", "VARCHAR(20) DEFAULT 'moderate'"),
+                        ("daily_calorie_target", "INTEGER"),
+                        ("goal_set_at", "TIMESTAMP")
+                    ]
+                    
+                    for col_name, col_def in columns_to_ensure:
+                        try:
+                            # Try to add the column. If it fails, we assume it exists.
+                            conn.execute(text(f"ALTER TABLE user_profiles ADD COLUMN {col_name} {col_def}"))
+                            print(f"Migrated: Added {col_name} to user_profiles")
+                        except Exception as e:
+                            # If column exists, DB throws error. We ignore it.
+                            pass
+                            
+                    transaction.commit()
+                    print("Migration check complete.")
+                except Exception as e:
+                    transaction.rollback()
+                    print(f"Migration error: {e}")
+                    
+        except Exception as e:
+            print(f"Auto-migration failed: {e}")
 
 
 # ---------------------------------------------------------
