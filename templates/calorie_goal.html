@@ -236,7 +236,7 @@
         async function init() {
             const token = localStorage.getItem('access_token');
             try {
-                const res = await fetch('/profile/profile_api', { headers: { Authorization: `Bearer ${token}` } });
+                const res = await fetch('/profile', { headers: { Authorization: `Bearer ${token}` } });
                 const data = await res.json();
                 if (data.weight_kg) g.current_weight = data.weight_kg;
                 if (data.height_cm) g.height_cm = data.height_cm;
