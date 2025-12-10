@@ -205,15 +205,15 @@
                             </button>
                             <button
                                 class="tab-btn flex-1 py-3 px-4 text-sm font-medium text-slate-400 hover:text-white flex items-center justify-center gap-2"
-                                data-tab="barcode">
-                                <span class="material-symbols-outlined text-lg">qr_code_scanner</span>
-                                Barcode
+                                data-tab="nlp">
+                                <span class="material-symbols-outlined text-lg">record_voice_over</span>
+                                Quick Log
                             </button>
                             <button
                                 class="tab-btn flex-1 py-3 px-4 text-sm font-medium text-slate-400 hover:text-white flex items-center justify-center gap-2"
-                                data-tab="recipe">
-                                <span class="material-symbols-outlined text-lg">restaurant_menu</span>
-                                Recipe
+                                data-tab="barcode">
+                                <span class="material-symbols-outlined text-lg">qr_code_scanner</span>
+                                Barcode
                             </button>
                             <button
                                 class="tab-btn flex-1 py-3 px-4 text-sm font-medium text-slate-400 hover:text-white flex items-center justify-center gap-2"
@@ -270,6 +270,54 @@
                                 </div>
                             </div>
 
+
+                            <!-- NLP Quick Log Tab -->
+                            <div id="tab_nlp" class="tab-content hidden">
+                                <div class="text-center mb-6">
+                                    <div
+                                        class="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
+                                        <span
+                                            class="material-symbols-outlined text-4xl text-purple-400">record_voice_over</span>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-white mb-2">Quick Log with AI</h3>
+                                    <p class="text-slate-400 text-sm">Describe what you ate in natural language</p>
+                                </div>
+
+                                <div class="mb-4">
+                                    <textarea id="nlp_input" rows="3"
+                                        class="w-full bg-slate-800 border-slate-700 rounded-lg text-white focus:ring-purple-500 focus:border-purple-500 px-4 py-3"
+                                        placeholder="Type what you ate, e.g., '2 eggs, a slice of toast with butter, and a glass of orange juice'"></textarea>
+                                </div>
+
+                                <button id="btn_nlp_analyze"
+                                    class="w-full py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 mb-4">
+                                    <span class="material-symbols-outlined">psychology</span>
+                                    Analyze & Log
+                                </button>
+
+                                <!-- NLP Results -->
+                                <div id="nlp_result" class="hidden">
+                                    <!-- Will be populated with parsed foods -->
+                                </div>
+
+                                <!-- Examples -->
+                                <div class="mt-4 pt-4 border-t border-slate-700">
+                                    <p class="text-xs text-slate-500 mb-2">Try these examples:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button
+                                            class="nlp-example text-xs px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700"
+                                            data-text="2 fried eggs and a slice of whole wheat toast">🍳 Eggs &
+                                            Toast</button>
+                                        <button
+                                            class="nlp-example text-xs px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700"
+                                            data-text="large coffee with cream and a banana">☕ Coffee & Banana</button>
+                                        <button
+                                            class="nlp-example text-xs px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700"
+                                            data-text="chicken breast 200g with steamed rice and broccoli">🍗 Chicken
+                                            Dinner</button>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Barcode Tab -->
                             <div id="tab_barcode" class="tab-content hidden">

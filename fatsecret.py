@@ -231,7 +231,7 @@ def get_fatsecret_token():
     try:
         response = requests.post(
             FATSECRET_TOKEN_URL,
-            data={"grant_type": "client_credentials", "scope": "premier barcode"},
+            data={"grant_type": "client_credentials", "scope": "premier barcode nlp"},
             auth=(client_id, client_secret),
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
@@ -405,6 +405,49 @@ def get_fatsecret_autocomplete(query, max_results=10):
             return None
     except Exception as e:
         print(f"FatSecret autocomplete exception: {e}")
+        return None
+
+
+def search_fatsecret_nlp(text_input):
+    """Search foods using FatSecret NLP (Natural Language Processing) API.
+    
+    This API can understand natural language like:
+    - "2 eggs and a glass of milk"
+    - "large coffee with cream"
+    - "chicken breast 200g with rice"
+    """
+    token = get_fatsecret_token()
+    if not token:
+        print("FatSecret NLP: No token available")
+        return None
+    
+    try:
+        response = requests.post(
+            FATSECRET_API_URL,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "method": "natural_language.get",
+                "text": text_input,
+                "format": "json"
+            }
+        )
+        
+        print(f"FatSecret NLP response status: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            foods = data.get("natural_language", {}).get("foods", {}).get("food", [])
+            if isinstance(foods, dict):
+                foods = [foods]
+            return foods
+        else:
+            print(f"FatSecret NLP error: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        print(f"FatSecret NLP exception: {e}")
         return None
 
 
@@ -681,6 +724,69 @@ def test_fatsecret():
             results["barcode_food_name"] = barcode_result.get("food_name", "Unknown")
     
     return jsonify(results), 200
+
+
+@fatsecret_bp.route("/nlp", methods=["POST"])
+@jwt_required()
+def nlp_search():
+    """Natural Language food search using FatSecret NLP API.
+    
+    This endpoint can understand natural language like:
+    - "2 eggs and a glass of milk"
+    - "large coffee with cream"
+    - "chicken breast 200g with rice"
+    """
+    data = request.get_json() or {}
+    text_input = data.get("text", "").strip()
+    
+    if not text_input:
+        return jsonify({"error": "Missing 'text' in request body"}), 400
+    
+    foods = search_fatsecret_nlp(text_input)
+    
+    if foods:
+        # Format the results
+        formatted_foods = []
+        for food in foods:
+            # Extract serving info
+            serving = food.get("serving", {})
+            
+            formatted_foods.append({
+                "food_id": food.get("food_id"),
+                "food_name": food.get("food_name"),
+                "food_type": food.get("food_type", ""),
+                "brand_name": food.get("brand_name", ""),
+                "quantity": food.get("food_entry_quantity", 1),
+                "serving_description": serving.get("serving_description", "1 serving"),
+                "calories": float(serving.get("calories", 0)),
+                "protein": float(serving.get("protein", 0)),
+                "carbs": float(serving.get("carbohydrate", 0)),
+                "fat": float(serving.get("fat", 0)),
+                "fiber": float(serving.get("fiber", 0)),
+                "sugar": float(serving.get("sugar", 0)),
+            })
+        
+        # Calculate total nutrition
+        total = {
+            "calories": sum(f["calories"] for f in formatted_foods),
+            "protein": sum(f["protein"] for f in formatted_foods),
+            "carbs": sum(f["carbs"] for f in formatted_foods),
+            "fat": sum(f["fat"] for f in formatted_foods),
+        }
+        
+        return jsonify({
+            "success": True,
+            "input_text": text_input,
+            "foods": formatted_foods,
+            "total": total,
+            "source": "fatsecret-nlp"
+        }), 200
+    
+    return jsonify({
+        "success": False,
+        "error": "Could not parse food from text",
+        "input_text": text_input
+    }), 200
 
 
 @fatsecret_bp.route("/categories", methods=["GET"])
