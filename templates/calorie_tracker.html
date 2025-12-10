@@ -193,12 +193,6 @@
                             </button>
                             <button
                                 class="tab-btn flex-1 py-3 px-4 text-sm font-medium text-slate-400 hover:text-white flex items-center justify-center gap-2"
-                                data-tab="scan">
-                                <span class="material-symbols-outlined text-lg">photo_camera</span>
-                                Scan Image
-                            </button>
-                            <button
-                                class="tab-btn flex-1 py-3 px-4 text-sm font-medium text-slate-400 hover:text-white flex items-center justify-center gap-2"
                                 data-tab="recipe">
                                 <span class="material-symbols-outlined text-lg">restaurant_menu</span>
                                 Recipe
@@ -252,32 +246,6 @@
                                 </div>
                             </div>
 
-                            <!-- Scan Tab -->
-                            <div id="tab_scan" class="tab-content hidden">
-                                <div class="text-center py-8">
-                                    <span
-                                        class="material-symbols-outlined text-6xl text-slate-500 mb-4 block">photo_camera</span>
-                                    <h3 class="text-lg font-semibold text-white mb-2">Scan Nutrition Label</h3>
-                                    <p class="text-slate-400 text-sm mb-4">Upload an image of a nutrition label, menu,
-                                        or recipe to extract calories</p>
-                                    <input type="file" id="image_upload" accept="image/*" class="hidden">
-                                    <label for="image_upload"
-                                        class="cursor-pointer inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
-                                        <span class="material-symbols-outlined">upload</span>
-                                        Upload Image
-                                    </label>
-                                    <div id="scan_preview" class="mt-4 hidden">
-                                        <img id="scan_image" class="max-h-48 mx-auto rounded-lg mb-4">
-                                        <button id="btn_scan_image"
-                                            class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                                            <span
-                                                class="material-symbols-outlined align-middle mr-1">document_scanner</span>
-                                            Extract Nutrition
-                                        </button>
-                                    </div>
-                                    <div id="scan_results" class="mt-4 text-left"></div>
-                                </div>
-                            </div>
 
                             <!-- Recipe Tab -->
                             <div id="tab_recipe" class="tab-content hidden">
