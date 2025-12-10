@@ -325,7 +325,10 @@ def search_fatsecret_foods(query, max_results=20):
 
 
 def get_food_by_barcode(barcode):
-    """Get food by barcode using FatSecret food.find_id_for_barcode.v2 API with OAuth 1.0."""
+    """Get food by barcode using FatSecret food.find_id_for_barcode.v2 API with OAuth 1.0.
+    
+    Note: The v2 API returns the full food object directly, not just food_id.
+    """
     print(f"FatSecret barcode lookup: {barcode}")
     
     result = make_fatsecret_request("food.find_id_for_barcode.v2", {
@@ -341,18 +344,25 @@ def get_food_by_barcode(barcode):
         print(f"FatSecret barcode error: {result['error']}")
         return None
     
+    # v2 API returns the full food object directly
+    food = result.get("food")
+    if food:
+        print(f"FatSecret barcode found: {food.get('food_name')} by {food.get('brand_name', 'N/A')}")
+        return food
+    
+    # Fallback: check for food_id (older API format)
     food_id_data = result.get("food_id")
-    if not food_id_data:
-        print("FatSecret barcode: No food_id in response")
-        return None
+    if food_id_data:
+        if isinstance(food_id_data, dict):
+            food_id = food_id_data.get("value")
+        else:
+            food_id = food_id_data
+        print(f"FatSecret barcode found food_id: {food_id}")
+        return get_food_by_id(food_id)
     
-    if isinstance(food_id_data, dict):
-        food_id = food_id_data.get("value")
-    else:
-        food_id = food_id_data
-    
-    print(f"FatSecret barcode found food_id: {food_id}")
-    return get_food_by_id(food_id)
+    print("FatSecret barcode: No food data in response")
+    return None
+
 
 
 def get_food_by_id(food_id):
