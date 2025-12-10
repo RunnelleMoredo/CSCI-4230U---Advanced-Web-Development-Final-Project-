@@ -349,19 +349,31 @@ if (foodSearchBtn && foodSearchInput) {
             const data = await res.json();
 
             if (data.success && data.meals && data.meals.length > 0) {
-                const sourceLabel = data.source === "calorieninjas" ? "CalorieNinjas" : (data.source === "usda" ? "USDA" : "Database");
+                const isAiEstimate = data.source === "ai_estimate";
+                const sourceLabel = isAiEstimate ? "🤖 AI Estimate" :
+                    (data.source === "calorieninjas" ? "✓ CalorieNinjas" :
+                        (data.source === "usda" ? "✓ USDA" : "✓ Database"));
+                const sourceClass = isAiEstimate ? "text-purple-400" : "text-green-400";
+
                 searchResults.innerHTML = `
-                    <p class="text-xs text-green-400 mb-2">Found ${data.meals.length} results from ${sourceLabel}</p>
+                    <p class="text-xs ${sourceClass} mb-2">${data.meals.length} result${data.meals.length > 1 ? 's' : ''} from ${sourceLabel}</p>
+                    ${isAiEstimate ? `<p class="text-xs text-slate-400 mb-3 bg-purple-500/10 px-3 py-2 rounded-lg border border-purple-500/20">
+                        <span class="text-purple-400 font-medium">⚠️ Note:</span> These are AI-estimated values based on typical recipes. Actual nutrition may vary.
+                    </p>` : ''}
                     ${data.meals.map(meal => `
-                        <div class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors border border-transparent hover:border-green-500/50"
+                        <div class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors border border-transparent hover:border-${isAiEstimate ? 'purple' : 'green'}-500/50"
                              onclick='openServingModal(${JSON.stringify(meal).replace(/'/g, "\\'")})'>
                             <div class="text-2xl">${getFoodEmoji(meal.food_name)}</div>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-white">${meal.food_name}</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-medium text-white">${meal.food_name}</p>
+                                    ${meal.source === 'ai_estimate' ? `<span class="text-xs bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">🤖 AI</span>` : ''}
+                                </div>
                                 <p class="text-xs text-slate-400">${meal.protein || 0}g P / ${meal.carbs || 0}g C / ${meal.fat || 0}g F</p>
+                                ${meal.notes ? `<p class="text-xs text-slate-500 mt-1">${meal.notes}</p>` : ''}
                             </div>
                             <div class="text-right">
-                                <p class="text-lg font-bold text-amber-500">${meal.calories || 0}</p>
+                                <p class="text-lg font-bold ${isAiEstimate ? 'text-purple-400' : 'text-amber-500'}">${meal.calories || 0}</p>
                                 <p class="text-xs text-slate-400">cal</p>
                             </div>
                         </div>

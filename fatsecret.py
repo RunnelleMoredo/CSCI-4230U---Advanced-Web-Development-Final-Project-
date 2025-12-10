@@ -30,6 +30,87 @@ _token_cache = {
     "expires_at": 0
 }
 
+# Gemini API for AI estimation (when no database match found)
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+
+
+def estimate_nutrition_with_gemini(food_query):
+    """Use Gemini AI to estimate nutrition for foods not found in database."""
+    api_key = os.getenv("GEMINI_API_KEY")
+    
+    if not api_key:
+        print("Gemini API key not configured")
+        return None
+    
+    prompt = f"""You are a nutrition expert. Estimate the nutritional information for: "{food_query}"
+
+Provide your best estimate based on typical recipes, portion sizes, and ingredients.
+If this is a restaurant dish, base it on typical restaurant portions.
+
+Return ONLY valid JSON in this exact format (no markdown, no extra text):
+{{
+    "food_name": "Name of the food",
+    "calories": 0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "serving": "typical serving description",
+    "confidence": "high/medium/low",
+    "notes": "Brief note about assumptions made"
+}}
+
+Be realistic with calorie estimates. A typical fast food meal is 800-1200 calories. A salad is 150-400 calories."""
+
+    try:
+        response = requests.post(
+            f"{GEMINI_API_URL}?key={api_key}",
+            headers={"Content-Type": "application/json"},
+            json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.3,
+                    "maxOutputTokens": 500
+                }
+            },
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            text = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            
+            # Clean up the response (remove markdown code blocks if present)
+            text = text.strip()
+            if text.startswith("```"):
+                text = text.split("```")[1]
+                if text.startswith("json"):
+                    text = text[4:]
+            text = text.strip()
+            
+            # Parse JSON
+            nutrition_data = json.loads(text)
+            
+            return [{
+                "food_name": nutrition_data.get("food_name", food_query.title()),
+                "calories": round(nutrition_data.get("calories", 0)),
+                "protein": round(float(nutrition_data.get("protein", 0)), 1),
+                "carbs": round(float(nutrition_data.get("carbs", 0)), 1),
+                "fat": round(float(nutrition_data.get("fat", 0)), 1),
+                "serving": nutrition_data.get("serving", "1 serving"),
+                "source": "ai_estimate",
+                "confidence": nutrition_data.get("confidence", "medium"),
+                "notes": nutrition_data.get("notes", "AI-estimated values")
+            }]
+        else:
+            print(f"Gemini API error: {response.status_code} - {response.text}")
+            
+    except json.JSONDecodeError as e:
+        print(f"Gemini JSON parse error: {e}")
+    except Exception as e:
+        print(f"Gemini estimation error: {e}")
+    
+    return None
+
 
 def search_calorieninjas(query, max_results=5):
     """Search foods using CalorieNinjas API."""
@@ -325,6 +406,16 @@ def search_ai_meal():
             "success": True,
             "meals": fallback,
             "source": "fallback"
+        }), 200
+    
+    # Fallback 3: Gemini AI estimation (for restaurant meals, custom foods, etc.)
+    gemini_estimate = estimate_nutrition_with_gemini(meal_query)
+    if gemini_estimate and len(gemini_estimate) > 0:
+        return jsonify({
+            "success": True,
+            "meals": gemini_estimate,
+            "source": "ai_estimate",
+            "is_estimate": True
         }), 200
     
     return jsonify({
