@@ -3,10 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const intermediate = document.getElementById("intermediateBtn");
 
   beginner.addEventListener("click", () => {
-    window.location.href = "/ai_workout";
+    window.location.href = "/calorie_goal";
   });
 
   intermediate.addEventListener("click", () => {
-    window.location.href = "/main_dashboard";
+    window.location.href = "/calorie_goal";
   });
 });

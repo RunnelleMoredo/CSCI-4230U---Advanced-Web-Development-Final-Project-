@@ -129,10 +129,15 @@
 
                         <!-- Stats Grid -->
                         <div class="grid grid-cols-2 gap-3 mb-4">
-                            <div class="text-center p-3 bg-green-500/10 rounded-lg">
+                            <a href="/calorie_goal"
+                                class="text-center p-3 bg-green-500/10 rounded-lg hover:bg-green-500/20 transition group">
                                 <p class="text-xl font-bold text-green-500" id="cal_target">--</p>
-                                <p class="text-xs text-green-300">Target</p>
-                            </div>
+                                <p class="text-xs text-green-300 flex items-center justify-center gap-1">
+                                    Target
+                                    <span
+                                        class="material-symbols-outlined text-xs opacity-0 group-hover:opacity-100 transition">edit</span>
+                                </p>
+                            </a>
                             <div class="text-center p-3 bg-amber-500/10 rounded-lg">
                                 <p class="text-xl font-bold text-amber-500" id="cal_consumed">0</p>
                                 <p class="text-xs text-amber-300">Eaten</p>
