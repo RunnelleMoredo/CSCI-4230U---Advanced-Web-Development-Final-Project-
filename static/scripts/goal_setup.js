@@ -93,6 +93,7 @@ continueBtn.addEventListener("click", async () => {
 
     // Store goal in localStorage as backup
     localStorage.setItem("primaryGoal", selectedGoal);
+    localStorage.setItem("hasGoal", "true");
 
     // Redirect to calorie goal page
     window.location.href = "/calorie_goal";
