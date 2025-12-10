@@ -834,9 +834,15 @@ window.openRecipeModal = async function (mealId) {
             `;
             document.getElementById("recipeServings").textContent = `Serves ~${servings} | Per serving: ~${Math.round(total.calories / servings)} cal`;
 
-            // Store for adding to log
+            // Store for adding to log - estimate ~400g per full recipe
             currentRecipe.nutrition = total;
             currentRecipe.servings = servings;
+            currentRecipe.totalGrams = 400; // Estimated total weight
+
+            // Reset portion inputs and update preview
+            if (portionGramsInput) portionGramsInput.value = 100;
+            if (portionPreset) portionPreset.value = "";
+            updatePortionPreview();
         } else {
             document.getElementById("recipeNutritionGrid").innerHTML = `<p class="col-span-4 text-red-400 text-sm">Could not calculate nutrition</p>`;
         }
@@ -859,23 +865,55 @@ recipeModal?.addEventListener("click", (e) => {
     if (e.target === recipeModal) closeRecipeModalFn();
 });
 
-// Add recipe to log
+// Add recipe to log with portion support
+const portionGramsInput = document.getElementById("recipePortionGrams");
+const portionPreset = document.getElementById("recipePortionPreset");
+
+// Update portion preview when grams change
+function updatePortionPreview() {
+    if (!currentRecipe || !currentRecipe.nutrition || !currentRecipe.totalGrams) return;
+
+    const grams = parseInt(portionGramsInput?.value) || 100;
+    const ratio = grams / currentRecipe.totalGrams;
+    const total = currentRecipe.nutrition;
+
+    const cal = Math.round(total.calories * ratio);
+    const protein = Math.round(total.protein * ratio * 10) / 10;
+    const carbs = Math.round(total.carbs * ratio * 10) / 10;
+    const fat = Math.round(total.fat * ratio * 10) / 10;
+
+    document.getElementById("portionCal").textContent = cal;
+    document.getElementById("portionProtein").textContent = protein + "g";
+    document.getElementById("portionCarbs").textContent = carbs + "g";
+    document.getElementById("portionFat").textContent = fat + "g";
+}
+
+portionGramsInput?.addEventListener("input", updatePortionPreview);
+portionPreset?.addEventListener("change", () => {
+    if (portionPreset.value) {
+        portionGramsInput.value = portionPreset.value;
+        updatePortionPreview();
+    }
+});
+
 document.getElementById("addRecipeToLog")?.addEventListener("click", () => {
     if (!currentRecipe || !currentRecipe.nutrition) {
         alert("Recipe nutrition not available");
         return;
     }
 
+    const grams = parseInt(portionGramsInput?.value) || 100;
+    const totalGrams = currentRecipe.totalGrams || 400;
+    const ratio = grams / totalGrams;
     const total = currentRecipe.nutrition;
-    const servings = currentRecipe.servings || 4;
 
     addFoodToLog({
         name: currentRecipe.name,
-        calories: Math.round(total.calories / servings),
-        serving: `1 serving (1/${servings} recipe)`,
-        protein: Math.round(total.protein / servings * 10) / 10,
-        carbs: Math.round(total.carbs / servings * 10) / 10,
-        fat: Math.round(total.fat / servings * 10) / 10
+        calories: Math.round(total.calories * ratio),
+        serving: `${grams}g`,
+        protein: Math.round(total.protein * ratio * 10) / 10,
+        carbs: Math.round(total.carbs * ratio * 10) / 10,
+        fat: Math.round(total.fat * ratio * 10) / 10
     });
 
     closeRecipeModalFn();

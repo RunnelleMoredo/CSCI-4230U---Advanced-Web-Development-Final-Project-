@@ -362,11 +362,51 @@
                         <p id="recipeInstructions" class="text-sm text-slate-400 whitespace-pre-line"></p>
                     </div>
 
+                    <!-- Portion Size Input -->
+                    <div class="mb-4 p-4 bg-slate-800 rounded-lg">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">How much are you eating?</label>
+                        <div class="flex gap-3 items-center mb-3">
+                            <input type="number" id="recipePortionGrams" value="100" min="1" max="2000"
+                                class="w-24 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-center">
+                            <span class="text-slate-400">grams</span>
+                            <span class="text-slate-500 text-sm">or</span>
+                            <select id="recipePortionPreset"
+                                class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white">
+                                <option value="">Choose preset...</option>
+                                <option value="100">Small (100g)</option>
+                                <option value="200">Medium (200g)</option>
+                                <option value="300">Large (300g)</option>
+                                <option value="400">Full serving (400g)</option>
+                            </select>
+                        </div>
+                        <div class="bg-slate-900 rounded-lg p-3">
+                            <p class="text-xs text-slate-400 mb-2">You'll log:</p>
+                            <div class="grid grid-cols-4 gap-2 text-center" id="portionPreviewGrid">
+                                <div>
+                                    <p id="portionCal" class="text-lg font-bold text-amber-500">0</p>
+                                    <p class="text-xs text-slate-500">cal</p>
+                                </div>
+                                <div>
+                                    <p id="portionProtein" class="text-lg font-bold text-green-500">0g</p>
+                                    <p class="text-xs text-slate-500">protein</p>
+                                </div>
+                                <div>
+                                    <p id="portionCarbs" class="text-lg font-bold text-blue-500">0g</p>
+                                    <p class="text-xs text-slate-500">carbs</p>
+                                </div>
+                                <div>
+                                    <p id="portionFat" class="text-lg font-bold text-purple-500">0g</p>
+                                    <p class="text-xs text-slate-500">fat</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Add to Log Button -->
                     <button id="addRecipeToLog"
                         class="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined">add_circle</span>
-                        Add Recipe to Today's Log
+                        Add to Today's Log
                     </button>
                 </div>
             </div>
